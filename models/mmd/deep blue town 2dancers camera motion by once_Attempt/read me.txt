@@ -1,0 +1,15 @@
+DEEP BLUE TOWN 2dancers camera motion with position adjustment by once_Attempt
+
+use position adjustment after you used motion on your model
+
+
+preview:https://youtu.be/vrC7jL2wRLk
+         Haku used position adjustment(Front),Miku used position adjustment(Back)
+
+
+
+
+
+
+
+p3dbtc

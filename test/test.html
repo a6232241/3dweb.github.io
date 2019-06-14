@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../css/styles.css">
+    </head>
+    <body>
+        <h1>Train</h1>
+        <div id="scene-container">
+        </div>
+        <script src="../three.js/build/three.js"></script>
+        <script src="../three.js/examples/js/controls/OrbitControls.js"></script>
+        <script src="../three.js/examples/js/loaders/GLTFLoader.js"></script>
+        <script>
+
+            let container;
+            let scene, camera, renderer;
+            let mesh;
+            let controls;
+            const mixers = [];
+            const clock = new THREE.Clock();
+            
+            //建立場景
+            function init(){
+
+                container = document.querySelector('#scene-container');
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color('skyblue');
+
+                createCamera();
+                createLights();
+                createMeshes();
+                loadModels();
+                createRenderer();
+                createControls();
+
+                window.addEventListener('resize', onWindowResize, false);
+
+                renderer.setAnimationLoop( ()=> {
+                    update();
+                    render();
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                fov = 100;
+                aspect = container.clientWidth/container.clientHeight;
+                near = 50;
+                far = 500;
+                camera= new THREE.PerspectiveCamera(fov, aspect, near, far);
+                camera.position.set(-20, 15, 50);
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                const hemiLight = new THREE.HemisphereLight(0xddeeff, 0x0f0e0d, 5);
+                const DirLight = new THREE.DirectionalLight(0xffffff, 5);
+                DirLight.position.set(10,10,10);
+
+                scene.add(hemiLight, DirLight);
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                const body = new THREE.MeshStandardMaterial({
+                    color: 0xff3333,
+                    flatShading: true
+                });
+                body.color.convertSRGBToLinear();
+
+                const detail = new THREE.MeshStandardMaterial({
+                    color: 0x666666,
+                    flatShading: true
+                });
+                detail.color.convertSRGBToLinear();
+
+                return{
+                    body, detail
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const nose = new THREE.CylinderBufferGeometry(0.75, 0.75, 3, 12);
+
+                const cabin = new THREE.BoxBufferGeometry(2, 2.25, 1.5);
+
+                const chimney = new THREE.CylinderBufferGeometry(0.3, 0.1, 0.5);
+
+                const wheel = new THREE.CylinderBufferGeometry(0.4, 0.4, 1.75, 10);
+                wheel.rotateX(Math.PI/2);
+
+                return{
+                    nose, cabin, chimney, wheel
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                const train = new THREE.Group();
+                scene.add(train);
+
+                const geometries = createGeometries();
+                const materials = createMaterials();
+
+                const nose = new THREE.Mesh(geometries.nose, materials.body);
+                nose.rotateZ(Math.PI/2);
+                nose.position.x = -1;
+
+                const cabin = new THREE.Mesh(geometries.cabin, materials.body);
+                cabin.position.set(1.5, 0.4, 0);
+
+                const chimney = new THREE.Mesh(geometries.chimney, materials.detail);
+                chimney.position.set(-2, 0.9, 0);
+
+                const wheels = new THREE.Group();
+                for(let i=0; i<4; i++){
+                    let wheel = new THREE.Mesh(geometries.wheel, materials.detail);
+                    if(i<3){
+                        wheel.position.set(-i, -0.5, 0);
+                    }else{
+                        wheel.position.set(i-1.5, -0.5, 0);
+                        wheel.scale.set(1.5, 1.5, 1.5);
+                    }
+                    wheels.add(wheel);
+                }
+
+                train.add(
+                    nose, cabin, chimney, wheels
+                )
+            }
+
+            //加載模組GLTF
+            function loadModels(){
+
+                const loader = new THREE.GLTFLoader();
+
+                const onLoad = (gltf, position) => {
+
+                    const model = gltf.scene.children[0];
+                    model.position.copy(position);
+
+                    const animation = gltf.animations[0];
+
+                    const mixer = new THREE.AnimationMixer(model);
+                    mixers.push(mixer);
+
+                    const action = mixer.clipAction(animation);
+                    action.play();
+
+                    scene.add(model);
+                };
+
+                const onProgress = () => {};
+
+                const onError = (errorMessage) => { console.log(errorMessage);};
+
+                const parrotPosition = new THREE.Vector3(30, 10, -50);
+                loader.load('../three.js/examples/models/gltf/Parrot.glb', gltf => onLoad(gltf, parrotPosition), onProgress, onError);
+                
+                const flamingoPosition = new THREE.Vector3(50, 10, -400);
+                loader.load('../three.js/examples/models/gltf/Flamingo.glb', gltf => onLoad(gltf, flamingoPosition), onProgress, onError);
+
+                const storkPosition = new THREE.Vector3(-30, 50, -150);
+                loader.load('../three.js/examples/models/gltf/Stork.glb', gltf => onLoad(gltf, storkPosition), onProgress, onError);
+            }
+
+            //實現控制
+            function createControls(){
+                controls = new THREE.OrbitControls(camera, container);
+                controls.addEventListener('change', renderer);
+            }
+
+            //實現渲染
+            function createRenderer(){
+                renderer = new THREE.WebGLRenderer({antialias:true});
+
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+
+                renderer.physicallyCorrectLights = true;
+
+                container.appendChild(renderer.domElement);
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                camera.aspect = container.clientWidth/container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+
+            //物件事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                const delta = clock.getDelta();
+
+                mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+                renderer.render(scene, camera);
+            }
+            
+            init();
+
+        </script>
+
+    </body>
+</html>

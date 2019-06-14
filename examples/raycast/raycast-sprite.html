@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>raycast-sprite</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <script src="../../three.js/build/three.js"></script>
+        <script src="../../three.js/examples/js/controls/OrbitControls.js"></script>
+        <script>
+
+            let renderer, scene, camera;
+            let controls, group;
+            
+            //建立場景
+            function init(){
+
+                container = document.querySelector('#scene-container');
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xffffff);
+
+                createCamera();
+                // createLights();
+                createMeshes();
+                createRenderer();
+                createControls();
+                createSprite();
+
+                window.addEventListener('resize', onWindowResize, false);
+                window.addEventListener( 'mousemove', onDocumentMouseMove, false);
+
+                renderer.setAnimationLoop( ()=> {
+                    update();
+                    render();
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                fov = 50;
+                aspect = container.clientWidth/container.clientHeight;
+                near = 1;
+                far = 1000;
+                camera= new THREE.PerspectiveCamera( fov, aspect, near, far);
+                camera.position.set( 15, 15, 15);
+                camera.lookAt( scene.position );
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // const hemiLight = new THREE.HemisphereLight(0xddeeff, 0x0f0e0d, 5);
+                // const DirLight = new THREE.DirectionalLight(0xffffff, 5);
+                // DirLight.position.set(10,10,10);
+
+                // scene.add(hemiLight, DirLight);
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // const body = new THREE.MeshStandardMaterial({
+                //     color: 0xff3333,
+                //     flatShading: true
+                // });
+                // body.color.convertSRGBToLinear();
+
+                // const detail = new THREE.MeshStandardMaterial({
+                //     color: 0x666666,
+                //     flatShading: true
+                // });
+                // detail.color.convertSRGBToLinear();
+
+                // return{
+                //     body, detail
+                // };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                // const nose = new THREE.CylinderBufferGeometry(0.75, 0.75, 3, 12);
+
+                // const cabin = new THREE.BoxBufferGeometry(2, 2.25, 1.5);
+
+                // const chimney = new THREE.CylinderBufferGeometry(0.3, 0.1, 0.5);
+
+                // const wheel = new THREE.CylinderBufferGeometry(0.4, 0.4, 1.75, 10);
+                // wheel.rotateX(Math.PI/2);
+
+                // return{
+                //     nose, cabin, chimney, wheel
+                // };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                group = new THREE.Group();
+                scene.add(group);
+
+                // const geometries = createGeometries();
+                // const materials = createMaterials();
+
+                // const nose = new THREE.Mesh(geometries.nose, materials.body);
+                // nose.rotateZ(Math.PI/2);
+                // nose.position.x = -1;
+
+                // const cabin = new THREE.Mesh(geometries.cabin, materials.body);
+                // cabin.position.set(1.5, 0.4, 0);
+
+                // const chimney = new THREE.Mesh(geometries.chimney, materials.detail);
+                // chimney.position.set(-2, 0.9, 0);
+
+                // const wheels = new THREE.Group();
+                // for(let i=0; i<4; i++){
+                //     let wheel = new THREE.Mesh(geometries.wheel, materials.detail);
+                //     if(i<3){
+                //         wheel.position.set(-i, -0.5, 0);
+                //     }else{
+                //         wheel.position.set(i-1.5, -0.5, 0);
+                //         wheel.scale.set(1.5, 1.5, 1.5);
+                //     }
+                //     wheels.add(wheel);
+                // }
+
+                // train.add(
+                //     nose, cabin, chimney, wheels
+                // )
+            }
+
+            //實現控制
+            function createControls(){
+                controls = new THREE.OrbitControls( camera, container);
+                controls.enableRotate = true;
+                controls.addEventListener('change', renderer);
+            }
+
+            //實現渲染
+            function createRenderer(){
+                renderer = new THREE.WebGLRenderer({antialias:true});
+
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+
+                renderer.physicallyCorrectLights = true;
+
+                container.appendChild(renderer.domElement);
+            }
+
+            //創建精靈
+            function createSprite(){
+
+                let sprite = new THREE.Sprite( new THREE.SpriteMaterial( { color: '#69f' } ) );
+                sprite.position.set( 6, 5, 5);
+                sprite.scale.set( 2, 5, 1 );
+                group.add(sprite);
+
+                sprite = new THREE.Sprite( new THREE.SpriteMaterial( { color: '#69f' } ) );
+                sprite.material.rotation = Math.PI / 3 * 4;
+                sprite.position.set( 8, -2, 2);
+                sprite.center.set( 0.5, 0);
+                sprite.scale.set( 1, -5, 1 );
+                group.add(sprite);
+
+                let group2 = new THREE.Object3D();
+                group2.scale.set( 1, 2, 1);
+                group2.position.set( -5, 0, 0);
+                group2.rotation.set( Math.PI / 2, 0, 0);
+                group.add( group2 );
+
+                sprite = new THREE.Sprite( new THREE.SpriteMaterial( { color: '#69f' } ) );
+                sprite.position.set( 0, 2, 5 );
+                sprite.center.set( -0.1, 0 );
+                sprite.scale.set( 10, 2, 3 );
+                sprite.material.rotation = Math.PI / 3;
+                group.add(sprite);
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                camera.aspect = container.clientWidth/container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+
+            let selectObject = null;
+
+            //滑鼠移動事件
+            function onDocumentMouseMove( event ){
+
+                event.preventDefault();
+                if(selectObject){
+
+                    selectObject.material.color.set('#69f');
+                    selectObject = null;
+                }
+
+                let intersects = getIntersects( event.layerX, event.layerY );
+                if( intersects.length > 0 ){
+
+                    let res = intersects.filter( (res) => {
+                        
+                        return res && res.object;
+                    })[0];
+
+                    if( res && res.object ){
+                        selectObject = res.object;
+                        selectObject.material.color.set( '#f00' );
+                    }
+                }
+            }
+
+            let raycaster = new THREE.Raycaster();
+            let mouseVector = new THREE.Vector3();
+
+            //取得與group的相交
+            function getIntersects( x, y){
+                
+                x = ( x / container.clientWidth ) * 2 - 1;
+                y = -( y / container.clientHeight ) * 2 + 1;
+
+                mouseVector.set( x, y, 0.5 );
+                raycaster.setFromCamera( mouseVector, camera );
+
+                return raycaster.intersectObject( group, true );
+            }
+
+            //物件事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                // const delta = clock.getDelta();
+
+                // mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+                renderer.render(scene, camera);
+            }
+            
+            init();
+
+        </script>
+
+    </body>
+</html>

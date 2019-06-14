@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>angle</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<style>
+	body{overflow:hidden}
+</style>
+</head>
+<body>
+
+<script src="three/build/three.js"></script>
+<script src="three/examples/js/controls/OrbitControls.js"></script>
+<script src="three/examples/js/WebGL.js"></script>
+<script src="three/examples/js/libs/stats.min.js"></script>
+
+<script>
+	if(WEBGL.isWebGLAvalable===false){
+		document.body.appendChild(WEBGL.getWebGLErrorMessage());
+	}
+	
+	var controls,stats,container;
+	var camera,scene,renderer;
+	
+	init();
+	animate();
+	
+	function init(){
+	
+		container=document.createElement('div');
+		document.body.appendChild(container);
+	
+		camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,1,1000);
+		camera.position.set(0,0,100);
+		
+		scene=new THREE.Scene();
+		scene.background=new THREE.Color(0xffffff);
+		
+		var imageUrls="models/png/300px-DQMJ2_Angel_Slime.png"
+		var imageTexture=new THREE.TextureLoader().load(imageUrls,function(){
+		imageTexture.offset.x=-0.75;
+		imageTexture.offset.y=-0.75;
+		
+		imageTexture.repeat.set(0.2,0.2);
+		});
+		
+		var imageMesh=new THREE.Mesh(new THREE.PlaneBufferGeometry(30,30),new THREE.MeshBasicMaterial({map:imageTexture,wireframe:false}));
+		
+		imageMesh.position.set(0,0,50);
+		scene.add(imageMesh);
+		
+		renderer=new THREE.WebGLRenderer({antialias:true});
+		renderer.setPixelRatio(window.devicePixelRatio);
+		renderer.setSize(window.innerWidth,window.innerHeight);
+		container.appendChild(renderer.domElement);
+		
+		controls=new THREE.OrbitControls(camera,renderer.domElement);
+		controls.minDistance=10;
+		controls.maxDistance=50;
+		
+		stats=new Stats();
+		container.appendChild(stats.dom);
+		
+		window.addEventListener('resize',onWindowResize,false);
+	}
+	
+	function onWindowResize(){
+		
+		camera.aspect=window.innerWidth/window.innerHeight;
+		camera.updateProjectionMatrix();
+		
+		renderer.setSize(window.innerWidth,window.innerHeight);
+	}
+	
+	function animate(){
+		requestAnimationFrame(animate);
+		
+		renderer.render(scene,camera);
+		
+		stats.update();
+	}
+</script>
+</body>
+</html>
