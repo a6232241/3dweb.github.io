@@ -96,7 +96,7 @@ function init(){
 	planeMesh.rotation.x= -Math.PI*0.5;
 	scene.add(planeMesh);
 	
-	new THREE.EXRLoader().load('http://threejs.org/examples/textures/piz_compressed.exr', function ( texture ) {
+	new THREE.EXRLoader().load('../three.js/examples/textures/piz_compressed.exr', function ( texture ) {
 		texture.minFilter=THREE.NearestFilter;
 		//texture.magFilter=THREE.NearestFilter;
 		texture.encoding=THREE.LinearEncoding;
@@ -119,7 +119,7 @@ function init(){
 		pmremCubeUVPacker.dispose();
 	});
 	
-	new THREE.TextureLoader().load('http://threejs.org/examples/textures/equirectangular.png', function ( texture ) {
+	new THREE.TextureLoader().load('../three.js/examples/textures/equirectangular.png', function ( texture ) {
 		texture.encoding=THREE.sRGBEncoding;
 		
 		var cubemapGenerator=new THREE.EquirectangularToCubeGenerator(texture,{resolution:512});
