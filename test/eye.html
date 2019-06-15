@@ -4,15 +4,15 @@
 <title>materials-envmaps exr</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<script src="../three.js/build/three.js"></script>
-<script src="../three.js/examples/js/controls/OrbitControls.js"></script>
-<script src="../three.js/examples/js/loaders/EXRLoader.js"></script>
-<script src="../three.js/examples/js/loaders/EquirectangularToCubeGenerator.js"></script>
-<script src="../three.js/examples/js/WebGL.js"></script>
-<script src="../three.js/examples/js/libs/stats.min.js"></script>
-<script src="../three.js/examples/js/pmrem/PMREMGenerator.js"></script>
-<script src="../three.js/examples/js/pmrem/PMREMCubeUVPacker.js"></script>
-<script src="../three.js/examples/js/libs/dat.gui.min.js"></script>
+<script src="http://threejs.org/build/three.js"></script>
+<script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="http://threejs.org/examples/js/loaders/EXRLoader.js"></script>
+<script src="http://threejs.org/examples/js/loaders/EquirectangularToCubeGenerator.js"></script>
+<script src="http://threejs.org/examples/js/WebGL.js"></script>
+<script src="http://threejs.org/examples/js/libs/stats.min.js"></script>
+<script src="http://threejs.org/examples/js/pmrem/PMREMGenerator.js"></script>
+<script src="http://threejs.org/examples/js/pmrem/PMREMCubeUVPacker.js"></script>
+<script src="http://threejs.org/examples/js/libs/dat.gui.min.js"></script>
 <style>
 body{
 	color:#fff;
@@ -96,7 +96,7 @@ function init(){
 	planeMesh.rotation.x= -Math.PI*0.5;
 	scene.add(planeMesh);
 	
-	new THREE.EXRLoader().load('../three.js/examples/textures/piz_compressed.exr', function ( texture ) {
+	new THREE.EXRLoader().load('http://threejs.org/examples/textures/piz_compressed.exr', function ( texture ) {
 		texture.minFilter=THREE.NearestFilter;
 		//texture.magFilter=THREE.NearestFilter;
 		texture.encoding=THREE.LinearEncoding;
@@ -119,7 +119,7 @@ function init(){
 		pmremCubeUVPacker.dispose();
 	});
 	
-	new THREE.TextureLoader().load('../three.js/examples/textures/equirectangular.png', function ( texture ) {
+	new THREE.TextureLoader().load('http://threejs.org/examples/textures/equirectangular.png', function ( texture ) {
 		texture.encoding=THREE.sRGBEncoding;
 		
 		var cubemapGenerator=new THREE.EquirectangularToCubeGenerator(texture,{resolution:512});

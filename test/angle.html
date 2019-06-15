@@ -10,10 +10,10 @@
 </head>
 <body>
 
-<script src="three/build/three.js"></script>
-<script src="three/examples/js/controls/OrbitControls.js"></script>
-<script src="three/examples/js/WebGL.js"></script>
-<script src="three/examples/js/libs/stats.min.js"></script>
+<script src="http://threejs.org/build/three.js"></script>
+<script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="http://threejs.org/examples/js/WebGL.js"></script>
+<script src="http://threejs.org/examples/js/libs/stats.min.js"></script>
 
 <script>
 	if(WEBGL.isWebGLAvalable===false){
@@ -37,7 +37,7 @@
 		scene=new THREE.Scene();
 		scene.background=new THREE.Color(0xffffff);
 		
-		var imageUrls="models/png/300px-DQMJ2_Angel_Slime.png"
+		var imageUrls="../models/png/300px-DQMJ2_Angel_Slime.png"
 		var imageTexture=new THREE.TextureLoader().load(imageUrls,function(){
 		imageTexture.offset.x=-0.75;
 		imageTexture.offset.y=-0.75;

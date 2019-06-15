@@ -25,22 +25,22 @@ canvas { width: 100%; height: 100% }
   firebase.initializeApp(config);
 </script>
 
-<script src="three/build/three.js"></script>
+<script src="http://threejs.org/build/three.js"></script>
 
 <!-- Live2Dのコアライブラリ -->
-<script src="three/build/Live2D/lib/live2d.min.js"></script>
+<script src="live2D/Live2D/lib/live2d.min.js"></script>
 
 <!-- Live2Dの便利機能が入ったクラス群 -->
-<script src="three/build/Live2D/framework/Live2DFramework.js"></script>
+<script src="live2D/Live2D/framework/Live2DFramework.js"></script>
 
 <!-- Live2Dモデルやテクスチャロード管理クラス -->
-<script src="three/build/Live2D/sample/sampleApp1/src/PlatformManager.js"></script>
+<script src="live2D/Live2D/sample/sampleApp1/src/PlatformManager.js"></script>
 
 <!-- Live2Dモデルの生成やチェンジを行うクラス -->
-<script src="three/build/Live2D/sample/sampleApp1/src/LAppLive2DManager.js"></script>
+<script src="live2D/Live2D/sample/sampleApp1/src/LAppLive2DManager.js"></script>
 
 <!-- Three.js用のカスタムクラス -->
-<script src="three/build/Live2D/Live2DRender.js"></script>
+<script src="live2D/Live2D/Live2DRender.js"></script>
 
 <script>
 	
@@ -73,14 +73,14 @@ canvas { width: 100%; height: 100% }
 		
 		var textureLoader = new THREE.TextureLoader();
 		// 背景テクスチャのロード
-		var background = textureLoader.load("three/build/Live2D/sample/sampleApp1/assets/image/back_class_normal.png");
+		var background = textureLoader.load("live2D/Live2D/sample/sampleApp1/assets/image/back_class_normal.png");
 		// プレーン生成
 		var backgeo = new THREE.PlaneGeometry( 8, 8, 1, 1 );
 		var backmat = new THREE.MeshBasicMaterial( { map: background } );
 		var backmesh = new THREE.Mesh( backgeo, backmat );
 		scene.add( backmesh );
 		
-		var MODEL_PATH1="three/build/Live2D/sample/sampleApp1/assets/live2d/Epsilon2.1/";
+		var MODEL_PATH1="live2D/Live2D/sample/sampleApp1/assets/live2d/Epsilon2.1/";
 		var MODEL_JSON1 ="Epsilon2.1.model.json";
 		
 		live2dModel1=new THREE.Live2DRender(renderer,MODEL_PATH1,MODEL_JSON1);
@@ -97,6 +97,13 @@ canvas { width: 100%; height: 100% }
 		
 		document.addEventListener('contextmenu',onDocumentContextmenu,false);
 		document.addEventListener('mousedown',onDocumentMouseDown,false);
+
+		renderer.setAnimationLoop( () => {
+			renderer.render(offScene1,camera,offRenderTarget1);
+			live2dModel1.draw();
+			renderer.state.reset();
+			renderer.render(scene,camera);
+	});
 		
 	}
 	
@@ -128,16 +135,7 @@ canvas { width: 100%; height: 100% }
 		}
 	}
 	
-	var render=function(){
-	
-		requestAnimationFrame(render);
-		renderer.render(offScene1,camera,offRenderTarget1);
-		live2dModel1.draw();
-		renderer.state.reset();
-		renderer.render(scene,camera);
-	}
-	
-	render();
+
 	
 </script>
 
