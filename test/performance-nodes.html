@@ -59,7 +59,7 @@
 
 <script type="module">
 
-	import 'three/examples/js/nodes/THREE.Nodes.js';
+	import '../three.js/examples/js/nodes/THREE.Nodes.js';
 	
 	var container,stats;
 	var camera,scene,renderer;
@@ -158,7 +158,7 @@
 		scene.add( new THREE.PointLight( 0xFFFFFF ) );
 		//scene.background = new THREE.Color( 0xffffff );
 		var loader = new THREE.BufferGeometryLoader();
-		loader.load( 'models/json/suzanne_buffergeometry.json', function ( geo ) {
+		loader.load( '../three.js/examples/models/json/suzanne_buffergeometry.json', function ( geo ) {
 			geo.computeVertexNormals();
 			geometry = geo;
 		} );

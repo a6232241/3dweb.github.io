@@ -72,11 +72,10 @@
 <div id="feedback"></div>
 </div>
 
-<script src="three/build/three.js"></script>
-<script src="three/examples/js/controls/TrackballControls.js"></script>
-<script src="three/examples/js/libs/dat.gui.min.js"></script>
-
-<script src="three/examples/js/loaders/LoaderSupport.js"></script>
+<script src="../three.js/build/three.js"></script>
+<script src="../three.js/examples/js/controls/TrackballControls.js"></script>
+<script src="../three.js/examples/js/libs/dat.gui.min.js"></script>
+<script src="../three.js/examples/js/loaders/LoaderSupport.js"></script>
 
 <script>
 
@@ -163,7 +162,7 @@
 				
 				return workerCode;
 			};
-			var libs2Load=['build/three.min.js'];
+			var libs2Load=['three.js/build/three.min.js'];
 			this.workerSupport.validate(buildCode,'MeshSparay.Parser',libs2Load,'../../');
 			this.workerSupport.setCallbacks(scopeBuilderFunc,scopeFuncComplete);
 			this.workerSupport.run(

@@ -32,19 +32,18 @@
 	Serialized using <a href="webgl_materials_nodes.html">webgl_materials_nodes.html</a>
 </div>
 
-<script src="three/build/three.js"></script>
-
-<script src='three/examples/js/geometries/TeapotBufferGeometry.js'></script>
-<script src="three/examples/js/controls/OrbitControls.js"></script>
-<script src="three/examples/js/libs/dat.gui.min.js"></script>
+<script src="../../three.js/build/three.js"></script>
+<script src='../../three.js/examples/js/geometries/TeapotBufferGeometry.js'></script>
+<script src="../../three.js/examples/js/controls/OrbitControls.js"></script>
+<script src="../../three.js/examples/js/libs/dat.gui.min.js"></script>
 
 <script type="module">
 
-	import 'three/examples/js/nodes/THREE.Nodes.js';
-	import 'three/examples/js/loaders/NodeMaterialLoader.js';
+	import '../../three.js/examples/js/nodes/THREE.Nodes.js';
+	import '../../three.js/examples/js/loaders/NodeMaterialLoader.js';
 	
 	var container=document.getElementById('container');
-	var renderers,scene,camera,clock=new THREE.Clock(),fov=50;
+	var renderer,scene,camera,clock=new THREE.Clock(),fov=50;
 	var frame=new THREE.NodeFrame();
 	var teapot,mesh,cloud;
 	var controls;
@@ -65,7 +64,7 @@
 		camera.position.z = - 50;
 		camera.position.y = 30;
 		camera.target = new THREE.Vector3();
-		cloud = new THREE.TextureLoader().load( 'three/examples/textures/lava/cloud.png' );
+		cloud = new THREE.TextureLoader().load( '../../three.js/examples/textures/lava/cloud.png' );
 		cloud.wrapS = cloud.wrapT = THREE.RepeatWrapping;
 		controls = new THREE.OrbitControls( camera, renderer.domElement );
 		controls.minDistance = 50;
@@ -138,13 +137,13 @@
 		
 		clearGui();
 		
-		var url="three/examples/nodes/" + param.load + ".json";
+		var url="../../three.js/examples/nodes/" + param.load + ".json";
 		
 		var library={
 			"cloud":cloud
 		};
 		
-		var loader=new THREE.NodeMaterialLoader(undefined,libaray).load(url,function(){
+		var loader=new THREE.NodeMaterialLoader(undefined, library).load(url,function(){
 			
 			var time=loader.getObjectByName("time");
 			

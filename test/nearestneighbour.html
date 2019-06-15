@@ -28,9 +28,9 @@
 
 <div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - typed arrays - nearest neighbour for 500,000 sprites</div>
 
-<script src="three/build/three.js"></script>
-<script src="three/examples/js/TypedArrayUtils.js"></script>
-<script src="three/examples/js/controls/FirstPersonControls.js"></script>
+<script src="../three.js/build/three.js"></script>
+<script src="../three.js/examples/js/utils/TypedArrayUtils.js"></script>
+<script src="../three.js/examples/js/controls/FirstPersonControls.js"></script>
 
 <script type="x-shader/x-vertex" id="vertexshader">
 
@@ -84,7 +84,7 @@
 		controls.lookAt( 500, 500, 500 );
 		
 		var cubeTextureLoader=new THREE.CubeTextureLoader();
-		cubeTextureLoader.setPath( 'three/examples/textures/cube/skybox/' );
+		cubeTextureLoader.setPath( '../three.js/examples/textures/cube/skybox/' );
 		var cubeTexture = cubeTextureLoader.load( [
 			'px.jpg', 'nx.jpg',
 			'py.jpg', 'ny.jpg',
@@ -99,7 +99,7 @@
 		
 		var textureLoader = new THREE.TextureLoader();
 		
-		var imagePreviewTexture = textureLoader.load( 'three/examples/textures/crate.gif' );
+		var imagePreviewTexture = textureLoader.load( '../three.js/examples/textures/crate.gif' );
 		
 		imagePreviewTexture.minFilter=THREE.LinearMipMapLinearFilter;
 		imagePreviewTexture.magFilter=THREE.LinearFilter;
@@ -136,7 +136,7 @@
 		}
 		
 		var measureStart=new Date().getTime();
-		kdtree=new THREE.TypedArrayUtils.kdtree(positions,distanceFunction,3);
+		kdtree = new THREE.TypedArrayUtils.Kdtree(positions,distanceFunction,3);
 		
 		console.log( 'TIME building kdtree', new Date().getTime() - measureStart );
 		

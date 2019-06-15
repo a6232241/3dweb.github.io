@@ -131,9 +131,9 @@
 
 <div id="container"></div>
 
-<script src="three/build/three.js"></script>
-<script src="three/examples/js/controls/TrackballControls.js"></script>
-<script src="three/examples/js/libs/stats.min.js"></script>
+<script src="../three.js/build/three.js"></script>
+<script src="../three.js/examples/js/controls/TrackballControls.js"></script>
+<script src="../three.js/examples/js/libs/stats.min.js"></script>
 
 <script id="vertMerged" type="x-shader/x-vertex">
 	#difine SHADER_NAME vertMerged
@@ -454,7 +454,7 @@
 	
 		clean();
 		
-		loader.load('three/examples/models/json/suzanne_buffergeometry.json',function(geo){
+		loader.load('../three.js/examples/models/json/suzanne_buffergeometry.json',function(geo){
 			
 			geo=geo.toNonIndexed();
 			geo=computeBoundingBox();

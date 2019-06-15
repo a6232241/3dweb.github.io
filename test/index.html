@@ -4,14 +4,14 @@
 <title>three.js webgl - FBX loader - Nurbs</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<script src="three/build/three.js"></script><!--three.js 資源包-->
-<script src="three/examples/js/controls/OrbitControls.js"></script><!--控制camera-->
-<script src="three/examples/js/curves/NURBSCurve.js"></script>
-<script src="three/examples/js/curves/NURBSUtils.js"></script>
-<script src="three/examples/js/loaders/FBXLoader.js"></script><!--載入fbx檔-->
-<script src="three/examples/js/libs/inflate.min.js"></script><!--分析二進制-->
-<script src="three/examples/js/WebGL.js"></script>
-<script src="three/examples/js/libs/stats.min.js"></script><!--效能檢測-->
+<script src="../three.js/build/three.js"></script><!--three.js 資源包-->
+<script src="../three.js/examples/js/controls/OrbitControls.js"></script><!--控制camera-->
+<script src="../three.js/examples/js/curves/NURBSCurve.js"></script>
+<script src="../three.js/examples/js/curves/NURBSUtils.js"></script>
+<script src="../three.js/examples/js/loaders/FBXLoader.js"></script><!--載入fbx檔-->
+<script src="../three.js/examples/js/libs/inflate.min.js"></script><!--分析二進制-->
+<script src="../three.js/examples/js/WebGL.js"></script>
+<script src="../three.js/examples/js/libs/stats.min.js"></script><!--效能檢測-->
 <style>
 	body {
 		font-family: Monospace;
@@ -101,7 +101,7 @@
 
 		// model
 		var loader = new THREE.FBXLoader();
-		loader.load( 'models/glass.FBX', function ( object ) {
+		loader.load( '../models/fbx/glass.FBX', function ( object ) {
 			object.scale.multiplyScalar(.1);
 			object.position.set(0,-190,10);
 			scene.add( object );

@@ -50,10 +50,10 @@
             //創建相機
             function createCamera(){
 
-                fov = 100;
+                fov = 50;
                 aspect = container.clientWidth/container.clientHeight;
-                near = 50;
-                far = 500;
+                near = 10;
+                far = 1000;
                 camera= new THREE.PerspectiveCamera(fov, aspect, near, far);
                 camera.position.set(-20, 15, 50);
 
