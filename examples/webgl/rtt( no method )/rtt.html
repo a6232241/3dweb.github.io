@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>rtt</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>rtt</p>
+        </div>
+        <script src="../../../three.js/build/three.js"></script>
+        <script src="../../../three.js/examples/js/WebGL.js"></script>
+        <script src="../../../three.js/examples//js/libs/stats.min.js"></script>
+
+        <script id="fragment_shader_screen" type="x-shader/x-fragment">
+
+            varying vec2 vUv;
+            uniform sampler2D tDiffuse;
+
+            void main(){
+
+                gl_FragColor = texture2D( tDiffuse, vUv );
+
+            }
+
+        </script>
+
+        <script id="fragment_shader_pass_1" type="x-shader/x-fragment">
+        
+            varying vec2 vUv;
+            uniform float time;
+
+            void main(){
+
+                float r = vUv.x;
+                if( vUv.y < 0.5 ) r = 0.0;
+                float g = vUv.y;
+                if( vUv.x < 0.5 ) g = 0.0;
+
+                gl_FragColor = vec4( r, g, time, 1.0 );
+
+            }
+
+        </script>
+
+        <script id="vertexShader" type="x-shader/x-vertex">
+        
+            varying vec2 vUv;
+
+            void main(){
+
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+            }
+
+        </script>
+
+        <script>
+
+            if( WEBGL.isWebGLAvailable() === false ){
+                
+                document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            }
+            
+            let container = document.querySelector('#scene-container');
+            
+            let stats;
+
+            let cameraRTT, camera;
+            let sceneRTT, sceneScreen, scene;
+            let renderer, zmesh1, zmesh2;
+
+            let mouseX = 0, mouseY = 0;
+
+            let clientHalfX = container.clientWidth / 2;
+            let clientHalfY = container.clientHeight / 2;
+
+            let rtTexture, material, quad;
+
+            let delta = 0.01;
+
+            let group, n = 5;
+            
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                sceneRTT = new THREE.Scene();
+                sceneScreen = new THREE.Scene();
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                // createControls();
+                createStats();
+
+                window.addEventListener('resize', onWindowResize, false);
+                container.addEventListener( 'mousemove', onMouseMove, false);
+
+                renderer.setAnimationLoop( ()=> {
+
+                    // update();
+                    render();
+                    stats.update();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let left = container.clientWidth / -2;
+                let right = container.clientWidth / 2;
+                let top = container.clientHeight / 2;
+                let bottom = container.clientHeight / -2;
+                let near = -10000;
+                let far = 10000;
+                cameraRTT = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                cameraRTT.position.z = 100;
+
+                let fov = 30;
+                let aspect = container.clientWidth / container.clientHeight;
+                near = 1;
+                camera = new THREE.PerspectiveCamera( 30, aspect, near, far );
+                camera.position.z = 100;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                let DirLight = new THREE.DirectionalLight(0xffffff);
+                DirLight.position.set( 0, 0, 1 ).normalize();
+                sceneRTT.add( DirLight );
+
+                DirLight = new THREE.DirectionalLight( 0xffaaaa, 1.5 );
+                DirLight.position.set( 0, 0, -1 ).normalize();
+                sceneRTT.add( DirLight );
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                createTexture();
+                
+                material = new THREE.ShaderMaterial( {
+
+                    uniforms: { "time": { value: 0.0 } },
+                    vertexShader: document.getElementById( 'vertexShader' ).textContent,
+                    fragmentShader: document.getElementById( 'fragment_shader_pass_1' ).textContent
+
+                } );
+
+                const materialScreen = new THREE.ShaderMaterial( {
+
+                    uniforms: { "tDiffuse": { value: rtTexture.texture } },
+                    vertexShader: document.getElementById( 'vertexShader' ).textContent,
+                    fragmentShader: document.getElementById( 'fragment_shader_screen' ).textContent,
+
+                    depthWrite: false
+
+                } );
+
+                const mat1 = new THREE.MeshPhongMaterial( { color: 0x555555, specular: 0xffaa00, shininess: 5 } );
+                const mat2 = new THREE.MeshPhongMaterial( { color: 0x550000, specular: 0xff2200, shininess: 5 } );
+
+                const sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, map: rtTexture.texture } );
+
+                return{
+                    materialScreen, mat1, mat2, sphereMaterial
+                };
+
+            }
+
+            function createTexture(){
+
+                rtTexture = new THREE.WebGLRenderTarget( container.clientWidth, container.clientHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat, type: THREE.FloatType} );
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const plane = new THREE.PlaneBufferGeometry( container.clientWidth, container.clientHeight );
+
+                const geometry = new THREE.TorusBufferGeometry( 100, 25, 15, 30 );
+
+                const sphereGeometry = new THREE.SphereBufferGeometry( 10, 64, 32 );
+
+                return{
+                    plane, geometry, sphereGeometry
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geometries = createGeometries();
+                let materials = createMaterials();
+
+                quad = new THREE.Mesh( geometries.plane, material );
+                quad.position.z = -100;
+
+                zmesh1 = new THREE.Mesh( geometries.geometry, materials.mat1 );
+                zmesh1.position.set( 0, 0, 100 );
+                zmesh1.scale.set( 1.5, 1.5, 1.5 );
+
+                zmesh2 = new THREE.Mesh( geometries.geometry, materials.mat2 );
+                zmesh2.position.set( 0, 150, 100 );
+                zmesh2.scale.set( 0.75, 0.75, 0.75 );
+
+                sceneRTT.add( quad, zmesh1, zmesh2 );
+
+                quad = new THREE.Mesh( geometries.plane, materials.materialScreen );
+                quad.position.z = -100;
+                sceneScreen.add( quad );
+
+                group = new THREE.Group();
+                scene.add( group );
+
+                for ( let i = 0; i < n; i++ ){
+                    
+                    for( let j = 0; j < n; j++ ){
+
+                        let mesh = new THREE.Mesh( geometries.sphereGeometry, materials.sphereMaterial );
+
+                        mesh.position.x = ( i - ( n - 1 ) / 2 ) * 20;
+                        mesh.position.y = ( j - ( n - 1 ) / 2 ) * 20;
+                        mesh.position.z = 0;
+                        mesh.rotation.y = -Math.PI / 2;
+
+                        group.add( mesh );
+
+                    }
+                }
+
+            }
+
+            //實現控制
+            function createControls(){
+                // controls = new THREE.OrbitControls( camera, container);
+                // controls.enableRotate = true;
+                // controls.addEventListener('change', renderer);
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container.clientWidth, container.clientHeight) ;
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.autoClear = false;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+                stats = new Stats();
+                container.appendChild( stats.dom );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                mouseX = ( event.clientX - clientHalfX );
+                mouseY = ( event.clientY - clientHalfY );
+
+            }
+
+            //物件事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                // const delta = clock.getDelta();
+
+                // mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+
+                let time = Date.now() * 0.0015;
+
+                camera.position.x += ( mouseX - camera.position.x ) * .05;
+                camera.position.y += ( - mouseY - camera.position.y ) * .05;
+
+                camera.lookAt( scene.position );
+
+                if( zmesh1 && zmesh2 ){
+
+                    zmesh1.rotation.y = -time;
+                    zmesh2.rotation.y = -time + Math.PI / 2;
+
+                }
+
+                if( material.uniforms[ "time" ].value > 1 || material.uniforms[ "time" ].value < 0 ){
+
+                    delta *= -1;
+
+                }
+
+                material.uniforms[ "time" ].value += delta;
+
+                renderer.clear();
+
+                //將第一個scene渲染成texture
+                renderer.setRenderTarget( rtTexture );
+                renderer.clear();
+                renderer.render( sceneRTT, cameraRTT );
+                
+                //使用生成的texture渲染full screen
+                renderer.setRenderTarget( null );
+                renderer.clear();
+                renderer.render( sceneScreen, cameraRTT );
+
+                renderer.render( scene, camera );
+
+            }
+            
+            init();
+
+        </script>
+
+    </body>
+</html>
