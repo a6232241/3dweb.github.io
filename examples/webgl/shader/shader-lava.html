@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>shader-lava</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>shader - lava</p>
+        </div>
+        <script src="../../../three.js/build/three.js"></script>
+        <script src="../../../three.js/examples/js/shaders/ConvolutionShader.js"></script>
+		<script src="../../../three.js/examples/js/shaders/CopyShader.js"></script>
+        <script src="../../../three.js/examples/js/shaders/FilmShader.js"></script>
+        
+		<script src="../../../three.js/examples/js/postprocessing/EffectComposer.js"></script>
+		<script src="../../../three.js/examples/js/postprocessing/ShaderPass.js"></script>
+		<script src="../../../three.js/examples/js/postprocessing/MaskPass.js"></script>
+		<script src="../../../three.js/examples/js/postprocessing/RenderPass.js"></script>
+		<script src="../../../three.js/examples/js/postprocessing/BloomPass.js"></script>
+        <script src="../../../three.js/examples/js/postprocessing/FilmPass.js"></script>
+        
+		<script src="../../../three.js/examples/js/WebGL.js"></script>
+
+        <script id="fragmentShader" type="x-shader/x-fragment">
+
+			uniform float time;
+			uniform float fogDensity;
+			uniform vec3 fogColor;
+			uniform sampler2D texture1;
+			uniform sampler2D texture2;
+            varying vec2 vUv;
+            
+			void main( void ) {
+				vec2 position = - 1.0 + 2.0 * vUv;
+				vec4 noise = texture2D( texture1, vUv );
+				vec2 T1 = vUv + vec2( 1.5, - 1.5 ) * time * 0.02;
+				vec2 T2 = vUv + vec2( - 0.5, 2.0 ) * time * 0.01;
+				T1.x += noise.x * 2.0;
+				T1.y += noise.y * 2.0;
+				T2.x -= noise.y * 0.2;
+				T2.y += noise.z * 0.2;
+				float p = texture2D( texture1, T1 * 2.0 ).a;
+				vec4 color = texture2D( texture2, T2 * 2.0 );
+				vec4 temp = color * ( vec4( p, p, p, p ) * 2.0 ) + ( color * color - 0.1 );
+				if( temp.r > 1.0 ) { temp.bg += clamp( temp.r - 2.0, 0.0, 100.0 ); }
+				if( temp.g > 1.0 ) { temp.rb += temp.g - 1.0; }
+				if( temp.b > 1.0 ) { temp.rg += temp.b - 1.0; }
+				gl_FragColor = temp;
+				float depth = gl_FragCoord.z / gl_FragCoord.w;
+				const float LOG2 = 1.442695;
+				float fogFactor = exp2( - fogDensity * fogDensity * depth * depth * LOG2 );
+				fogFactor = 1.0 - clamp( fogFactor, 0.0, 1.0 );
+				gl_FragColor = mix( gl_FragColor, vec4( fogColor, gl_FragColor.w ), fogFactor );
+            }
+            
+		</script>
+
+        <script id="vertexShader" type="x-shader/x-vertex">
+            
+			uniform vec2 uvScale;
+            varying vec2 vUv;
+            
+			void main()
+			{
+				vUv = uvScale * uv;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				gl_Position = projectionMatrix * mvPosition;
+            }
+            
+		</script>
+
+        <script>
+
+            if( WEBGL.isWebGLAvailable() === false ){
+                
+                document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            }
+            
+            let container = document.querySelector('#scene-container');
+
+            let camera, scene, renderer;
+
+            let composer, clock = new THREE.Clock();
+
+            let uniforms, mesh;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+
+                createCamera();
+                // createLights();
+                createMeshes();
+                createRenderer();
+                // createControls();
+                // createStats();
+                createComposer();
+
+                window.addEventListener('resize', onWindowResize, false);
+                // container.addEventListener( 'mousemove', onMouseMove, false);
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    // update();
+                    render();
+                    // if ( statsEnabled ) stats.update();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                // let left = -1;
+                // let right = 1;
+                // let top = 1;
+                // let bottom = -1;
+                let fov = 35;
+                let aspect = container.clientWidth / container.clientHeight;
+                let near = 1;
+                let far = 3000;
+
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.z = 4;
+
+                // camera = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // let DirLight = new THREE.DirectionalLight(0xffffff);
+                // DirLight.position.set( 0, 0, 1 ).normalize();
+                // sceneRTT.add( DirLight );
+
+                // let PointLight = new THREE.PointLight( 0xffffff );
+                // scene.add( PointLight );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                let textureLoader = new THREE.TextureLoader();
+
+                uniforms = {
+
+                    "fogDensity": { value: 0.45 },
+                    "fogColor": { value: new THREE.Vector3( 0, 0, 0 ) },
+                    "time": { value: 1.0 },
+                    "uvScale": { value: new THREE.Vector2( 3.0, 1.0 ) },
+					"texture1": { value: textureLoader.load( '../../../three.js/examples/textures/lava/cloud.png' ) },
+					"texture2": { value: textureLoader.load( '../../../three.js/examples/textures/lava/lavatile.jpg' ) }
+
+                }
+
+                uniforms["texture1"].value.wrapS = uniforms["texture1"].value.wrapT = THREE.RepeatWrapping;
+                uniforms["texture2"].value.wrapS = uniforms["texture2"].value.wrapT = THREE.RepeatWrapping;
+
+                // return{
+                //     texture1, texture2
+                // };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = 
+                createTexture();
+                
+                const material = new THREE.ShaderMaterial( { 
+
+                    uniforms: uniforms,
+                    vertexShader: document.getElementById( 'vertexShader' ).textContent,
+                    fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+
+                } );
+
+                return{
+                    material
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const geometry = new THREE.TorusBufferGeometry( 0.65, 0.3, 30, 30 );
+
+                return{
+                    geometry
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geometries = createGeometries();
+                let materials = createMaterials();
+
+                mesh = new THREE.Mesh( geometries.geometry, materials.material );
+                mesh.rotation.x = 0.3;
+                scene.add( mesh );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setSize( container.clientWidth, container.clientHeight) ;
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                renderer.autoClear = false;
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+
+            //實現控制
+            function createControls(){
+                // controls = new THREE.OrbitControls( camera, container);
+                // controls.enableRotate = true;
+                // controls.addEventListener('change', renderer);
+            }
+
+            //新增執行效率
+            function createStats(){
+
+                // if( statsEnabled ){
+                //     stats = new Stats();
+                //     container.appendChild( stats.dom );
+                // }
+
+            }
+
+            //新增composer
+            function createComposer(){
+
+                let renderModel = new THREE.RenderPass( scene, camera );
+                let effectBloom = new THREE.BloomPass( 1.25 );
+                let effectFilm = new THREE.FilmPass( 0.35, 0.95, 2048, false );
+
+                composer = new THREE.EffectComposer( renderer );
+
+                composer.addPass( renderModel );
+                composer.addPass( effectBloom );
+                composer.addPass( effectFilm );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // clientHalfX = container.clientWidth / 2;
+                // clientHalfY = container.clientHeight / 2;
+
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container.clientWidth, container.clientHeight );
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //創建canvasTexture
+            function generateTexture( r, g, b ){
+                
+                // const canvas = document.createElement( 'canvas' );
+                // canvas.width = 256;
+                // canvas.height = 256;
+
+                // let context = canvas.getContext( '2d' );
+                // let image = context.getImageData( 0, 0, 256, 256 );
+
+                // let x = 0, y = 0, p;
+
+                // for ( let i = 0, j = 0, l = image.data.length; i < l; i += 4, j ++ ){
+
+                //     x = j % 256;
+                //     y = x == 0 ? y + 1 : y;
+                //     p = Math.floor( x ^ y );
+
+                //     image.data[ i ] = ~ ~ p * r;
+                //     image.data[ i + 1 ] = ~ ~ p * g;
+                //     image.data[ i + 2 ] = ~ ~ p * b;
+                //     image.data[ i + 3 ] = 255;
+
+                // }
+
+                // context.putImageData( image, 0, 0 );
+
+                // return canvas;
+
+            }
+
+            //Object事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                // const delta = clock.getDelta();
+
+                // mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+
+                var delta = 5 * clock.getDelta();
+
+                uniforms["time"].value += 0.2 * delta;
+
+                mesh.rotation.y += 0.0125 * delta;
+                mesh.rotation.x += 0.05 * delta;
+
+                renderer.clear();
+                composer.render( 0.01 );
+
+            }
+            
+            init();
+
+        </script>
+
+    </body>
+</html>
