@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>shader-tonemapping</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <span>shader - tonemapping</span>
+		</div>
+        <div class="label" style="position: absolute;left: 10%;bottom: 10%;">
+            Low Dynamic Range<br/>
+            Static Tone Mapping
+        </div>
+        
+        <div class="label" style="position: absolute;left: 40%;bottom: 10%;">
+            High Dynamic Range<br/>
+            Static Tone Mapping
+        </div>
+        
+        <div class="label" style="position: absolute;left: 73%;bottom: 10%;">
+            High Dynamic Range<br/>
+            Adaptive Tone Mapping
+        </div>
+        <script src="../../../three.js/build/three.js"></script>
+        
+		<script src="../../../three.js/examples/js/WebGL.js"></script>
+        <script src="../../../three.js/examples/js/libs/dat.gui.min.js"></script>
+        
+		<script src="../../../three.js/examples/js/shaders/CopyShader.js"></script>
+		<script src="../../../three.js/examples/js/shaders/LuminosityShader.js"></script>
+		<script src="../../../three.js/examples/js/shaders/ConvolutionShader.js"></script>
+		<script src="../../../three.js/examples/js/shaders/ToneMapShader.js"></script>
+        <script src="../../../three.js/examples/js/shaders/GammaCorrectionShader.js"></script>
+        
+		<script src="../../../three.js/examples/js/postprocessing/EffectComposer.js"></script>
+		<script src="../../../three.js/examples/js/postprocessing/RenderPass.js"></script>
+		<script src="../../../three.js/examples/js/postprocessing/MaskPass.js"></script>
+		<script src="../../../three.js/examples/js/postprocessing/ShaderPass.js"></script>
+		<script src="../../../three.js/examples/js/postprocessing/BloomPass.js"></script>
+        <script src="../../../three.js/examples/js/postprocessing/AdaptiveToneMappingPass.js"></script>
+        
+		<script src="../../../three.js/examples/js/controls/OrbitControls.js"></script>
+
+
+        <script>
+
+            if( WEBGL.isWebGLAvailable() === false ){
+                
+                document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            }
+            
+            let container = document.querySelector('#scene-container');
+
+            let bloomPass, adaptToneMappingPass, ldrToneMappingPass, hdrToneMappingPass;
+
+            let params = {
+                bloomAmout: 1.0,
+                sunLight: 4.0,
+
+                enabled: true,
+                avgLuminance: 0.7,
+                middleGrey: 0.04,
+                maxLuminance: 16,
+
+                adaptionRate: 2.0
+            };
+
+            let DirLight;
+            let camera, scene, renderer;
+            let cameraCube, sceneCube;
+            let cameraBG, debugScene;
+            let adaptiveLuminanceMat, currentLuminanceMat;
+            let dynamicHdrEffectComposer, ldrEffectComposer, hdrEffectComposer;
+
+            let controls;
+
+            let containerHalfX = container.clientWidth / 2;
+            let containerHalfY = container.clientHeight / 2;
+
+            let containerThirdX = container.clientWidth / 3;
+
+            //創建atmoShader參數
+            let atmoShader = {
+                side: THREE.BackSide,
+                transparent: true,
+                lights: true,
+                uniforms: THREE.UniformsUtils.merge( [
+
+                    THREE.UniformsLib["common"],
+                    THREE.UniformsLib["lights"]
+
+                ] ),
+
+                vertexShader: [
+
+                    "varying vec3 vViewPosition;",
+                    "varying vec3 vNormal;",
+                    "void main() {",
+                        THREE.ShaderChunk[ "beginnormal_vertex" ],
+                        THREE.ShaderChunk[ "defaultnormal_vertex" ],
+                        "	vNormal = normalize( transformedNormal );",
+                        "vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
+                        "vViewPosition = -mvPosition.xyz;",
+                        "gl_Position = projectionMatrix * mvPosition;",
+                    "}"
+
+                ].join( "\n" ),
+
+                fragmentShader: [
+
+                    THREE.ShaderChunk["common"],
+                    THREE.ShaderChunk["bsdfs"],
+                    THREE.ShaderChunk["lights_pars_begin"],
+                    THREE.ShaderChunk["lights_phong_pars_fragment"],
+
+                    "void main() {",
+						"vec3 normal = normalize( -vNormal );",
+						"vec3 viewPosition = normalize( vViewPosition );",
+						"#if NUM_DIR_LIGHTS > 0",
+						"vec3 dirDiffuse = vec3( 0.0 );",
+						"for( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {",
+						"vec4 lDirection = viewMatrix * vec4( directionalLights[i].direction, 0.0 );",
+						"vec3 dirVector = normalize( lDirection.xyz );",
+						"float dotProduct = dot( viewPosition, dirVector );",
+						"dotProduct = 1.0 * max( dotProduct, 0.0 ) + (1.0 - max( -dot( normal, dirVector ), 0.0 ));",
+						"dotProduct *= dotProduct;",
+						"dirDiffuse += max( 0.5 * dotProduct, 0.0 ) * directionalLights[i].color;",
+						"}",
+						"#endif",
+						//Fade out atmosphere at edge
+						"float viewDot = abs(dot( normal, viewPosition ));",
+						"viewDot = clamp( pow( viewDot + 0.6, 10.0 ), 0.0, 1.0);",
+						"vec3 color = vec3( 0.05, 0.09, 0.13 ) * dirDiffuse;",
+						"gl_FragColor = vec4( color, viewDot );",
+                    "}"
+
+                ].join( "\n" )
+
+            };
+
+            //創建BGShader參數
+            let vBGShader = [
+                "varying vec2 vUv;",
+                "void main() {",
+                    "vUv = uv;",
+                    "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+                "}"
+            ].join( "\n" );
+            let pBGShader = [
+                "uniform sampler2D map;",
+                "varying vec2 vUv;",
+                "void main() {",
+					"vec2 sampleUV = vUv;",
+					"vec4 color = texture2D( map, sampleUV, 0.0 );",
+					"gl_FragColor = vec4( color.xyz, 1.0 );",
+                "}"
+            ].join( "\n" );
+
+            let r = "../../../three.js/examples/textures/cube/MilkyWay/";
+            let urls = [
+                r + "dark-s_px.jpg", r + "dark-s_nx.jpg",
+                r + "dark-s_py.jpg", r + "dark-s_ny.jpg",
+                r + "dark-s_pz.jpg", r + "dark-s_nz.jpg"
+            ];
+
+            let height = container.clientHeight || 1;
+
+            let parameters = {
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                format: THREE.RGBFormat,
+                stencilBuffer: false
+            }
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+
+                sceneCube = new THREE.Scene();
+                let textureCube = new THREE.CubeTextureLoader().load( urls );
+                textureCube.format = THREE.RGBFormat;
+                sceneCube.background = textureCube;
+
+                debugScene = new THREE.Scene();
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                createControls();
+                // createStats();
+                createComposer();
+                createGUI();
+
+                window.addEventListener('resize', onWindowResize, false);
+                // container.addEventListener( 'mousemove', onMouseMove, false);
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    guiChanged()
+                    // update();
+                    render();
+                    // if ( statsEnabled ) 
+                    // stats.update();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 70;
+                let aspect = containerThirdX / container.clientHeight;
+                let near = 0.1;
+                let far = 100000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( 700, 400, 800 );
+
+                near = 1;
+                cameraCube = new THREE.PerspectiveCamera( fov, aspect, near, far );
+
+                let left = - containerHalfX;
+                let right = containerHalfX;
+                let top = containerHalfY;
+                let bottom = - containerHalfY;
+                near = -10000;
+                far = 10000;
+                cameraBG = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                cameraBG.position.z = 100;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                let AmbLight = new THREE.AmbientLight( 0x050505 );
+                scene.add( AmbLight );
+
+                DirLight = new THREE.DirectionalLight( 0xffffff, params.sunLight );
+                DirLight.position.set( 2, 0, 10 ).normalize();
+                scene.add( DirLight );
+
+                // let PointLight = new THREE.PointLight( 0xffffff );
+                // scene.add( PointLight );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let textureLoader = new THREE.TextureLoader();
+
+                // return{
+                //     texture1, texture2
+                // };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = 
+                // createTexture();
+
+                const earthAtmoMat = new THREE.ShaderMaterial( atmoShader );
+
+                const earthMat = new THREE.MeshPhongMaterial( {
+                    color: 0xffffff,
+                    shininess: 200
+                } );
+
+                let textureLoader = new THREE.TextureLoader();
+                textureLoader.load( '../../../three.js/examples/textures/planets/earth_atmos_4096.jpg', function( tex ){
+                    
+                    earthMat.map = tex;
+                    earthMat.needsUpdate = true;
+
+                } );
+
+                textureLoader.load( '../../../three.js/examples/textures/planets/earth_specular_2048.jpg', function ( tex ) {
+
+					earthMat.specularMap = tex;
+                    earthMat.needsUpdate = true;
+                    
+                } );
+                
+                let earthLights = textureLoader.load( '../../../three.js/examples/textures/planets/earth_lights_2048.png' );
+                const earthLightsMat = new THREE.MeshBasicMaterial( {
+                    color: 0xffffff,
+                    blending: THREE.AdditiveBlending,
+                    transparent: true,
+                    depthTest: false,
+                    map: earthLights
+                } );
+
+                let earthClouds = textureLoader.load( '../../../three.js/examples/textures/planets/earth_clouds_2048.png' );
+                const earthCloudsMat = new THREE.MeshLambertMaterial( {
+                    color: 0xffffff,
+                    blending: THREE.NormalBlending,
+                    transparent: true,
+                    depthTest: false,
+                    map: earthClouds
+                } );
+
+                //Skybox
+                adaptiveLuminanceMat = new THREE.ShaderMaterial( {
+                    uniforms: {
+                        "map": { value: null }
+                    },
+                    vertexShader: vBGShader,
+                    fragmentShader: pBGShader,
+                    depthTest: false,
+                    blending: THREE.NoBlending
+                } );
+
+                currentLuminanceMat = new THREE.ShaderMaterial( {
+                    uniforms: {
+                        "map": { value: null }
+                    },
+                    vertexShader: vBGShader,
+                    fragmentShader: pBGShader,
+                    depthTest: false,
+                } );
+                
+                return{
+                    earthAtmoMat, earthMat, earthLightsMat, earthCloudsMat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const earthGeo = new THREE.SphereBufferGeometry( 600, 24, 24 );
+
+                return{
+                    earthGeo, 
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geometries = createGeometries();
+                let materials = createMaterials();
+
+                let earthMesh = new THREE.Mesh( geometries.earthGeo, materials.earthMat );
+
+                let earthLigthsMesh = new THREE.Mesh( geometries.earthGeo, materials.earthLightsMat );
+
+                let earthCloudsMesh = new THREE.Mesh( geometries.earthGeo, materials.earthCloudsMat );
+
+                let earthAtmoMesh = new THREE.Mesh( geometries.earthGeo, materials.earthAtmoMat );
+                earthAtmoMesh.scale.set( 1.05, 1.05, 1.05 );
+
+                scene.add( earthMesh, earthLigthsMesh, earthCloudsMesh, earthAtmoMesh );
+
+                //Skybox
+                let quadBG = new THREE.Mesh( new THREE.PlaneBufferGeometry( 0.1, 0.1 ), currentLuminanceMat );
+                quadBG.position.z = -500;
+                quadBG.position.x = -container.clientWidth * 0.5 + container.clientWidth * 0.05;
+                quadBG.scale.set( container.clientWidth, container.clientHeight, 1 );
+                debugScene.add( quadBG );
+
+                quadBG = new THREE.Mesh( new THREE.PlaneBufferGeometry( 0.1, 0.1 ), adaptiveLuminanceMat );
+                quadBG.position.z = -500;
+                quadBG.position.x = -container.clientWidth * 0.5 + container.clientWidth * 0.15;
+                quadBG.scale.set( container.clientWidth, container.clientHeight, 1 );
+                debugScene.add( quadBG );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container.clientWidth, container.clientHeight) ;
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                renderer.autoClear = false;
+                renderer.gammaInput = true;
+                renderer.gammaOuput = false;
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                controls = new THREE.OrbitControls( camera, container );
+                controls.autoRotate = true;
+                controls.autoRotateSpeed = 1;
+                // controls.addEventListener('change', renderer);
+                // controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+                // if( statsEnabled ){
+                    // stats = new Stats();
+                    // container.appendChild( stats.dom );
+                // }
+
+            }
+
+            //新增composer
+            function createComposer(){
+
+                //新增effectComposer
+                let regularRenderTarget = new THREE.WebGLRenderTarget( containerThirdX, height, parameters );
+                ldrEffectComposer = new THREE.EffectComposer( renderer, regularRenderTarget );
+
+                if( renderer.extensions.get( 'OES_texture_half_float_linear' ) ){
+
+                    parameters.type = THREE.FloatType;
+
+                }
+
+                let hdrRendererTarget = new THREE.WebGLRenderTarget( containerThirdX, height, parameters );
+                dynamicHdrEffectComposer = new THREE.EffectComposer( renderer, hdrRendererTarget );
+                dynamicHdrEffectComposer.setSize( container.clientWidth, container.clientHeight );
+
+                hdrEffectComposer = new THREE.EffectComposer( renderer, hdrRendererTarget );
+
+                //新增renderPass
+                let debugPass = new THREE.RenderPass( debugScene, cameraBG );
+                debugPass.clear = false;
+
+                let scenePass = new THREE.RenderPass( scene, camera, undefined, undefined, undefined );
+
+                let skyboxPass = new THREE.RenderPass( sceneCube, cameraCube );
+                scenePass.clear = false;
+
+                //新增adaptiveToneMappingPass
+                adaptToneMappingPass = new THREE.AdaptiveToneMappingPass( true, 256 );
+                adaptToneMappingPass.needsSwap = true;
+
+                ldrToneMappingPass = new THREE.AdaptiveToneMappingPass( false, 256 );
+
+                hdrToneMappingPass = new THREE.AdaptiveToneMappingPass( false, 256 );
+
+                bloomPass = new THREE.BloomPass();
+
+                let gammaCorrectionPass = new THREE.ShaderPass( THREE.GammaCorrectionShader );
+
+                //加入pass效果
+                dynamicHdrEffectComposer.addPass( skyboxPass );
+                dynamicHdrEffectComposer.addPass( scenePass );
+                dynamicHdrEffectComposer.addPass( adaptToneMappingPass );
+                dynamicHdrEffectComposer.addPass( bloomPass );
+                dynamicHdrEffectComposer.addPass( gammaCorrectionPass );
+
+                hdrEffectComposer.addPass( skyboxPass );
+                hdrEffectComposer.addPass( scenePass );
+                hdrEffectComposer.addPass( hdrToneMappingPass );
+                hdrEffectComposer.addPass( bloomPass );
+                hdrEffectComposer.addPass( gammaCorrectionPass );
+
+                ldrEffectComposer.addPass( skyboxPass );
+                ldrEffectComposer.addPass( scenePass );
+                ldrEffectComposer.addPass( ldrToneMappingPass );
+                ldrEffectComposer.addPass( bloomPass );
+                ldrEffectComposer.addPass( gammaCorrectionPass );
+
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                let gui = new dat.GUI();
+
+                let sceneGui = gui.addFolder( 'Scenes' );
+                sceneGui.add( params, 'bloomAmout', 0.0, 10.0 );
+                sceneGui.add( params, 'sunLight', 0.1, 12.0 );
+
+                let toneMappingGui = gui.addFolder( 'ToneMapping' );
+                toneMappingGui.add( params, 'enabled' );
+                toneMappingGui.add( params, 'middleGrey', 0, 12 );
+                toneMappingGui.add( params, 'maxLuminance', 1, 30 );
+
+                let staticToneMappingGui = gui.addFolder( 'StaticOnly' );
+                staticToneMappingGui.add( params, 'avgLuminance', 0.001, 2.0 );
+
+                let adaptiveToneMappingGui = gui.addFolder( 'AdaptiveOnly' );
+                adaptiveToneMappingGui.add( params, 'adaptionRate', 0.0, 10.0 );
+
+                gui.open();
+
+            }
+
+            function guiChanged(){
+
+                if( bloomPass ){
+
+                    bloomPass.copyUniforms["opacity"].value = params.bloomAmout;
+
+                }
+
+                if( adaptToneMappingPass ){
+
+                    adaptToneMappingPass.setAdaptionRate( params.adaptionRate );
+                    adaptiveLuminanceMat.uniforms["map"].value = adaptToneMappingPass.luminanceRT;
+                    currentLuminanceMat.uniforms["map"].value = adaptToneMappingPass.currentLuminanceRT;
+
+                    adaptToneMappingPass.enabled = params.enabled;
+                    adaptToneMappingPass.setMaxLuminance( params.maxLuminance );
+                    adaptToneMappingPass.setMiddleGrey( params.middleGrey );
+
+                    hdrToneMappingPass.enabled = params.enabled;
+                    hdrToneMappingPass.setMaxLuminance( params.maxLuminance );
+                    hdrToneMappingPass.setMiddleGrey( params.middleGrey );
+                    if( hdrToneMappingPass.setAverageLuminance ){
+
+                        hdrToneMappingPass.setAverageLuminance( params.avgLuminance );
+
+                    }
+
+                    ldrToneMappingPass.enabled = params.enabled;
+                    ldrToneMappingPass.setMaxLuminance( params.maxLuminance );
+                    ldrToneMappingPass.setMiddleGrey( params.middleGrey );
+                    if( ldrToneMappingPass.setAverageLuminance ){
+
+                        ldrToneMappingPass.setAverageLuminance( params.avgLuminance );
+                        
+                    }
+
+                }
+
+                DirLight.intensity = params.sunLight;
+
+                controls.update();
+
+                render();
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                containerHalfX = container.clientWidth / 2;
+                containerHalfY = container.clientHeight / 2;
+                containerThirdX = container.clientWidth / 3;
+
+                camera.aspect = containerThirdX / container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                cameraCube.aspect = containerThirdX / container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container.clientWidth, container.clientHeight );
+
+                // render();
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //Object事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                // const delta = clock.getDelta();
+
+                // mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+
+                camera.lookAt( scene.position );
+                cameraCube.rotation.copy( camera.rotation );
+
+                renderer.setViewport( 0, 0, containerThirdX, container.clientHeight );
+                ldrEffectComposer.render( 0.017 );
+
+                renderer.setViewport( containerThirdX, 0, containerThirdX, container.clientHeight );
+                hdrEffectComposer.render( 0.017 );
+
+                renderer.setViewport( containerThirdX * 2, 0, containerThirdX, container.clientHeight );
+                dynamicHdrEffectComposer.render( 0.017 );
+
+
+            }
+            
+            init();
+
+        </script>
+
+    </body>
+</html>
