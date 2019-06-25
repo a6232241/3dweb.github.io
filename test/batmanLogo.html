@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>BatMan Logo</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <span>BatMan Logo</span>
+		</div>
+       
+        <script src="../three.js/build/three.js"></script>
+
+        <script src="../three.js/examples/js/loaders/GLTFLoader.js"></script>
+        
+        <script src="../three.js/examples/js/controls/OrbitControls.js"></script>
+
+        <script src="../three.js/postprocessing/build/postprocessing.min.js"></script>
+
+        <script>
+            
+            let container = document.querySelector('#scene-container');
+
+            let camera, scene, renderer;
+
+            let circle;
+
+            let composer;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color( 0x020202 );
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                createControls();
+                // createStats();
+                createComposer();
+                // createGUI();
+                loadObject();
+
+                window.addEventListener('resize', onWindowResize, false);
+                // container.addEventListener( 'mousemove', onMouseMove, false);
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    composer.render( 0.1 );
+                    // guiChanged()
+                    // update();
+                    // render();
+                    // if ( statsEnabled ) 
+                    // stats.update();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 60;
+                let aspect = container.clientWidth / container.clientHeight;
+                let near = 1;
+                let far = 50000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.y = 510;
+                camera.position.z = 600;
+
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // cameraBG = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraBG.position.z = 100;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // let AmbLight = new THREE.AmbientLight( 0x404040, 100 );
+                // scene.add( AmbLight );
+
+                let DirLight = new THREE.DirectionalLight( 0xffccaa, 3 );
+                DirLight.position.set( 0, 0, -1 );
+                scene.add( DirLight );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let textureLoader = new THREE.TextureLoader();
+
+                // return{
+                //     texture1, texture2
+                // };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = 
+                // createTexture();
+
+                const circleMat = new THREE.MeshBasicMaterial( { color: 0xffccaa } );
+                
+                return{
+                    circleMat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const circleGeo = new THREE.CircleGeometry( 220, 50 );
+
+                return{
+                    circleGeo,
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geometries = createGeometries();
+                let materials = createMaterials();
+
+                circle = new THREE.Mesh( geometries.circleGeo, materials.circleMat );
+                circle.position.set( 0, 100, -500 );
+                circle.scale.setX( 1.2 );
+                scene.add( circle );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setSize( container.clientWidth, container.clientHeight) ;
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.autoClear = false;
+                // renderer.gammaInput = true;
+                // renderer.gammaOuput = false;
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                controls = new THREE.OrbitControls( camera );
+                // controls.autoRotate = true;
+                // controls.autoRotateSpeed = 1;
+                controls.addEventListener('change', renderer);
+                controls.panSpeed = 0.1;
+                controls.rotateSpeed = 0.1;
+                controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+                // if( statsEnabled ){
+                    // stats = new Stats();
+                    // container.appendChild( stats.dom );
+                // }
+
+            }
+
+            //新增composer
+            function createComposer(){
+
+                let areaImage = new Image();
+                areaImage.src = POSTPROCESSING.SMAAEffect.areaImageDataUrl;
+                let searchImage = new Image();
+                searchImage.src = POSTPROCESSING.SMAAEffect.searchImageDataUrl;
+                let smaaEffect = new POSTPROCESSING.SMAAEffect( searchImage, areaImage, 1 );
+
+                let godraysEffect = new POSTPROCESSING.GodRaysEffect( camera, circle, {
+                    resolutionScale: 1,
+                    density: 0.8,
+                    decay: 0.95,
+                    weight: 0.9,
+                    samples: 100
+                } );
+                
+                let renderPass = new POSTPROCESSING.RenderPass( scene, camera );
+                let effectPass = new POSTPROCESSING.EffectPass( camera, godraysEffect );
+                effectPass.renderToScreen = true;
+
+                composer = new POSTPROCESSING.EffectComposer( renderer );
+                composer.addPass( renderPass );
+                composer.addPass( effectPass );
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                // let gui = new dat.GUI();
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+                let loader = new THREE.GLTFLoader();
+                loader.load( "../models/gltf/batman_logo/scene.gltf", function( gltf ){
+                    let bat = gltf.scene.children[0];
+                    bat.scale.set( 100, 100, 100 );
+                    bat.position.set( 160, -100, 0 );
+                    scene.add( gltf.scene );
+                } );
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.clientWidth / 2;
+                // containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container.clientWidth, container.clientHeight );
+
+                // render();
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //Object事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                // const delta = clock.getDelta();
+
+                // mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+
+                renderer.render( scene, camera );
+
+            }
+            
+            init();
+
+        </script>
+
+    </body>
+</html>

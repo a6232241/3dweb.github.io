@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>shader-vector</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <span>shader vector</span>
+		</div>
+       
+        <script src="../../../three.js/build/three.js"></script>
+
+        <script src="../../../three.js/examples/js/libs/stats.min.js"></script>
+        
+        <script src="../../../three.js/examples/js/controls/OrbitControls.js"></script>
+
+        <script type="x-shader/x-fragment" id="fs">
+			varying vec2 vUv;
+			varying float flip;
+			uniform vec3 color;
+			float inCurve(vec2 uv) {
+				return uv.x * uv.x - uv.y;
+			}
+			float delta = 0.1;
+			void main() {
+				float x = inCurve(vUv);
+				if (x * flip > 0.) discard;
+				gl_FragColor = vec4(color, 1.);
+			}
+		</script>
+
+		<script type="x-shader/x-vertex" id="vs">
+			varying vec2 vUv;
+			attribute float invert;
+			varying float flip;
+			void main() {
+				vUv = uv;
+				flip = invert;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				gl_Position = projectionMatrix * mvPosition;
+			}
+		</script>
+
+        <script>
+            
+            let container = document.querySelector('#scene-container');
+
+            let camera, scene, renderer, contorls;
+
+            let stats;
+
+            let group;
+
+            let textShapes;
+
+            let theText = '&';
+
+            //建立場景
+            function init( font ){
+
+                textShapes = font.generateShapes( theText, 180 );
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color( 0xf0f0f0 );
+
+                createCamera();
+                // createLights();
+                createMeshes();
+                createRenderer();
+                // createComposer();
+                // createGUI();
+                // loadObject();
+                createControls();
+                createStats();
+
+                window.addEventListener('resize', onWindowResize, false);
+                // container.addEventListener( 'mousemove', onMouseMove, false);
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    // update();
+                    render();
+                    // if ( statsEnabled ) 
+                    stats.update();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 50;
+                let aspect = container.clientWidth / container.clientHeight;
+                let near = 1;
+                let far = 10000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( 50, 100, 500 );
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // cameraBG = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraBG.position.z = 100;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // let AmbLight = new THREE.AmbientLight( 0x404040, 100 );
+                // scene.add( AmbLight );
+
+                // let DirLight = new THREE.DirectionalLight( 0xffccaa, 3 );
+                // DirLight.position.set( 0, 0, -1 );
+                // scene.add( DirLight );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let textureLoader = new THREE.TextureLoader();
+
+                // return{
+                //     texture1, texture2
+                // };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = 
+                // createTexture();
+
+                const textMat = new THREE.MeshBasicMaterial( {
+                    color: new THREE.Color( 0, 0, 1 ),
+                    side: THREE.DoubleSide,
+                    wireframe: true
+                } );
+
+                const textMat2 = new THREE.MeshBasicMaterial( {
+                    color: new THREE.Color( 1, 0, 0 ),
+                    side: THREE.DoubleSide,
+                    wireframe: true
+                } );
+
+                const textMat3 = new THREE.MeshBasicMaterial( {
+                    color: 0.45 * 0xffffff,
+                    side: THREE.DoubleSide,
+                } );
+
+                const beziersMat = new THREE.ShaderMaterial( {
+                    uniforms: {
+                        color: { value: new THREE.Color( 0.45 * 0xffffff ) }
+                    },
+                    vertexShader: document.getElementById( 'vs' ).textContent,
+                    fragmentShader: document.getElementById( 'fs' ).textContent,
+                    side: THREE.DoubleSide
+                } );
+
+                return{
+                    textMat, textMat2, textMat3, beziersMat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                subShape();
+
+                const shapeGeo = new THREE.ShapeBufferGeometry( textShapes );
+
+                const beziersGeo = new THREE.BufferGeometry();
+                let vertices = [];
+                let uvs = [];
+
+                for( let i = 0; i < beziers.length; i++ ){
+
+                    let p = beziers[i];
+                    vertices.push( p.x, p.y, 0 );
+
+                }
+
+                for( let i = 0; i < beziers.length; i += 3 ){
+
+                    uvs.push( 0, 0, 0.5, 0, 1, 1 );
+
+                }
+
+                beziersGeo.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+                beziersGeo.addAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+                beziersGeo.addAttribute( 'invert', new THREE.Float32BufferAttribute( invert, 1 ) );
+
+                const convexhullGeo = new THREE.ShapeBufferGeometry( convexhullShapeGroup );
+
+                const solidGeo = new THREE.ShapeBufferGeometry( solidShapeGroup );
+
+                return{
+                    shapeGeo,beziersGeo, convexhullGeo, solidGeo
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geometries = createGeometries();
+                let materials = createMaterials();
+
+                group = new THREE.Group();
+                scene.add( group );
+
+                let text = new THREE.Mesh( geometries.shapeGeo, materials.textMat );
+                text.position.x = -200;
+                group.add( text );
+
+                text = new THREE.Mesh( geometries.convexhullGeo, materials.textMat );
+                text.position.x = 200;
+                group.add( text );
+
+                text = new THREE.Mesh( geometries.solidGeo, materials.textMat2 );
+                text.position.x = 200;
+                group.add( text );
+
+                text = new THREE.Mesh( geometries.beziersGeo, materials.beziersMat );
+                text.rotation.y = Math.PI * 2;
+                group.add( text );
+
+                text = new THREE.Mesh( geometries.solidGeo, materials.textMat3 );
+                text.rotation.y = Math.PI * 2;
+                group.add( text );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setSize( container.clientWidth, container.clientHeight) ;
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.autoClear = false;
+                // renderer.gammaInput = true;
+                // renderer.gammaOuput = false;
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+
+            //新增composer
+            function createComposer(){
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                // let gui = new dat.GUI();
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+                // let loader = new THREE.GLTFLoader();
+                // loader.load( "../models/gltf/batman_logo/scene.gltf", function( gltf ){
+                //     let bat = gltf.scene.children[0];
+                //     bat.scale.set( 100, 100, 100 );
+                //     bat.position.set( 160, -100, 0 );
+                //     scene.add( gltf.scene );
+                // } );
+            }
+
+            //實現控制
+            function createControls(){
+
+                controls = new THREE.OrbitControls( camera, renderer.domElement );
+                // controls.autoRotate = true;
+                // controls.autoRotateSpeed = 1;
+                // controls.addEventListener('change', renderer);
+                // controls.panSpeed = 0.1;
+                // controls.rotateSpeed = 0.1;
+                controls.target.set( 50, 100, 0 );
+                controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                stats = new Stats();
+                container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.clientWidth / 2;
+                // containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container.clientWidth, container.clientHeight );
+
+                // render();
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //Object事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                // const delta = clock.getDelta();
+
+                // mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+
+                renderer.render( scene, camera );
+
+            }
+
+            let vA = new THREE.Vector2();
+            let vB = new THREE.Vector2();
+
+            function processShape( path ){
+
+                let pts = [];
+                let pts2 = [];
+                let beziers = [];
+                let invert = [];
+                let z;
+
+                let wind;
+
+                pts.push( path[ 0 ].getPoint( 0 ) );
+                pts2.push( path[ 0 ].getPoint( 0 ) );
+
+                for(let i = 0; i < path.length; i++ ){
+
+                    let curve = path[i];
+                    if( curve instanceof THREE.LineCurve ){
+
+                        pts.push( curve.v2 );
+                        pts2.push( curve.v2 );
+
+                    }else if( curve instanceof THREE.QuadraticBezierCurve ){
+
+                        vA = vA.subVectors( curve.v1, curve.v0 );
+                        vB = vB.subVectors( curve.v2, curve.v1 );
+                        z = vA.x * vB.y - vA.y * vB.x;
+                        wind = z < 0;
+
+                        if( wind ){
+
+                            pts.push( curve.v1 );
+                            pts.push( curve.v2 );
+                            pts2.push( curve.v2 );
+
+                        }else{
+
+                            pts.push( curve.v2 );
+                            pts2.push( curve.v1 );
+                            pts2.push( curve.v2 );
+
+                        }
+
+                        let flip = wind ? 1 : -1;
+
+                        invert.push( flip, flip, flip );
+                        beziers.push( curve.v0, curve.v1, curve.v2 );
+
+                    }
+
+                }
+
+                return{
+                    pts: pts,
+                    pts2: pts2,
+                    beziers: beziers,
+                    invert: invert
+                };
+
+            }
+
+            let pts, pts2;
+            let subshape;
+            let convexhullShape;
+            let solidShape;
+            let convexhullShapeGroup = [];
+            let solidShapeGroup = [];
+
+            let beziers = [], invert = [];
+            let process;
+            let hole;
+            
+            function subShape(){
+
+                for ( var s = 0; s < textShapes.length; s ++ ) {
+
+					subshape = textShapes[ s ];
+                    process = processShape( subshape.curves );
+                    
+					pts = process.pts;
+					pts2 = process.pts2;
+					beziers = beziers.concat( process.beziers );
+                    invert = invert.concat( process.invert );
+                    
+					convexhullShape = new THREE.Shape( pts );
+                    solidShape = new THREE.Shape( pts2 );
+                    
+					convexhullShapeGroup.push( convexhullShape );
+                    solidShapeGroup.push( solidShape );
+                    
+					for ( var i = 0; i < subshape.holes.length; i ++ ) {
+
+                        hole = subshape.holes[ i ];
+                        
+                        process = processShape( hole.curves, true );
+                        
+						pts = process.pts;
+						pts2 = process.pts2;
+						beziers = beziers.concat( process.beziers );
+                        invert = invert.concat( process.invert );
+                        
+						convexhullShape.holes.push( new THREE.Shape( pts ) );
+                        solidShape.holes.push( new THREE.Shape( pts2 ) );
+                        
+                    }
+                    
+                }
+                
+            }
+
+            let loader = new THREE.FontLoader();
+            loader.load( '../../../three.js/examples/fonts/helvetiker_regular.typeface.json', function( font ){
+
+                init( font );
+
+            });
+
+        </script>
+
+    </body>
+</html>
