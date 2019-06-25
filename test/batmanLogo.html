@@ -6,7 +6,7 @@
         <title>BatMan Logo</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="../../../css/styles.css">
+        <link rel="stylesheet" href="../css/styles.css">
     </head>
     <body>
         <div id="scene-container">
@@ -72,7 +72,7 @@
                 let near = 1;
                 let far = 50000;
                 camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
-                camera.position.y = 510;
+                camera.position.y = 310;
                 camera.position.z = 600;
 
 
@@ -189,9 +189,9 @@
             function createComposer(){
 
                 let areaImage = new Image();
-                areaImage.src = POSTPROCESSING.SMAAEffect.areaImageDataUrl;
+                areaImage.src = POSTPROCESSING.SMAAEffect.areaImageDataURL;
                 let searchImage = new Image();
-                searchImage.src = POSTPROCESSING.SMAAEffect.searchImageDataUrl;
+                searchImage.src = POSTPROCESSING.SMAAEffect.searchImageDataURL;
                 let smaaEffect = new POSTPROCESSING.SMAAEffect( searchImage, areaImage, 1 );
 
                 let godraysEffect = new POSTPROCESSING.GodRaysEffect( camera, circle, {
@@ -226,7 +226,7 @@
                 loader.load( "../models/gltf/batman_logo/scene.gltf", function( gltf ){
                     let bat = gltf.scene.children[0];
                     bat.scale.set( 100, 100, 100 );
-                    bat.position.set( 160, -100, 0 );
+                    bat.position.set( 160, -110, -100 );
                     scene.add( gltf.scene );
                 } );
             }
