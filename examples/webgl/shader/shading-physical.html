@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>shading-physical</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <span>shading physical</span>
+		</div>
+       
+        <script src="../../../three.js/build/three.js"></script>
+
+        <script src="../../../three.js/examples/js/WebGL.js"></script>
+        <script src="../../../three.js/examples/js/libs/stats.min.js"></script>
+        <script src="../../../three.js/examples/js/controls/TrackballControls.js"></script>
+
+        <script src="../../../three.js/examples/js/loaders/GLTFLoader.js"></script>
+
+        <script src='../../../three.js/examples/js/libs/dat.gui.min.js'></script>
+
+        <script>
+            
+            let container = document.querySelector('#scene-container');
+
+            let camera, cubeCamera;
+            let scene, renderer, contorls;
+
+            let stats;
+
+            let mesh;
+
+            let sunLight, pointLight, ambientLight;
+
+            let mixer;
+
+            let clock = new THREE.Clock();
+
+            let shadowCameraHelper, shadowConfig = {
+
+                shadowCameraVisible: false,
+                shadowCameraNear: 759,
+                shadowCameraFar: 4000,
+                shadowCameraFov: 30,
+                shadowBias: -0.0002
+
+            };
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                scene.fog = new THREE.Fog( 0, 1000, 10000 );
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                // createComposer();
+                createGUI();
+                loadObject();
+                createControls();
+                createStats();
+
+                window.addEventListener('resize', onWindowResize, false);
+                // container.addEventListener( 'mousemove', onMouseMove, false);
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    // update();
+                    stats.begin();
+                    render();
+                    // if ( statsEnabled ) 
+                    stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 45;
+                let aspect = container.clientWidth / container.clientHeight;
+                let near = 2;
+                let far = 10000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( 500, 400, 1200 );
+
+                near = 1;
+                let cubeResolution = 128;
+                cubeCamera = new THREE.CubeCamera( near, far, cubeResolution );
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // cameraBG = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraBG.position.z = 100;
+
+            }
+
+            //cameraHelper
+            function cameraHelper(){
+                
+                shadowCameraHelper = new THREE.CameraHelper( sunLight.shadow.camera );
+                shadowCameraHelper.visible = shadowConfig.shadowCameraVisible;
+                scene.add( shadowCameraHelper );
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                ambientLight = new THREE.AmbientLight( 0x3f2806 );
+                scene.add( ambientLight );
+
+                pointLight = new THREE.PointLight( 0xffaa00, 1, 5000 );
+                scene.add( pointLight );
+
+                sunLight = new THREE.SpotLight( 0xffffff, 0.3, 0, Math.PI / 2 );
+                sunLight.position.set( 1000, 2000, 1000 );
+                sunLight.castShadow = true;
+                sunLight.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( shadowConfig.shadowCameraFov, 1, shadowConfig.shadowCameraNear, shadowConfig.shadowCameraFar ) );
+                sunLight.shadow.bias = shadowConfig.shadowBias;
+                scene.add( sunLight );
+
+                cameraHelper();
+
+                // let DirLight = new THREE.DirectionalLight( 0xffccaa, 3 );
+                // DirLight.position.set( 0, 0, -1 );
+                // scene.add( DirLight );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                let textureLoader = new THREE.TextureLoader();
+
+                const textureSquares = textureLoader.load( "../../../three.js/examples/textures/patterns/bright_squares256.png" );
+                textureSquares.repeat.set( 50, 50 );
+                textureSquares.wrapT = textureSquares.wrapS = THREE.RepeatWrapping;
+                textureSquares.magFilter = THREE.NearestFilter;
+                textureSquares.format = THREE.RGBFormat;
+
+                const textureNoiseColor = textureLoader.load( "../../../three.js/examples/textures/disturb.jpg" );
+                textureNoiseColor.repeat.set( 1, 1 );
+                textureNoiseColor.wrapT = textureNoiseColor.wrapS = THREE.RepeatWrapping;
+                textureNoiseColor.format = THREE.RGBFormat;
+
+                const textureLava = textureLoader.load( "../../../three.js/examples/textures/lava/lavatile.jpg" );
+                textureLava.repeat.set( 6, 2 );
+                textureLava.wrapT = textureLava.wrapS = THREE.RepeatWrapping;
+                textureLava.format = THREE.RGBFormat;
+
+                return{
+                    textureSquares, textureNoiseColor, textureLava
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                let textures = createTexture();
+
+                const groundMat = new THREE.MeshPhongMaterial( {
+                    shininess: 80,
+                    color: 0xffffff,
+                    specular: 0xffffff,
+                    map: textures.textureSquares
+                } );
+
+                const matLambert = new THREE.MeshPhongMaterial( { shininess: 50, color: 0xffffff, map: textures.textureNoiseColor } );
+                const matPhong = new THREE.MeshPhongMaterial( { shininess: 50, color: 0xffffff, specular: 0x999999, map: textures.textureLava } );
+                const matPhongCube = new THREE.MeshPhongMaterial( { shininess: 50, color: 0xffffff, specular: 0x999999, envMap: cubeCamera.renderTarget.texture } );
+
+                return{
+                    groundMat, matLambert, matPhong, matPhongCube
+                };
+
+            }
+
+            function addObjectColor( geo, color, x, y, z, ry ){
+
+                let mat = new THREE.MeshPhongMaterial( { color: 0xffffff } );
+                return addObject( geo, mat, x, y, z, ry );
+
+            }
+
+            function addObject( geo, mat, x, y, z, ry ){
+
+                let tmpMesh = new THREE.Mesh( geo, mat );
+                tmpMesh.material.color.offsetHSL( 0.1, -0.1, 0 );
+                tmpMesh.position.set( x, y, z );
+                tmpMesh.rotation.y = ry;
+
+                tmpMesh.castShadow = true;
+                tmpMesh.receiveShadow = true;
+
+                scene.add( tmpMesh );
+
+                return tmpMesh;
+                
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const groundGeo = new THREE.PlaneBufferGeometry( 100, 100 );
+                const sphereGeo = new THREE.SphereBufferGeometry( 100, 64, 32 );
+                const torusGeo = new THREE.TorusBufferGeometry( 240, 60, 32, 64 );
+                const cubeGeo = new THREE.BoxBufferGeometry( 150, 150, 150 );
+                const bigCube = new THREE.BoxBufferGeometry( 50, 500, 50 );
+                const midCube = new THREE.BoxBufferGeometry( 50, 200, 50 );
+                const smallCube = new THREE.BoxBufferGeometry( 100, 100, 100 );
+
+                return{
+                    groundGeo, sphereGeo, torusGeo, cubeGeo, bigCube, midCube, smallCube
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geometries = createGeometries();
+                let materials = createMaterials();
+
+                let ground = new THREE.Mesh( geometries.groundGeo, materials.groundMat );
+                ground.position.set( 0, 0, 0 );
+                ground.rotation.x = -Math.PI / 2;
+                ground.scale.set( 1000, 1000, 1000 );
+                ground.receiveShadow = true;
+                scene.add( ground );
+
+                mesh = addObject( geometries.sphereGeo, materials.matPhongCube, 350, 100, -350, 0 );
+                mesh.add( cubeCamera );
+
+                addObject( geometries.torusGeo, materials.matPhong, 0, 100, 0, 0 );
+                addObject( geometries.cubeGeo, materials.matLambert, 350, 75, 300, 0 );
+                
+                addObjectColor( geometries.bigCube, 0xff0000, - 500, 250, 0, 0 );
+                addObjectColor( geometries.smallCube, 0xff0000, - 500, 50, - 150, 0 );
+                
+				addObjectColor( geometries.midCube, 0x00ff00, 500, 100, 0, 0 );
+                addObjectColor( geometries.smallCube, 0x00ff00, 500, 50, - 150, 0 );
+                
+				addObjectColor( geometries.midCube, 0x0000ff, 0, 100, - 500, 0 );
+                addObjectColor( geometries.smallCube, 0x0000ff, - 150, 50, - 500, 0 );
+                
+				addObjectColor( geometries.midCube, 0xff00ff, 0, 100, 500, 0 );
+                addObjectColor( geometries.smallCube, 0xff00ff, - 150, 50, 500, 0 );
+                
+				addObjectColor( new THREE.BoxBufferGeometry( 500, 10, 10 ), 0xffff00, 0, 600, 0, Math.PI / 4 );
+				addObjectColor( new THREE.BoxBufferGeometry( 250, 10, 10 ), 0xffff00, 0, 600, 0, 0 );
+				addObjectColor( new THREE.SphereBufferGeometry( 100, 32, 26 ), 0xffffff, - 300, 100, 300, 0 );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setSize( container.clientWidth, container.clientHeight) ;
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                // renderer.autoClear = false;
+                renderer.gammaInput = true;
+                renderer.gammaOutput = true;
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+
+            //新增composer
+            function createComposer(){
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                let gui = new dat.GUI( { width: 400 } );
+
+                //shadow
+                let shadowGUI = gui.addFolder( "Shadow" );
+                shadowGUI.add( shadowConfig, 'shadowCameraVisible' ).onChange( function(){
+                    
+                    shadowCameraHelper.visible = shadowConfig.shadowCameraVisible;
+
+                } );
+
+                shadowGUI.add( shadowConfig, 'shadowCameraNear', 1, 1500 ).onChange( function(){
+                    
+                    sunLight.shadow.camera.near = shadowConfig.shadowCameraNear;
+                    sunLight.shadow.camera.updateProjectionMatrix();
+                    shadowCameraHelper.update();
+
+                } );
+
+                shadowGUI.add( shadowConfig, 'shadowCameraFar', 1501, 5000 ).onChange( function(){
+                    
+                    sunLight.shadow.camera.far = shadowConfig.shadowCameraFar;
+                    sunLight.shadow.camera.updateProjectionMatrix();
+                    shadowCameraHelper.update();
+
+                } );
+
+                shadowGUI.add( shadowConfig, 'shadowCameraFov', 1, 120 ).onChange( function(){
+                    
+                    sunLight.shadow.camera.fov = shadowConfig.shadowCameraFov;
+                    sunLight.shadow.camera.updateProjectionMatrix();
+                    shadowCameraHelper.update();
+
+                } );
+
+                shadowGUI.add( shadowConfig, 'shadowBias', -0.01, 0.01 ).onChange( function(){
+                    
+                    sunLight.shadow.bias = shadowConfig.shadowBias;
+
+                } );
+
+                shadowGUI.open();
+
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+                let loader = new THREE.GLTFLoader();
+                loader.load( "../../../three.js/examples/models/gltf/SittingBox.glb", function( gltf ){
+
+                    let mesh = gltf.scene.children[0];
+
+                    mixer = new THREE.AnimationMixer( mesh );
+                    mixer.clipAction( gltf.animations[0] ).setDuration( 10 ).play();
+
+                    let s = 200;
+                    mesh.scale.set( s, s, s );
+
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+
+                    scene.add( mesh );
+
+                } );
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new THREE.OrbitControls( camera, renderer.domElement );
+                controls = new THREE.TrackballControls( camera, renderer.domElement );
+
+                // controls.autoRotate = true;
+                // controls.autoRotateSpeed = 1;
+                // controls.addEventListener('change', renderer);
+
+                controls.panSpeed = 0.8;
+                controls.rotateSpeed = 1.0;
+                controls.zoomSpeed = 1.2;
+
+                controls.noZoom = false;
+                controls.noPan = false;
+
+                controls.staticMoving = true;
+                controls.dynamicDampingFactor = 0.15;
+
+                controls.keys = [ 65, 83, 68 ];
+
+                controls.target.set( 0, 120, 0 );
+                // controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                stats = new Stats();
+                container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.clientWidth / 2;
+                // containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container.clientWidth, container.clientHeight );
+
+                // render();
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //Object事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                // const delta = clock.getDelta();
+
+                // mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+
+                let delta = clock.getDelta();
+
+                controls.update();
+
+                if( mixer ){
+
+                    mixer.update(delta);
+
+                }
+
+                mesh.visible = false;
+                cubeCamera.update( renderer, scene );
+                mesh.visible = true;
+
+                renderer.render( scene, camera );
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>
