@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>shadowmap-viewer</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>shadowmap - viewer</p>
+		</div>
+       
+        <script src="../../../three.js/build/three.js"></script>
+
+        <script src="../../../three.js/examples/js/libs/stats.min.js"></script>
+        <script src="../../../three.js/examples/js/controls/OrbitControls.js"></script>
+
+        <script src="../../../three.js/examples/js/shaders/UnpackDepthRGBAShader.js"></script>
+        <script src="../../../three.js/examples/js/utils/ShadowMapViewer.js"></script>
+
+        <script>
+
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+
+            let camera, scene, renderer, contorls;
+
+            let dirLight, spotLight;
+
+            let dirLightShadowMapViewer, spotLightShadowMapViewer;
+
+            let torustKnot, cube;
+
+            let stats;
+
+            let clock = new THREE.Clock();
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                // createComposer();
+                // createGUI();
+                // loadObject();
+                createControls();
+                createStats();
+
+                window.addEventListener('resize', onWindowResize, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                // container.addEventListener( 'mousemove', onMouseMove, false);
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    // update();
+                    // stats.begin();
+                    render();
+                    // if ( statsEnabled ) 
+                    stats.update();
+                    // stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 45;
+                let aspect = container.clientWidth / container.clientHeight;
+                let near = 1;
+                let far = 1000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( 0, 15, 35 );
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // cameraBG = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraBG.position.z = 100;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                let ambLight = new THREE.AmbientLight( 0x404040 );
+                scene.add( ambLight );
+
+                spotLight = new THREE.SpotLight( 0xffffff );
+                spotLight.name = 'Spot Light';                
+                spotLight.angle = Math.PI / 5;
+                spotLight.penumbra = 0.3;
+                spotLight.position.set( 10, 10, 5 );
+                spotLight.castShadow = true;
+                spotLight.shadow.camera.near = 8;
+                spotLight.shadow.camera.far = 30;
+                spotLight.shadow.mapSize.width = 1024;
+                spotLight.shadow.mapSize.height = 1024;
+                scene.add( spotLight );
+
+                scene.add( new THREE.CameraHelper( spotLight.shadow.camera ) );
+
+                dirLight = new THREE.DirectionalLight( 0xffffff, 1);
+                dirLight.name = 'Dir. Light';
+                dirLight.position.set( 0, 10, 0 );
+                dirLight.castShadow = true;
+                dirLight.shadow.camera.near = 1;
+                dirLight.shadow.camera.far = 10;
+                dirLight.shadow.camera.right = 15;
+                dirLight.shadow.camera.left = -15;
+                dirLight.shadow.camera.top = 15;
+                dirLight.shadow.camera.bottom = -15;
+                dirLight.shadow.mapSize.width = 1024;
+                dirLight.shadow.mapSize.height = 1024;
+                scene.add( dirLight );
+
+                scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
+
+                createShadowMapViewers();
+
+            }
+
+            function createShadowMapViewers(){
+
+                spotLightShadowMapViewer = new THREE.ShadowMapViewer( spotLight );
+                spotLightShadowMapViewer.size.set( 256, 256 );
+                spotLightShadowMapViewer.position.set( 276, 10 );
+                spotLightShadowMapViewer.update();
+
+                dirLightShadowMapViewer = new THREE.ShadowMapViewer( dirLight );
+                dirLightShadowMapViewer.position.x = 10;
+                dirLightShadowMapViewer.position.y = 10;
+                dirLightShadowMapViewer.size.width = 256;
+                dirLightShadowMapViewer.size.height = 256;
+                dirLightShadowMapViewer.update();
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                let loader = new THREE.FontLoader();
+
+                return{
+                    
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = createTexture();
+
+                const mat = new THREE.MeshPhongMaterial( {
+                    color: 0xff0000,
+                    shininess: 150,
+                    specular: 0x222222
+                } );
+
+                const groundMat = new THREE.MeshPhongMaterial( {
+                    color: 0xa0adaf,
+                    shininess: 150,
+                    specular: 0x111111
+                } );
+
+                return{
+                    mat, groundMat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const torusKnotGeo = new THREE.TorusKnotBufferGeometry( 25, 8, 75, 20 );
+                const cubeGeo = new THREE.BoxBufferGeometry( 3, 3, 3 );
+                const groundGeo = new THREE.BoxBufferGeometry( 10, 0.15, 10 );
+
+                return{
+                    torusKnotGeo, cubeGeo, groundGeo
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geometries = createGeometries();
+                let materials = createMaterials();
+
+                torustKnot = new THREE.Mesh( geometries.torusKnotGeo, materials.mat );
+                torustKnot.scale.multiplyScalar( 1 / 18 );
+                torustKnot.position.y = 3;
+                torustKnot.castShadow = true;
+                torustKnot.receiveShadow = true;
+                scene.add( torustKnot );
+
+                cube = new THREE.Mesh( geometries.cubeGeo, materials.mat);
+                cube.position.set( 8, 3, 8 );
+                cube.castShadow = true;
+                cube.receiveShadow = true;
+                scene.add( cube );
+
+                let ground = new THREE.Mesh( geometries.groundGeo, materials.groundMat );
+                ground.scale.multiplyScalar( 3 );
+                ground.castShadow = false;
+                ground.receiveShadow = true;
+                scene.add( ground );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setSize( container.clientWidth, container.clientHeight) ;
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                // renderer.autoClear = false;
+                
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+
+                // for( let i = 0; i !== animation_groups; ++i ){
+                    
+                //     let group = new THREE.AnimationObjectGroup();
+                //     animGroups.push( group );
+                    
+                // }
+
+                // mesh = mesh.clone();
+                // mesh.material = mesh.material.clone();
+
+                // if( fudgeColor ){
+
+                //     mesh.material.color.offsetHSL( 0, Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25 );
+
+                // }
+
+                // mesh.speed = speed;
+
+                // if( massOptimization ) {
+
+                //     let index = Math.floor( Math.random() * animation_groups ), animGroup = animGroups[index];
+
+                //     animGroup.add( mesh );
+
+                //     if( ! mixer.existingAction( clip, animGroup ) ){
+                        
+                //             let randomness = 0.6 * Math.random() - 0.3;
+                //             let phase = ( index + randomness ) / animation_groups;
+                            
+                //             mixer.clipAction( clip, animGroup ).setDuration( duration ).startAt( -duration * phase ).play();
+                            
+                //         }
+
+                // }else{
+
+                //     mixer.clipAction( clip, mesh ).setDuration( duration ).startAt( -duration * Math.random() ).play();
+
+                // }
+
+
+                // mesh.position.set( x, y, z );
+                // mesh.rotation.y = Math.PI / 2;
+
+                // mesh.castShadow = true;
+                // mesh.receiveShadow = true;
+
+                // scene.add( mesh );
+
+                // morphs.push( mesh );
+
+            }
+
+            //創建composer
+            function createComposer(){
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+                let loader = new THREE.GLTFLoader();
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new THREE.OrbitControls( camera, renderer.domElement );
+                controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+                // controls.lookSpeed = 0.0125;
+                // controls.movementSpeed = 500;
+                // controls.lookVertical = true;
+
+                // controls.panSpeed = 0.8;
+                // controls.rotateSpeed = 1.0;
+                // controls.zoomSpeed = 1.2;
+
+                // controls.noZoom = false;
+                // controls.noPan = false;
+                // controls.noFly = false;
+
+                // controls.lookAt( scene.position );
+                controls.target.set( 0, 2, 0 );
+                // controls.addEventListener('change', renderer);
+                controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                stats = new Stats();
+                container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.clientWidth / 2;
+                // containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container.clientWidth, container.clientHeight );
+
+                dirLightShadowMapViewer.updateForWindowResize();
+                spotLightShadowMapViewer.updateForWindowResize();
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            //Object事件
+            function update(){
+
+                // // mesh.material.color.set(Math.random()*0xffffff + 0x000000);
+                // mesh.rotation.x += Math.random()*0.01 + 0.05;
+                // mesh.rotation.y += Math.random()*0.01;
+                // mesh.rotation.z += Math.random()*0.01;
+
+                // const delta = clock.getDelta();
+
+                // mixers.forEach( (mixer) => { mixer.update(delta);});
+            }
+
+            //渲染更新
+            function render(){
+
+                let delta = clock.getDelta();
+
+                torustKnot.rotation.x += 0.25 * delta;
+                torustKnot.rotation.y += 2 * delta;
+                torustKnot.rotation.z += 1 * delta;
+
+                cube.rotation.x += 0.25 * delta;
+                cube.rotation.y += 2 * delta;
+                cube.rotation.z += 1 * delta;
+
+                renderer.render( scene, camera );
+
+                spotLightShadowMapViewer.render( renderer );
+                dirLightShadowMapViewer.render( renderer );
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>
