@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>shadowmesh</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>shadowmesh</p>
+            <input id="lightButton" type="button" value="Switch to PointLight">
+		</div>
+       
+        <script src="../../../three.js/build/three.js"></script>
+
+        <script src="../../../three.js/examples/js/libs/stats.min.js"></script>
+        <script src="../../../three.js/examples/js/controls/OrbitControls.js"></script>
+
+        <script type="module">
+
+            import { ShadowMesh } from '../../../three.js/examples/jsm/objects/ShadowMesh.js';
+
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+            let lightButton = document.getElementById('lightButton');
+
+            let camera, scene, renderer;
+
+            let sunLight;
+            let useDirLight = true;
+            let arrowHelper1, arrowHelper2, arrowHelper3;
+            let arrowDir = new THREE.Vector3();
+            let arrowPos1 = new THREE.Vector3();
+            let arrowPos2 = new THREE.Vector3();
+            let arrowPos3 = new THREE.Vector3();
+
+            let ground;
+            let lightSphere, lightHolder;
+            let pyramid, pyramidShadow;
+            let sphere, sphereShadow;
+            let cube, cubeShadow;
+            let cylinder, cylinderShadow;
+            let torus, torusShadow;
+
+            let normalVector = new THREE.Vector3( 0, 1, 0 );
+            let planeConstant = 0.01;
+            let groundPlane = new THREE.Plane( normalVector, planeConstant );
+            let lightPosition4D = new THREE.Vector4();
+            let verticalAngle = 0;
+            let horizontalAngle = 0;
+            let frameTime = 0;
+            let TWO_PI = Math.PI * 2;
+
+            let stats;
+
+            let clock = new THREE.Clock();
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color( 0x0096ff );
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                // createComposer();
+                // createGUI();
+                // loadObject();
+                // createControls();
+                createStats();
+                createEvent();
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    update();
+                    // stats.begin();
+                    render();
+                    // if ( statsEnabled ) 
+                    stats.update();
+                    // stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 55;
+                let aspect = container.clientWidth / container.clientHeight;
+                let near = 1;
+                let far = 3000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( 0, 2.5, 10 );
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // cameraBG = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraBG.position.z = 100;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                sunLight = new THREE.DirectionalLight( 'rgb( 255, 255, 255 )', 1 );
+                sunLight.position.set( 5, 7, -1 );
+                sunLight.lookAt( scene.position );
+                scene.add( sunLight );
+
+                lightPosition4D.x = sunLight.position.x;
+                lightPosition4D.y = sunLight.position.y;
+                lightPosition4D.z = sunLight.position.z;
+                lightPosition4D.w = 0.001;
+
+                createArrowHelper();
+
+            }
+
+            //創建ArrowHelper
+            function createArrowHelper(){
+
+                arrowDir.subVectors( scene.position, sunLight.position ).normalize();
+
+                arrowPos1.copy( sunLight.position );
+                arrowHelper1 = new THREE.ArrowHelper( arrowDir, arrowPos1, 0.9, 0xffff00, 0.25, 0.08 );
+                scene.add( arrowHelper1 );
+
+                arrowPos2.copy( sunLight.position ).add( new THREE.Vector3( 0, 0.2, 0 ) );
+                arrowHelper2 = new THREE.ArrowHelper( arrowDir, arrowPos2, 0.9, 0xffff00, 0.25, 0.08 );
+                scene.add( arrowHelper2 );
+
+                arrowPos3.copy( sunLight.position ).add( new THREE.Vector3( 0, -0.2, 0 ) );
+                arrowHelper3 = new THREE.ArrowHelper( arrowDir, arrowPos3, 0.9, 0xffff00, 0.25, 0.08 );
+                scene.add( arrowHelper3 );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                let loader = new THREE.FontLoader();
+
+                return{
+                    
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = createTexture();
+
+                const lightSphereMat = new THREE.MeshBasicMaterial( { color: 'rgb( 255, 255, 255 )' } );
+                const lightHolderMat = new THREE.MeshBasicMaterial( { color: 'rgb( 75, 75, 75 )' } );
+
+                const groundMat = new THREE.MeshPhongMaterial( { color: 'rgb( 0, 130, 0 )' } );
+
+                const cubeMat = new THREE.MeshLambertMaterial( { color: 'rgb( 255, 0, 0 )', emissive: 0x200000 } );
+                const cylinderMat = new THREE.MeshPhongMaterial( { color: 'rgb( 0, 0, 255 )', emissive: 0x000020 } );
+                const torusMat = new THREE.MeshPhongMaterial( { color: 'rgb( 255, 0, 255 )', emissive: 0x200020 } );
+
+                const sphereMat = new THREE.MeshPhongMaterial( { color: 'rgb( 255, 255, 255 )', emissive: 0x222222 } );
+                const pyramidMat = new THREE.MeshPhongMaterial( { color: 'rgb( 255, 255, 0 )', emissive: 0x440000, flatShading: true, shininess: 0 } );
+
+                return{
+                   lightSphereMat, lightHolderMat, groundMat,
+                   cubeMat, cylinderMat, torusMat,
+                   sphereMat, pyramidMat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const lightSphereGeo = new THREE.SphereBufferGeometry( 0.09 );
+                const lightHolderGeo = new THREE.CylinderBufferGeometry( 0.05, 0.05, 0.13 );
+                
+                const groundGeo = new THREE.BoxBufferGeometry( 30, 0.01, 40 );
+
+                const cubeGeo = new THREE.BoxBufferGeometry( 1, 1, 1 );
+                const cylinderGeo = new THREE.CylinderBufferGeometry( 0.3, 0.3, 2 );
+                const torusGeo = new THREE.TorusBufferGeometry( 1, 0.2, 10, 16, TWO_PI );
+                
+                const sphereGeo = new THREE.SphereBufferGeometry( 0.5, 20, 10 );
+                const pyramidGeo = new THREE.CylinderBufferGeometry( 0, 0.5, 2, 4 );
+                
+
+                return{
+                    lightSphereGeo, lightHolderGeo, groundGeo,
+                    cubeGeo, cylinderGeo, torusGeo,
+                    sphereGeo, pyramidGeo
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geos = createGeometries();
+                let mats = createMaterials();
+
+                lightSphere = new THREE.Mesh( geos.lightSphereGeo, mats.lightSphereMat );
+                lightSphere.visible = false;
+                scene.add( lightSphere );
+
+                lightHolder = new THREE.Mesh( geos.lightHolderGeo, mats.lightHolderMat );
+                lightHolder.visible = false;
+                scene.add( lightHolder );
+
+                ground = new THREE.Mesh( geos.groundGeo, mats.groundMat );
+                ground.position.y = 0.0;
+                scene.add( ground );
+
+                cube = new THREE.Mesh( geos.cubeGeo, mats.cubeMat);
+                cube.position.z = -1;
+                cubeShadow = new ShadowMesh( cube );
+                scene.add( cube, cubeShadow );
+
+                cylinder = new THREE.Mesh( geos.cylinderGeo, mats.cylinderMat );
+                cylinder.position.z = -2.5
+                cylinderShadow = new ShadowMesh( cylinder );
+                scene.add( cylinder, cylinderShadow );
+
+                torus = new THREE.Mesh( geos.torusGeo, mats.torusMat );
+                torus.position.z = -6;
+                torusShadow = new ShadowMesh( torus );
+                scene.add( torus, torusShadow );
+
+                sphere = new THREE.Mesh( geos.sphereGeo, mats.sphereMat );
+                sphere.position.set( 4, 0.5, 2 );
+                sphereShadow = new ShadowMesh( sphere );
+                scene.add( sphere, sphereShadow );
+
+                pyramid = new THREE.Mesh( geos.pyramidGeo, mats.pyramidMat );
+                pyramid.position.set( -4, 1, 2 );
+                pyramidShadow = new ShadowMesh( pyramid );
+                scene.add( pyramid, pyramidShadow );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container.clientWidth, container.clientHeight) ;
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                // renderer.autoClear = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+
+                // for( let i = 0; i !== animation_groups; ++i ){
+                    
+                //     let group = new THREE.AnimationObjectGroup();
+                //     animGroups.push( group );
+                    
+                // }
+
+                // mesh = mesh.clone();
+                // mesh.material = mesh.material.clone();
+
+                // if( fudgeColor ){
+
+                //     mesh.material.color.offsetHSL( 0, Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25 );
+
+                // }
+
+                // mesh.speed = speed;
+
+                // if( massOptimization ) {
+
+                //     let index = Math.floor( Math.random() * animation_groups ), animGroup = animGroups[index];
+
+                //     animGroup.add( mesh );
+
+                //     if( ! mixer.existingAction( clip, animGroup ) ){
+                        
+                //             let randomness = 0.6 * Math.random() - 0.3;
+                //             let phase = ( index + randomness ) / animation_groups;
+                            
+                //             mixer.clipAction( clip, animGroup ).setDuration( duration ).startAt( -duration * phase ).play();
+                            
+                //         }
+
+                // }else{
+
+                //     mixer.clipAction( clip, mesh ).setDuration( duration ).startAt( -duration * Math.random() ).play();
+
+                // }
+
+
+                // mesh.position.set( x, y, z );
+                // mesh.rotation.y = Math.PI / 2;
+
+                // mesh.castShadow = true;
+                // mesh.receiveShadow = true;
+
+                // scene.add( mesh );
+
+                // morphs.push( mesh );
+
+            }
+
+            //創建composer
+            function createComposer(){
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+                let loader = new THREE.GLTFLoader();
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new THREE.OrbitControls( camera, renderer.domElement );
+                // controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+                // // controls.lookSpeed = 0.0125;
+                // // controls.movementSpeed = 500;
+                // // controls.lookVertical = true;
+
+                // // controls.panSpeed = 0.8;
+                // // controls.rotateSpeed = 1.0;
+                // // controls.zoomSpeed = 1.2;
+
+                // // controls.noZoom = false;
+                // // controls.noPan = false;
+                // // controls.noFly = false;
+
+                // // controls.lookAt( scene.position );
+                // controls.target.set( 0, 2, 0 );
+                // // controls.addEventListener('change', renderer);
+                // controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                stats = new Stats();
+                container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // container.addEventListener( 'mousemove', onMouseMove, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                lightButton.addEventListener( 'click', lightButtonHandler );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.clientWidth / 2;
+                // containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container.clientWidth, container.clientHeight );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            //切換早晚
+            function lightButtonHandler(){
+
+                useDirLight = ! useDirLight;
+
+                if( useDirLight ){
+
+                    scene.background.setHex( 0x0096ff );
+
+                    ground.material.color.setHex( 0x008200 );
+
+                    sunLight.position.set( 5, 7, -1 );
+                    sunLight.lookAt( scene.position );
+
+                    lightPosition4D.x = sunLight.position.x;
+                    lightPosition4D.y = sunLight.position.y;
+                    lightPosition4D.z = sunLight.position.z;
+                    lightPosition4D.w = 0.001;
+
+                    arrowHelper1.visible = true;
+                    arrowHelper2.visible = true;
+                    arrowHelper3.visible = true;
+
+                    lightSphere.visible = false;
+                    lightHolder.visible = false;
+
+                    lightButton.value = "Switch to PointLight";
+
+                }else{
+
+                    scene.background.setHex( 0x000000 );
+
+                    ground.material.color.setHex( 0x969696 );
+
+                    sunLight.position.set( 0, 6, -2 );
+                    sunLight.lookAt( scene.position );
+
+                    lightPosition4D.x = sunLight.position.x;
+                    lightPosition4D.y = sunLight.position.y;
+                    lightPosition4D.z = sunLight.position.z;
+                    lightPosition4D.w = 0.9;
+
+                    arrowHelper1.visible = false;
+                    arrowHelper2.visible = false;
+                    arrowHelper3.visible = false;
+
+                    lightSphere.position.copy( sunLight.position );
+                    lightHolder.position.copy( lightSphere.position );
+                    lightHolder.position.y += 0.12;
+
+                    lightSphere.visible = true;
+                    lightHolder.visible = true;
+
+                    lightButton.value = "Switch to THREE.DirectionalLight";
+                }
+            }
+
+            //Object事件
+            function update(){
+
+                frameTime = clock.getDelta();
+
+                cube.rotation.x += 1.0 * frameTime;
+                cube.rotation.y += 1.0 * frameTime;
+
+                cylinder.rotation.y += 1.0 * frameTime;
+                cylinder.rotation.z -= 1.0 * frameTime;
+
+                torus.rotation.x -= 1.0 * frameTime;
+                torus.rotation.y -= 1.0 * frameTime;
+
+                pyramid.rotation.y += 0.5 * frameTime;
+
+                horizontalAngle += 0.5 * frameTime;
+                if( horizontalAngle > TWO_PI ) horizontalAngle -= TWO_PI;
+                cube.position.x = Math.sin( horizontalAngle ) * 4;
+                cylinder.position.x = Math.sin( horizontalAngle ) * -4;
+                torus.position.x = Math.cos( horizontalAngle ) * 4;
+
+                verticalAngle += 1.5 * frameTime;
+                if( verticalAngle > TWO_PI ) verticalAngle -= TWO_PI;
+                cube.position.y = Math.sin( verticalAngle ) * 2 + 2.9;
+                cylinder.position.y = Math.sin( verticalAngle ) * 2 + 3.1;
+                torus.position.y = Math.cos( verticalAngle ) * 2 + 3.3;
+
+                cubeShadow.update( groundPlane, lightPosition4D );
+                cylinderShadow.update( groundPlane, lightPosition4D );
+                torusShadow.update( groundPlane, lightPosition4D );                
+                sphereShadow.update( groundPlane, lightPosition4D );
+                pyramidShadow.update( groundPlane, lightPosition4D );
+
+            }
+
+            //渲染更新
+            function render(){
+
+                renderer.render( scene, camera );
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>
