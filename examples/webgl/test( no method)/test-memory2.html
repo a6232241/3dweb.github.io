@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>test-memory2</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>test - memory2</p>
+        </div>
+
+        <script type="x-shader/x-fragment" id="fragmentShader">
+			void main() {
+				if ( mod ( gl_FragCoord.x, 4.0001 ) < 1.0 || mod ( gl_FragCoord.y, 4.0001 ) < 1.0 )
+					gl_FragColor = vec4( XXX, 1.0 );
+				else
+					gl_FragColor = vec4( 1.0 );
+			}
+		</script>
+
+		<script type="x-shader/x-vertex" id="vertexShader">
+			void main() {
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				gl_Position = projectionMatrix * mvPosition;
+			}
+		</script>
+
+        <script type="module">
+
+            import * as THREE from '../../../three.js/build/three.module.js';
+
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+            
+            let container_width = container.clientWidth;
+            let container_height = container.clientHeight;
+
+            let camera, scene, renderer;
+
+            let n = 100;
+
+            let meshs = [];
+
+            let fragmentShader = document.getElementById( "fragmentShader" ).textContent;
+            let vertexShader = document.getElementById( "vertexShader" ).textContent;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color( 0xffffff );
+                // scene.fog = new THREE.Fog( 0x0000FF, 70, 150 );
+
+                createCamera();
+                // createLights();
+                createMeshes();
+                createRenderer();
+                // createComposer();
+                // createGUI();
+                // loadObject();
+                // createSprites();
+                // createControls();
+                // createStats();
+                createEvent();
+                
+
+                // renderer.setAnimationLoop( ( )=> {
+
+                //     // update();
+                //     // stats.begin();
+                //     render();
+                //     // if ( statsEnabled ) 
+                //     // stats.update();
+                //     // stats.end();
+
+                // });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 40;
+                let aspect = container_width / container_height;
+                let near = 1;
+                let far = 10000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.z = 2000;
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 1, far = 10;
+                // cameraOrtho = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraOrtho.position.z = 10;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // let HemiSphereLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 0.6 );
+                // HemiSphereLight.position.set( 0, 200, 0 );
+                // scene.add( HemiSphereLight );
+
+                // let DirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+                // DirLight.position.set( 0, 20, 10 );
+                // DirLight.castShadow = true;
+                // DirLight.shadow.camera.top = 18;
+                // DirLight.shadow.camera.bottom = -10;
+                // DirLight.shadow.camera.left = -12;
+                // DirLight.shadow.camera.right = 12;                
+                // scene.add( DirLight );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                let loader = new THREE.FontLoader();
+
+                return{
+                    
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = createTexture();
+
+                const mat = new THREE.ShaderMaterial( { vertexShader: vertexShader, fragmentShader: generateFragmentShader() } );
+
+                return{
+                   mat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+                
+                const geo = new THREE.SphereBufferGeometry( 15, 64, 32 );
+
+                return{
+                    geo
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geos = createGeometries();
+                let mats = createMaterials();
+
+                for( let i = 0; i < n; i++ ){
+
+                    mats.mat.fragmentShader = generateFragmentShader();
+
+                    let mesh = new THREE.Mesh( geos.geo, mats.mat );
+                    mesh.position.x = ( 0.5 - Math.random() ) * 1000;
+                    mesh.position.y = ( 0.5 - Math.random() ) * 1000;
+                    mesh.position.z = ( 0.5 - Math.random() ) * 1000;
+
+                    scene.add( mesh );
+
+                    meshs.push( mesh );
+
+                }
+
+            }
+
+            function generateFragmentShader(){
+
+                return fragmentShader.replace( "XXX", Math.random() + "," + Math.random() + "," + Math.random() );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                // renderer.autoClear = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+
+                // for( let i = 0; i !== animation_groups; ++i ){
+                    
+                //     let group = new THREE.AnimationObjectGroup();
+                //     animGroups.push( group );
+                    
+                // }
+
+                // mesh = mesh.clone();
+                // mesh.material = mesh.material.clone();
+
+                // if( fudgeColor ){
+
+                //     mesh.material.color.offsetHSL( 0, Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25 );
+
+                // }
+
+                // mesh.speed = speed;
+
+                // if( massOptimization ) {
+
+                //     let index = Math.floor( Math.random() * animation_groups ), animGroup = animGroups[index];
+
+                //     animGroup.add( mesh );
+
+                //     if( ! mixer.existingAction( clip, animGroup ) ){
+                        
+                //             let randomness = 0.6 * Math.random() - 0.3;
+                //             let phase = ( index + randomness ) / animation_groups;
+                            
+                //             mixer.clipAction( clip, animGroup ).setDuration( duration ).startAt( -duration * phase ).play();
+                            
+                //         }
+
+                // }else{
+
+                //     mixer.clipAction( clip, mesh ).setDuration( duration ).startAt( -duration * Math.random() ).play();
+
+                // }
+
+
+                // mesh.position.set( x, y, z );
+                // mesh.rotation.y = Math.PI / 2;
+
+                // mesh.castShadow = true;
+                // mesh.receiveShadow = true;
+
+                // scene.add( mesh );
+
+                // morphs.push( mesh );
+
+            }
+
+            //創建composer
+            function createComposer(){
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+                // let loader = new GLTFLoader();
+                // loader.load( '../../../three.js/examples/models/gltf/SimpleSkinning.gltf', function( gltf ){
+                    
+                //     scene.add( gltf.scene );
+                //     let clip = gltf.animations[0];
+                    
+                //     gltf.scene.traverse( function( child ){
+
+                //         if( child.isSkinnedMesh ) child.castShadow = true;
+
+                //     } );
+
+                //     mixer = new THREE.AnimationMixer( gltf.scene );
+                //     mixer.clipAction( clip ).play();
+
+                // } );
+
+            }
+
+            //新增精靈
+            function createSprites(){
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+                // controls.lookSpeed = 0.0125;
+                // controls.movementSpeed = 500;
+                // controls.lookVertical = true;
+
+                // controls.enablePan = false;
+                // controls.minDistance = 50;
+                // controls.maxDistance = 200;
+
+                // controls.panSpeed = 0.8;
+                // controls.rotateSpeed = 1.0;
+                // controls.zoomSpeed = 1.2;
+
+                // controls.noZoom = false;
+                // controls.noPan = false;
+                // controls.noFly = false;
+
+                // controls.lookAt( scene.position );
+                // controls.target.set( 0, 2, 0 );
+                // controls.addEventListener('change', renderer);
+                // controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                // stats = new Stats();
+                // container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // container.addEventListener( 'mousemove', onMouseMove, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.clientWidth / 2;
+                // containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                container_width = container.clientWidth;
+                container_height = container.clientHeight;
+
+                camera.aspect = container_width / container_height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container.clientWidth, container.clientHeight );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            //Object事件
+            function update(){
+
+            //    let delta = clock.getDelta();
+
+
+            }
+
+            //渲染更新
+            function render(){
+
+                for( let i = 0; i < n; i++ ){
+
+                    let mesh = meshs[i];
+                    mesh.material = new THREE.ShaderMaterial( { vertexShader: vertexShader, fragmentShader: generateFragmentShader() } );
+                
+                }
+
+                renderer.render( scene, camera );
+
+                console.log( "before", renderer.info.programs.length );
+
+                for( let i = 0; i < n; i++){
+
+                    let mesh = meshs[i];
+                    mesh.material.dispose();
+
+                }
+
+                console.log( "after", renderer.info.programs.length );
+
+            }
+
+            init();
+            setInterval( render, 1000 / 60 );
+
+        </script>
+
+    </body>
+</html>
