@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>postprocessing-crossfade</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>postprocessing - crossfade</p>
+        </div>
+
+        <script type="module">
+
+            import * as THREE from '../../three.js/build/three.module.js';
+
+			import Stats from '../../three.js/examples/jsm/libs/stats.module.js';
+			import { GUI } from '../../three.js/examples/jsm/libs/dat.gui.module.js';
+
+            import { BufferGeometryUtils } from '../../three.js/examples/jsm/utils/BufferGeometryUtils.js';
+
+			import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+            
+            let container_width = container.clientWidth;
+            let container_height = container.clientHeight;
+
+            let stats;
+            // let controls;
+
+            let clock = new THREE.Clock();
+
+            // let camera, 
+            let renderer;
+            let sceneA, sceneB;
+
+            let transition;
+            let transitionParams = {
+
+                "useTexture": true,
+                "transition": 0.5,
+                "transitionSpeed": 2.0,
+                "texture": 5,
+                "loopTexture": true,
+                "animateTransition": true,
+                "textureThreshold": 0.3
+                
+            };
+
+            //建立場景
+            function init(){
+
+                // scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xffffff );
+                // scene.fog = new THREE.Fog( 0x000000, 1, 1000 );
+
+                sceneA = new FXScene( "cube", 5000, 1200, 120, new THREE.Vector3( 0, -0.4, 0 ), 0xffffff );
+                sceneB = new FXScene( "sphere", 500, 2000, 50, new THREE.Vector3( 0, 0.2, 0.1 ), 0x000000 );
+                transition = new Transition( sceneA, sceneB );
+
+                // createCamera();
+                // createLights();
+                // createMeshes();
+                createRenderer();
+                // createComposer();
+                createGUI();
+                // loadObject();
+                // createSprites();
+                // createControls();
+                createStats();
+                createEvent();
+                
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    // update();
+                    // stats.begin();
+                    render();
+                    // if ( statsEnabled ) 
+                    stats.update();
+                    // stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                // let fov = 65;
+                // let aspect = container_width / container_height;
+                // let near = 1;
+                // let far = 10;
+                // camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                // camera.position.z = 7;
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 1, far = 10;
+                // cameraOrtho = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraOrtho.position.z = 10;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // scene.add( new THREE.AmbientLight( 0x222222 ) );
+
+                // light = new THREE.DirectionalLight( 0xffffff );
+                // light.position.set( 1, 1, 1 );  
+                // scene.add( light );
+
+                // let light = new THREE.PointLight( 0xddffdd, 1.0 );
+                // light.position.set( -70, -70, 70 );
+                // scene.add( light );
+
+                // let light2 = new THREE.PointLight( 0xffdddd, 1.0 );
+                // light2.position.set( -70, 70, 70 );
+                // scene.add( light2 );
+
+                // let light3 = new THREE.PointLight( 0xddddff, 1.0 );
+                // light3.position.set( 70, -70, 70 );
+                // scene.add( light3 );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let loader = new THREE.TextureLoader();
+
+                return{
+                    
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = createTexture();
+
+                return{
+                //    ballMat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries( objectType, numObjects ){
+
+                function applyVertexColors( geometry, color ){
+
+                    let position = geometry.attributes.position;
+                    let colors = [];
+
+                    for( let i = 0; i < position.count; i++ ){
+
+                        colors.push( color.r, color.g, color.b );
+
+                    }
+
+                    geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+
+                    }
+
+                let geometries = [];
+
+                let matrix = new THREE.Matrix4();
+                let position = new THREE.Vector3();
+                let rotation = new THREE.Euler();
+                let quaternion = new THREE.Quaternion();
+                let scale = new THREE.Vector3();
+                let color = new THREE.Color();
+
+                for( let i = 0; i < numObjects; i++ ){
+
+                    position.x = Math.random() * 10000 - 5000;
+                    position.y = Math.random() * 6000 - 3000;
+                    position.z = Math.random() * 8000 - 4000;
+
+                    rotation.x = Math.random() * 2 * Math.PI;
+                    rotation.y = Math.random() * 2 * Math.PI;
+                    rotation.z = Math.random() * 2 * Math.PI;
+                    quaternion.setFromEuler( rotation );
+
+                    scale.x = Math.random() * 200 + 100;
+
+                    let geometry;
+
+                    if( objectType === 'cube' ){
+
+                        geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+                        geometry = geometry.toNonIndexed();
+                        scale.y = Math.random() * 200 + 100;
+                        scale.z = Math.random() * 200 + 100;
+                        color.setRGB( 0, 0, 0.1 + 0.9 * Math.random() );
+
+                    }else if( objectType === 'sphere' ){
+
+                        geometry = new THREE.IcosahedronBufferGeometry( 1, 1 );
+                        scale.y = scale.z = scale.x;
+                        color.setRGB( 0.1 + 0.9 * Math.random(), 0, 0 );
+
+                    }
+
+                    applyVertexColors( geometry, color );
+
+                    matrix.compose( position, quaternion, scale );
+                    geometry.applyMatrix( matrix );
+                    geometries.push( geometry );
+
+                }
+
+                return BufferGeometryUtils.mergeBufferGeometries( geometries );
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                // let geos = createGeometries();
+                // let mats = createMaterials();
+
+                // group = new THREE.Group();
+                // scene.add( group );
+
+                // let mesh = new THREE.Mesh( geos.ballGeo, mats.ballMat );
+                // group.add( mesh );
+
+            }
+
+            function FXScene( type, numObjects, cameraZ, fov, rotationSpeed, clearColor ){
+
+                this.clearColor = clearColor;
+
+                this.camera = new THREE.PerspectiveCamera( fov, container_width / container_height, 1, 10000 );
+                this.camera.position.z = cameraZ;
+
+                this.scene = new THREE.Scene();
+
+                this.scene.add( new THREE.AmbientLight( 0x555555 ) );
+                let light = new THREE.SpotLight( 0xffffff, 1.5 );
+                light.position.set( 0, 500, 2000 );
+                this.scene.add( light );
+
+                this.rotationSpeed = rotationSpeed;
+
+                let defaultMat = new THREE.MeshPhongMaterial( { color: 0xffffff, flatShading: true, vertexColors: THREE.VertexColors } );
+                this.mesh = new THREE.Mesh( createGeometries( type, numObjects ), defaultMat );
+                this.scene.add( this.mesh );
+
+                let renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
+                this.fbo = new THREE.WebGLRenderTarget( container_width, container_height, renderTargetParameters );
+
+                this.render = function( delta, rtt ){
+
+                    this.mesh.rotation.x += delta * this.rotationSpeed.x;
+                    this.mesh.rotation.y += delta * this.rotationSpeed.y;
+                    this.mesh.rotation.z += delta * this.rotationSpeed.z;
+
+                    renderer.setClearColor( this.clearColor );
+
+                    if( rtt ){
+
+                        renderer.setRenderTarget( this.fbo );
+                        renderer.clear();
+                        renderer.render( this.scene, this.camera );
+
+                    }else{
+
+                        renderer.setRenderTarget( null );
+                        renderer.render( this.scene, this.camera );
+
+                    }
+
+                };
+
+            }
+
+            //建立transition class
+            function Transition( sceneA, sceneB ){
+
+                this.scene = new THREE.Scene();
+
+                this.cameraOrtho = new THREE.OrthographicCamera( - container_width / 2, container_width / 2, container_height / 2, - container_height / 2, -10, 10 );
+
+                this.textures = [];
+
+                let loader = new THREE.TextureLoader();
+                
+                for( let i = 0; i < 6; i++ ){
+                    this.textures[i] = loader.load( '../../three.js/examples/textures/transition/transition' + ( i + 1 ) + '.png' );
+                }
+
+                this.quadMat = new THREE.ShaderMaterial( {
+                    
+                    uniforms: {
+
+                        tDiffuse1: {
+                            value: null
+                        },
+                        tDiffuse2: {
+                            value: null
+                        },
+                        mixRatio: {
+                            value: 0.0
+                        },
+                        threshold: {
+                            value: 0.1
+                        },
+                        useTexture: {
+                            value: 1
+                        },
+                        tMixTexture: {
+                            value: this.textures[0]
+                        }
+                    },
+
+                    vertexShader: [
+
+                        "varying vec2 vUv;",
+						"void main() {",
+                            "vUv = vec2( uv.x, uv.y );",
+                            "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+						"}"
+
+                    ].join( "\n" ),
+
+                    fragmentShader: [
+
+                        "uniform float mixRatio;",
+						"uniform sampler2D tDiffuse1;",
+						"uniform sampler2D tDiffuse2;",
+						"uniform sampler2D tMixTexture;",
+						"uniform int useTexture;",
+						"uniform float threshold;",
+						"varying vec2 vUv;",
+						"void main() {",
+						"	vec4 texel1 = texture2D( tDiffuse1, vUv );",
+						"	vec4 texel2 = texture2D( tDiffuse2, vUv );",
+						"	if (useTexture==1) {",
+						"		vec4 transitionTexel = texture2D( tMixTexture, vUv );",
+						"		float r = mixRatio * (1.0 + threshold * 2.0) - threshold;",
+						"		float mixf=clamp((transitionTexel.r - r)*(1.0/threshold), 0.0, 1.0);",
+						"		gl_FragColor = mix( texel1, texel2, mixf );",
+						"	} else {",
+						"		gl_FragColor = mix( texel2, texel1, mixRatio );",
+						"	}",
+						"}"
+					].join( "\n" )
+
+                } );
+
+                this.quadGeo = new THREE.PlaneBufferGeometry( container_width, container_height );
+
+                this.quad = new THREE.Mesh( this.quadGeo, this.quadMat );
+                this.scene.add( this.quad );
+
+                this.sceneA = sceneA;
+                this.sceneB = sceneB;
+
+                this.quadMat.uniforms.tDiffuse1.value = sceneA.fbo.texture;
+                this.quadMat.uniforms.tDiffuse2.value = sceneB.fbo.texture;
+
+                this.needChange = false;
+
+                this.setTextureThreshold = function( value ){
+
+                    this.quadMat.uniforms.threshold.value = value;
+
+                };
+
+                this.useTexture = function( value ){
+
+                    this.quadMat.uniforms.useTexture.value = value ? 1 : 0;
+
+                };
+
+                this.setTexture = function( i ){
+
+                    this.quadMat.uniforms.tMixTexture.value = this.textures[i];
+
+                };
+
+                this.render = function( delta ){
+
+                    if( transitionParams.animateTransition ){
+
+                        let t = ( 1 + Math.sin( transitionParams.transitionSpeed * clock.getElapsedTime() / Math.PI ) ) / 2;
+                        transitionParams.transition = THREE.Math.smoothstep( t, 0.3, 0.7 );
+
+                        if( transitionParams.loopTexture && ( transitionParams.transition == 0 || transitionParams.transition == 1 ) ){
+
+                            if( this.needChange ){
+
+                                transitionParams.texture = ( transitionParams.texture + 1 ) % this.textures.length;
+                                this.quadMat.uniforms.tMixTexture.value = this.textures[ transitionParams.texture ];
+                                this.needChange = false;
+
+                            }
+
+                        }else{
+
+                            this.needChange = true;
+
+                        }
+                        
+                    }
+
+                    this.quadMat.uniforms.mixRatio.value = transitionParams.transition;
+
+                    if( transitionParams.transition == 0 ){
+
+                        this.sceneB.render( delta, false );
+
+                    }else if( transitionParams.transition == 1 ){
+
+                        this.sceneA.render( delta, false );
+
+                    }else{
+
+                        this.sceneA.render( delta, true );
+                        this.sceneB.render( delta, true );
+                        renderer.setRenderTarget( null );
+                        renderer.clear();
+                        renderer.render( this.scene, this.cameraOrtho );
+
+                    }
+                }
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                // renderer.autoClearColor = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+
+                // for( let i = 0; i !== animation_groups; ++i ){
+                    
+                //     let group = new THREE.AnimationObjectGroup();
+                //     animGroups.push( group );
+                    
+                // }
+
+                // mesh = mesh.clone();
+                // mesh.material = mesh.material.clone();
+
+                // if( fudgeColor ){
+
+                //     mesh.material.color.offsetHSL( 0, Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25 );
+
+                // }
+
+                // mesh.speed = speed;
+
+                // if( massOptimization ) {
+
+                //     let index = Math.floor( Math.random() * animation_groups ), animGroup = animGroups[index];
+
+                //     animGroup.add( mesh );
+
+                //     if( ! mixer.existingAction( clip, animGroup ) ){
+                        
+                //             let randomness = 0.6 * Math.random() - 0.3;
+                //             let phase = ( index + randomness ) / animation_groups;
+                            
+                //             mixer.clipAction( clip, animGroup ).setDuration( duration ).startAt( -duration * phase ).play();
+                            
+                //         }
+
+                // }else{
+
+                //     mixer.clipAction( clip, mesh ).setDuration( duration ).startAt( -duration * Math.random() ).play();
+
+                // }
+
+
+                // mesh.position.set( x, y, z );
+                // mesh.rotation.y = Math.PI / 2;
+
+                // mesh.castShadow = true;
+                // mesh.receiveShadow = true;
+
+                // scene.add( mesh );
+
+                // morphs.push( mesh );
+
+            }
+
+            //創建composer
+            function createComposer(){
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                // if ( gui ) gui.destroy();
+
+                let gui = new GUI();
+                gui.add( transitionParams, 'useTexture' ).onChange( function( value ){
+                    transition.useTexture( value );
+                } );
+
+                gui.add( transitionParams, 'loopTexture' ); 
+
+                gui.add( transitionParams, 'texture', { Perlin: 0, Squares: 1, Cells: 2, Distort: 3, Gradient: 4, Radial: 5 } ).onChange( function( value ){
+                    transition.setTexture( value );
+                } ).listen();
+
+                gui.add( transitionParams, 'textureThreshold', 0, 1, 0.01 ).onChange( function( value ){
+                    transition.setTextureThreshold( value );
+                } ); 
+                gui.add( transitionParams, 'animateTransition' ); 
+                gui.add( transitionParams, 'transition', 0, 1, 0.01 ).listen();
+                gui.add( transitionParams, 'transitionSpeed', 0.5, 5, 0.01 ); 
+
+                gui.open();
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+                // let loader = new GLTFLoader();
+                // loader.load( '../../../three.js/examples/models/gltf/SimpleSkinning.gltf', function( gltf ){
+                    
+                //     scene.add( gltf.scene );
+                //     let clip = gltf.animations[0];
+                    
+                //     gltf.scene.traverse( function( child ){
+
+                //         if( child.isSkinnedMesh ) child.castShadow = true;
+
+                //     } );
+
+                //     mixer = new THREE.AnimationMixer( gltf.scene );
+                //     mixer.clipAction( clip ).play();
+
+                // } );
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+
+                // controls.lookSpeed = 0.0125;
+                // controls.movementSpeed = 500;
+                // controls.lookVertical = true;
+
+                // controls.enablePan = false;
+                // controls.minDistance = 50;
+                // controls.maxDistance = 200;
+
+                // controls.panSpeed = 0.8;
+                // controls.rotationSpeed = 1.0;
+                // controls.zoomSpeed = 1.2;
+
+                // controls.noZoom = false;
+                // controls.noPan = false;
+                // controls.noFly = false;
+
+                // controls.lookAt( scene.position );
+                // controls.target.set( 0, 2, 0 );
+                // controls.addEventListener('change', renderer);
+                // controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                stats = new Stats();
+                container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                // document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                // document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+                // document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                // document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.clientWidth / 2;
+                // containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                container_width = container.clientWidth;
+                container_height = container.clientHeight;
+
+                // camera.aspect = container_width / container_height;
+                // camera.updateProjectionMatrix();
+
+                renderer.setSize( container_width, container_height );
+                // composer.setSize( container_width, container_height );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            function onDocumentMouseDown( event ){
+
+                // event.preventDefault();
+
+                // isUserInteracting = true;
+
+                // onPointerDownPointX = event.clientX;
+                // onPointerDownPointY = event.clientY;
+
+                // onPointerDownLon = lon;
+                // onPointerDownLat = lat;
+
+            }
+
+            function onDocumentMouseMove( event ){
+
+                // if( isUserInteracting == true ){
+                    
+                //     lon = ( onPointerDownPointX - event.clientX ) * 0.1 + onPointerDownLon;
+                //     lat = ( event.clientY - onPointerDownPointY ) * 0.1 + onPointerDownLat;
+
+                // }
+
+            }
+
+            function onDocumentMouseUp(){
+
+                // isUserInteracting = false;
+
+            }
+
+            function onDocumentMouseWheel( event ){
+
+                // distance += event.deltaY * 0.05;
+                // distance = THREE.Math.clamp( distance, 1, 50 );
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            //Object事件
+            function update(){
+
+            //    let delta = clock.getDelta();
+
+                // mesh.rotation.x += 0.005;
+                // mesh.rotation.y += 0.01;
+
+            }
+
+            //渲染更新
+            function render(){
+
+                transition.render( clock.getDelta() );           
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>
