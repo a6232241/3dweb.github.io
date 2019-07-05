@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>postprocessing-dof2</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>postprocessing - dof2</p>
+        </div>
+
+        <script type="module">
+
+            import * as THREE from '../../three.js/build/three.module.js';
+
+			import Stats from '../../three.js/examples/jsm/libs/stats.module.js';
+			import { GUI } from '../../three.js/examples/jsm/libs/dat.gui.module.js';
+            // import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+
+            import { BokehShader, BokehDepthShader } from '../../three.js/examples/jsm/shaders/BokehShader2.js';
+            
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+            
+            let container_width = container.clientWidth;
+            let container_height = container.clientHeight;
+
+            let containerHalfX = container_width / 2;
+            let containerHalfY = container_height / 2;
+
+            let stats;
+            // let controls;
+
+            // let clock = new THREE.Clock();
+
+            let camera, scene, renderer;
+
+            let materialDepth;
+            let postprocessing = { enabled: true };
+
+            let shaderSettings = {
+                rings: 3,
+                samples: 4
+            };
+
+            let mouse = new THREE.Vector2();
+            let raycaster = new THREE.Raycaster();
+            let distance = 100;
+            let target = new THREE.Vector3( 0, 20, -50 );
+            let effectController;
+            let pieces = [];
+            let leaves = 100;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xffffff );
+                // scene.fog = new THREE.Fog( 0x000000, 1, 1000 );
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                createPostprocessing();
+                createGUI();
+                // loadObject();
+                // createSprites();
+                // createControls();
+                createStats();
+                createEvent();
+                
+                renderer.setAnimationLoop( ( )=> {
+
+                    update();
+                    stats.begin();
+                    render();
+                    // if ( statsEnabled ) 
+                    // stats.update();
+                    stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 70;
+                let aspect = container_width / container_height;
+                let near = 1;
+                let far = 3000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.z = 450;
+                camera.position.y = 150;
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 1, far = 10;
+                // cameraOrtho = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraOrtho.position.z = 10;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                scene.add( new THREE.AmbientLight( 0x222222 ) );
+
+                let dirLight = new THREE.DirectionalLight( 0xffffff, 2 );
+                dirLight.position.set( 2, 1.2, 10 ).normalize();
+                scene.add( dirLight );
+
+                dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+                dirLight.position.set( -2, 1.2, -10 ).normalize();
+                scene.add( dirLight );
+
+                // let light = new THREE.PointLight( 0xddffdd, 1.0 );
+                // light.position.set( -70, -70, 70 );
+                // scene.add( light );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                let path = '../../three.js/examples/textures/cube/Bridge2/';
+                let format = '.jpg';
+                let urls = [
+                    path + 'posx' + format, path + 'negx' + format,
+					path + 'posy' + format, path + 'negy' + format,
+					path + 'posz' + format, path + 'negz' + format
+                ];
+
+                const textureCube = new THREE.CubeTextureLoader().load( urls );
+                textureCube.format = THREE.RGBFormat;
+
+                const shader = THREE.ShaderLib['cube'];
+                shader.uniforms['tCube'].value = textureCube;
+
+                return{
+                    textureCube, shader
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                let textures = createTexture();
+
+                let depthShader = BokehDepthShader;
+
+                materialDepth = new THREE.ShaderMaterial( {
+                    uniforms: depthShader.uniforms,
+                    vertexShader: depthShader.vertexShader,
+                    fragmentShader: depthShader.fragmentShader
+                } );
+                materialDepth.uniforms['mNear'].value = camera.near;
+                materialDepth.uniforms['mFar'].value = camera.far;
+
+                const skyMat = new THREE.ShaderMaterial( {
+                    uniforms:textures.shader.uniforms,
+                    vertexShader: textures.shader.vertexShader,
+                    fragmentShader: textures.shader.fragmentShader,
+                    depthWrite: false,
+                    side: THREE.BackSide
+                } );
+
+                const pieceMat = new THREE.MeshPhongMaterial( {
+                    color: 0xffffff * 0.4,
+                    shininess: 0.5,
+                    specular: 0xffffff,
+                    envMap: textures.textureCube,
+                    side: THREE.DoubleSide
+                } );
+
+                const monkeyMat = new THREE.MeshPhongMaterial( {
+                    shininess: 50,
+                    specular: 0xffffff,
+                    envMap: textures.textureCube,
+                    reflectivity: 1.0,
+                    flatShading: true
+                } );
+
+                const ballMat = new THREE.MeshPhongMaterial( {
+                    color: 0xffffff * Math.random(),
+                    shininess: 0.5,
+                    specular: 0xffffff,
+                    envMap: textures.textureCube,
+                } );
+
+                return{
+                   skyMat, pieceMat, monkeyMat, ballMat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const skyGeo = new THREE.BoxBufferGeometry( 1000, 1000, 1000 );
+                const pieceGeo = new THREE.PlaneBufferGeometry( 10, 10, 1, 1 );
+                const ballGeo = new THREE.SphereBufferGeometry( 1, 20, 20 );
+
+                return{
+                    skyGeo, pieceGeo, ballGeo
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geos = createGeometries();
+                let mats = createMaterials();
+
+                let sky = new THREE.Mesh( geos.skyGeo, mats.skyMat );
+                scene.add( sky );
+
+                let rand = Math.random;
+
+                for( let i = 0; i < leaves; i++ ){
+
+                    let piece = new THREE.Mesh( geos.pieceGeo, mats.pieceMat );
+                    piece.rotation.set( rand(), rand(), rand() );
+                    piece.rotation.dx = rand() * 0.1;
+                    piece.rotation.dy = rand() * 0.1;
+                    piece.rotation.dz = rand() * 0.1;
+
+                    piece.position.set( rand() * 150, 0 + rand() * 300, rand() * 150 );
+                    piece.position.dx = ( rand() - 0.5 );
+                    piece.position.dz = ( rand() - 0.5 );
+                    scene.add( piece );
+                    pieces.push( piece );
+
+                }
+
+                new THREE.BufferGeometryLoader().load( '../../three.js/examples/models/json/suzanne_buffergeometry.json', function( geo ){
+
+                    geo.computeVertexNormals();
+
+                    let monkeys = 20;
+
+                    for( let i = 0; i < monkeys; i++ ){
+
+                        let mesh = new THREE.Mesh( geo, mats.monkeyMat );
+
+                        mesh.position.z = Math.cos( i / monkeys * Math.PI * 2 ) * 200;
+						mesh.position.y = Math.sin( i / monkeys * Math.PI * 3 ) * 20;
+                        mesh.position.x = Math.sin( i / monkeys * Math.PI * 2 ) * 200;
+                        
+                        mesh.rotation.y = i / monkeys * Math.PI * 2;
+                        mesh.scale.setScalar( 30 );
+
+                        scene.add( mesh );
+
+                    }
+
+                } );
+
+                for( let i = 0; i < 20; i++ ){
+
+                    let mesh = new THREE.Mesh( geos.ballGeo, mats.ballMat );
+                    
+					mesh.position.x = ( Math.random() - 0.5 ) * 200;
+					mesh.position.y = Math.random() * 50;
+					mesh.position.z = ( Math.random() - 0.5 ) * 200;
+
+                    mesh.scale.setScalar( 10 );
+                    scene.add( mesh );
+
+                }
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( container_width, container_height );
+                
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                renderer.autoClear = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+            }
+
+            //創建postprocessing
+            function createPostprocessing(){
+
+                postprocessing.scene = new THREE.Scene();
+
+                postprocessing.camera = new THREE.OrthographicCamera( -containerHalfX, containerHalfX, containerHalfY, -containerHalfY );
+                postprocessing.camera.position.z = 100;
+
+                postprocessing.scene.add( postprocessing.camera );
+
+                let pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat };
+                postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget( container_width, container_height, pars );
+                postprocessing.rtTextureColor = new THREE.WebGLRenderTarget( container_width, container_height, pars );
+
+                let bokeh_shader = BokehShader;
+
+                postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone( bokeh_shader.uniforms );
+
+                postprocessing.bokeh_uniforms[ 'tColor' ].value = postprocessing.rtTextureColor.texture;
+				postprocessing.bokeh_uniforms[ 'tDepth' ].value = postprocessing.rtTextureDepth.texture;
+				postprocessing.bokeh_uniforms[ 'textureWidth' ].value = window.innerWidth;
+                postprocessing.bokeh_uniforms[ 'textureHeight' ].value = window.innerHeight;
+                
+                postprocessing.materialBokeh = new THREE.ShaderMaterial( {
+
+                    uniforms: postprocessing.bokeh_uniforms,
+                    vertexShader: bokeh_shader.vertexShader,
+                    fragmentShader: bokeh_shader.fragmentShader,
+                    defines: {
+                        RINGS: shaderSettings.rings,
+                        SAMPLES: shaderSettings.samples
+                    }
+
+                } );
+
+                postprocessing.quad = new THREE.Mesh(
+                    new THREE.PlaneBufferGeometry( container_width, container_height ),
+                    postprocessing.materialBokeh
+                );
+                postprocessing.quad.position.z = -500;
+                postprocessing.scene.add( postprocessing.quad );
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                effectController = {
+
+                    enabled: true,
+                    jsDepthCalculation: true,
+                    shaderFocus: false,
+
+                    fstop: 2.2,
+                    maxblur: 1.0,
+
+                    showFocus: false,
+                    focalDepth: 2.8,
+                    manualdof: false,
+                    vignetting: false,
+                    depthblur: false,
+
+                    threshold: 0.5,
+                    gain: 2.0,
+                    bias: 0.5,
+                    fringe: 0.7,
+
+                    focalLength: 35,
+                    noise: true,
+                    pentagon: false,
+
+                    dithering: 0.0001
+
+                };
+
+                let matChanger = function(){
+
+                    for( let e in effectController ){
+
+                        if(  e in postprocessing.bokeh_uniforms ){
+
+                            postprocessing.bokeh_uniforms[e].value = effectController[e];
+
+                        }
+                    }
+
+                    postprocessing.enabled = effectController.enabled;
+                    postprocessing.bokeh_uniforms["znear"].value = camera.near;
+                    postprocessing.bokeh_uniforms["zfar"].value = camera.far;
+                    camera.setFocalLength( effectController.focalLength );
+
+                }
+
+                let shaderUpdate = function(){
+
+                    postprocessing.materialBokeh.defines.RINGS = shaderSettings.rings;
+                    postprocessing.materialBokeh.defines.SAMPLES = shaderSettings.samples;
+                    postprocessing.materialBokeh.needsUpdate = true;
+
+                }
+                
+                // if ( gui ) gui.destroy();
+
+                let gui = new GUI();
+                gui.add( effectController, "enabled" ).onChange( matChanger );
+                gui.add( effectController, "jsDepthCalculation" ).onChange( matChanger );
+                gui.add( effectController, "shaderFocus" ).onChange( matChanger );
+                gui.add( effectController, "focalDepth", 0.0, 200.0 ).listen().onChange( matChanger );
+
+                gui.add( effectController, "fstop", 0.1, 22, 0.001 ).onChange( matChanger );
+                gui.add( effectController, "maxblur", 0.0, 5.0, 0.025 ).onChange( matChanger );
+
+                gui.add( effectController, "showFocus" ).onChange( matChanger );
+                gui.add( effectController, "manualdof" ).onChange( matChanger );
+                gui.add( effectController, "vignetting" ).onChange( matChanger );
+
+                gui.add( effectController, "depthblur" ).onChange( matChanger );
+
+                gui.add( effectController, "threshold", 0, 1, 0.001 ).onChange( matChanger );
+                gui.add( effectController, "gain", 0, 100, 0.001 ).onChange( matChanger );
+                gui.add( effectController, "bias", 0, 3, 0.001 ).onChange( matChanger );
+                gui.add( effectController, "fringe", 0, 5, 0.001 ).onChange( matChanger );
+
+                gui.add( effectController, "focalLength", 16, 80, 0.001 ).onChange( matChanger );
+
+                gui.add( effectController, "noise" ).onChange( matChanger );
+
+                gui.add( effectController, "dithering", 0, 0.001, 0.0001 ).onChange( matChanger );
+
+                gui.add( effectController, "pentagon" ).onChange( matChanger );
+
+                gui.add( shaderSettings, "rings", 1, 8, 1 ).onChange( shaderUpdate );
+                gui.add( shaderSettings, "samples", 1, 13, 1 ).onChange( shaderUpdate );
+
+                gui.open();
+
+                matChanger();
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                stats = new Stats();
+                container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                // document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                document.addEventListener( 'mousemove', onMouseMove, false );
+                // document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                // document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+                document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+                document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                containerHalfX = container.clientWidth / 2;
+                containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                container_width = container.clientWidth;
+                container_height = container.clientHeight;
+
+                camera.aspect = container_width / container_height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container_width, container_height );
+
+                postprocessing.rtTextureDepth.setSize( container_width, container_height );
+                postprocessing.rtTextureColor.setSize( container_width, container_height );
+
+                postprocessing.bokeh_uniforms['textureWidth'].value = container_width;
+                postprocessing.bokeh_uniforms['textureHeight'].value = container_height;
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            function onDocumentMouseDown( event ){
+
+                // event.preventDefault();
+
+                // isUserInteracting = true;
+
+                // onPointerDownPointX = event.clientX;
+                // onPointerDownPointY = event.clientY;
+
+                // onPointerDownLon = lon;
+                // onPointerDownLat = lat;
+
+            }
+
+            function onDocumentMouseMove( event ){
+
+                // if( isUserInteracting == true ){
+                    
+                //     lon = ( onPointerDownPointX - event.clientX ) * 0.1 + onPointerDownLon;
+                //     lat = ( event.clientY - onPointerDownPointY ) * 0.1 + onPointerDownLat;
+
+                // }
+
+            }
+
+            function onDocumentMouseUp(){
+
+                // isUserInteracting = false;
+
+            }
+
+            function onDocumentMouseWheel( event ){
+
+                // distance += event.deltaY * 0.05;
+                // distance = THREE.Math.clamp( distance, 1, 50 );
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                mouse.x = event.clientX - containerHalfX / containerHalfX;
+                mouse.y = event.clientY - containerHalfY / containerHalfY;
+
+                postprocessing.bokeh_uniforms['focusCoords'].value.set( event.clientX / container_width, 1 - ( event.clientY / container_height ) );
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            function onDocumentTouchStart( event ){
+
+                if( event.touches.length == 1 ){
+
+                    event.preventDefault();
+
+                    mouse.x = ( event.touches[0].pageX - containerHalfX ) / containerHalfX;
+                    mouse.y = -( event.touches[0].pageY - containerHalfY ) / containerHalfY;
+
+                }
+
+            }
+
+            function onDocumentTouchMove( event ){
+
+                if( event.touches.length == 1 ){
+
+                    event.preventDefault();
+
+                    mouse.x = ( event.touches[0].pageX - containerHalfX ) / containerHalfX;
+                    mouse.y = -( event.touches[0].pageY - containerHalfY ) / containerHalfY
+                    
+                }
+
+            }
+
+            //Object事件
+            function update(){
+
+                let time = Date.now() * 0.00005;
+
+                camera.position.x = Math.cos( time ) * 400;
+				camera.position.z = Math.sin( time ) * 500;
+				camera.position.y = Math.sin( time / 1.4 ) * 100;
+
+                camera.lookAt( target );
+
+                camera.updateMatrixWorld();
+
+                if( effectController.jsDepthCalculation ){
+
+                    raycaster.setFromCamera( mouse, camera );
+
+                    let intersects = raycaster.intersectObjects( scene.children, true );
+
+                    if( intersects.length > 0 ){
+
+                        let targetDistance = intersects[0].distance;
+
+                        distance += ( targetDistance - distance ) * 0.03;
+
+                        let sdistance = smoothstep( camera.near, camera.far, distance );
+                        let ldistance = linearize( 1 - sdistance );
+
+                        postprocessing.bokeh_uniforms['focalDepth'].value = ldistance;
+
+                        effectController['focalDepth'] = ldistance;
+
+                    }
+                }
+
+                for( let i = 0; i < leaves; i++ ){
+
+                    let piece = pieces[i];
+                    piece.rotation.x += piece.rotation.dx;
+                    piece.rotation.y += piece.rotation.dy;
+                    piece.rotation.z += piece.rotation.dz;
+
+                    piece.position.x += piece.position.dx;
+                    piece.position.y -= 2;
+                    piece.position.z -= piece.position.dz;
+
+                    if( piece.position.y < 0 ) piece.position.y += 300;
+
+                }
+
+            }
+
+            function linearize( depth ){
+                
+                let zfar = camera.far;
+                let znear = camera.near;
+                return -zfar * znear / ( depth * ( zfar -znear ) - zfar );
+
+            }
+
+            function smoothstep( near, far, depth ){
+
+                let x = saturate( ( depth - near ) / ( far / near ) );
+                return x * x * ( 3 - 2 * x );
+
+            }
+
+            function saturate( x ){
+                
+                return Math.max( 0, Math.min( 1, x ) );
+                
+            }
+
+            //渲染更新
+            function render(){
+
+                if( postprocessing.enabled ){
+
+                    renderer.clear();
+
+                    renderer.setRenderTarget( postprocessing.rtTextureColor );
+                    renderer.clear();
+                    renderer.render( scene, camera );
+
+                    scene.overrideMaterial = materialDepth;
+                    renderer.setRenderTarget( postprocessing.rtTextureDepth );
+                    renderer.clear();
+                    renderer.render( scene, camera );
+                    scene.overrideMaterial = null;
+
+                    renderer.setRenderTarget( null );
+                    renderer.render( postprocessing.scene, postprocessing.camera );
+
+                }else{
+
+                    scene.overrideMaterial = null
+
+                    renderer.setRenderTarget( null );
+                    renderer.clear();
+                    renderer.render( scene, camera );
+
+                }                
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>
