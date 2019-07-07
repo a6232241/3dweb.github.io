@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>postprocessing-fxaa</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>postprocessing - fxaa</p>
+        </div>
+
+        <script type="module">
+
+            import * as THREE from '../../three.js/build/three.module.js';
+
+			// import Stats from '../../three.js/examples/jsm/libs/stats.module.js';
+			// import { GUI } from '../../three.js/examples/jsm/libs/dat.gui.module.js';
+            // import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+
+			import { EffectComposer } from '../../three.js/examples/jsm/postprocessing/EffectComposer.js';
+			import { RenderPass } from '../../three.js/examples/jsm/postprocessing/RenderPass.js';
+            import { ShaderPass } from '../../three.js/examples/jsm/postprocessing/ShaderPass.js';
+            import { CopyShader } from '../../three.js/examples/jsm/shaders/CopyShader.js';
+			import { FXAAShader } from '../../three.js/examples/jsm/shaders/FXAAShader.js';
+            
+			
+
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+            
+            let container_width = container.offsetWidth;
+            let container_height = container.offsetHeight;
+            // let containerHalfX = container_width / 2;
+            // let containerHalfY = container_height / 2;
+
+            // let stats;
+            // let controls;
+
+            let clock = new THREE.Clock();
+
+            let camera, scene, renderer;
+
+            let group;
+            let composer1, composer2, fxaaPass;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color( 0xffffff );
+                scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                createPostprocessing();
+                // createGUI();
+                // loadObject();
+                // createSprites();
+                // createControls();
+                // createStats();
+                createEvent();
+                
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    update();
+                    // stats.begin();
+                    render();
+                    // if ( statsEnabled ) 
+                    // stats.update();
+                    // stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 45;
+                let aspect = ( container_width * 0.5 ) / container_height;
+                let near = 1;
+                let far = 2000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.z = 500;
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 1, far = 10;
+                // cameraOrtho = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraOrtho.position.z = 10;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // scene.add( new THREE.AmbientLight( 0x222222 ) );
+
+                let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+                dirLight.position.set( -3000, 1000, -1000 );  
+                scene.add( dirLight );
+
+                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+                hemiLight.position.set( 0, 1000, 0 );
+                scene.add( hemiLight );
+
+                // let light = new THREE.PointLight( 0xddffdd, 1.0 );
+                // light.position.set( -70, -70, 70 );
+                // scene.add( light );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let path = '../../three.js/examples/textures/cube/SwedishRoyalCastle/';
+                // let format = '.jpg';
+                // let urls = [
+                //     path + 'px' + format, path + 'nx' + format,
+				// 	path + 'py' + format, path + 'ny' + format,
+				// 	path + 'pz' + format, path + 'nz' + format
+                // ];
+
+                // let textureCube = new THREE.CubeTextureLoader().load( urls );
+
+                // parameters = { color: 0xff1100, envMap: textureCube };
+
+                return{
+                    
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = 
+                // createTexture();
+
+                const mat = new THREE.MeshStandardMaterial( { color: 0xee0808, flatShading: true } );
+
+                return{
+                   mat
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const geo = new THREE.TetrahedronBufferGeometry( 10 );
+
+                return{
+                    geo
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geos = createGeometries();
+                let mats = createMaterials();
+
+                group = new THREE.Group();
+                scene.add( group );
+
+                for( let i = 0; i < 100; i++ ){
+                    
+                    let mesh = new THREE.Mesh( geos.geo, mats.mat );
+
+                    mesh.position.x = Math.random() * 500 -250;
+                    mesh.position.y = Math.random() * 500 -250;
+                    mesh.position.z = Math.random() * 500 -250;
+
+                    mesh.scale.setScalar( Math.random() * 2 + 1 );
+
+                    mesh.rotation.x = Math.random() * Math.PI;
+                    mesh.rotation.y = Math.random() * Math.PI;
+                    mesh.rotation.z = Math.random() * Math.PI;
+
+                    group.add( mesh );
+
+                }
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                renderer.autoClear = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+            }
+
+            //創建Postprocessing
+            function createPostprocessing(){
+
+                let renderPass = new RenderPass( scene, camera );
+
+                fxaaPass = new ShaderPass( FXAAShader );
+
+                let pixelRatio = renderer.getPixelRatio();
+
+                fxaaPass.material.uniforms['resolution'].value.x = 1 / ( container_width * pixelRatio );
+                fxaaPass.material.uniforms['resolution'].value.y = 1 / ( container_width * pixelRatio );
+
+                composer1 = new EffectComposer( renderer );
+                composer1.addPass( renderPass );
+                composer1.addPass( fxaaPass );
+
+                let copyPass = new ShaderPass( CopyShader );
+
+                composer2 = new EffectComposer( renderer );
+                composer2.addPass( renderPass );
+                composer2.addPass( copyPass );
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                // if ( gui ) gui.destroy();
+
+                // let gui = new GUI();
+                // gui.add( effectController, "focus", 10.0, 3000.0, 10 ).onChange( matChanger );
+                // gui.add( effectController, "aperture", 0, 10.0, 0.1 ).onChange( matChanger );
+                // gui.add( effectController, "maxblur", 0.0, 3.0, 0.025 ).onChange( matChanger );
+
+                // gui.open();
+
+            }
+
+            //載入Object
+            function loadObject(){
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                // stats = new Stats();
+                // container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                // document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                // document.addEventListener( 'mousemove', onMouseMove, false );
+                // document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                // document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+                // document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+                // document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.offsetWidth / 2;
+                // containerHalfY = container.offsetHeight / 2;
+                // containerThirdX = container.offsetWidth / 3;
+
+                container_width = container.offsetWidth;
+                container_height = container.offsetHeight;
+
+                camera.aspect = ( container_width * 0.5 ) / container_height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container_width, container_height );
+                composer1.setSize( container_width, container_height );
+                composer2.setSize( container_width, container_height );
+
+                let pixelRatio = renderer.getPixelRatio();
+
+                fxaaPass.material.uniforms['resolution'].value.x = 1 / ( container_width * pixelRatio );
+                fxaaPass.material.uniforms['resolution'].value.y = 1 / ( container_width * pixelRatio );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            function onDocumentMouseDown( event ){
+
+                // event.preventDefault();
+
+                // isUserInteracting = true;
+
+                // onPointerDownPointX = event.offsetX;
+                // onPointerDownPointY = event.offsetY;
+
+                // onPointerDownLon = lon;
+                // onPointerDownLat = lat;
+
+            }
+
+            function onDocumentMouseMove( event ){
+
+                // if( isUserInteracting == true ){
+                    
+                //     lon = ( onPointerDownPointX - event.offsetX ) * 0.1 + onPointerDownLon;
+                //     lat = ( event.offsetY - onPointerDownPointY ) * 0.1 + onPointerDownLat;
+
+                // }
+
+            }
+
+            function onDocumentMouseUp(){
+
+                // isUserInteracting = false;
+
+            }
+
+            function onDocumentMouseWheel( event ){
+
+                // distance += event.deltaY * 0.05;
+                // distance = THREE.Math.clamp( distance, 1, 50 );
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = event.offsetX - containerHalfX;
+                // mouseY = event.offsetY - containerHalfY;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            function onDocumentTouchStart( event ){
+
+                // if( event.touches.length == 1 ){
+
+                //     event.preventDefault();
+
+                //     mouseX = event.touches[0].pageX - containerHalfX;
+                //     mouseY = event.touches[0].pageY - containerHalfY;
+
+                // }
+
+            }
+
+            function onDocumentTouchMove( event ){
+
+                // if( event.touches.length == 1 ){
+
+                //     event.preventDefault();
+
+                //     mouseX = event.touches[0].pageX - containerHalfX;
+                //     mouseY = event.touches[0].pageY - containerHalfY;
+                    
+                // }
+
+            }
+
+            //Object事件
+            function update(){
+
+                group.rotation.y += clock.getDelta() * 0.1;
+
+            }
+
+            //渲染更新
+            function render(){
+
+                // if( params.enable ){
+
+                    let halfWidth = container_width / 2;
+
+                    renderer.setViewport( 0, 0, halfWidth, container_height );
+                    composer1.render();
+
+                    renderer.setViewport( halfWidth, 0, halfWidth, container_height );
+                    composer2.render();
+
+                // }else{
+
+                //     renderer.render( scene, camera );
+
+                // }                
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>

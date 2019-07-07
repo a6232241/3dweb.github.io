@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>postprocessing-godrays</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>postprocessing - godrays</p>
+        </div>
+
+        <script type="module">
+
+            import * as THREE from '../../three.js/build/three.module.js';
+
+			import Stats from '../../three.js/examples/jsm/libs/stats.module.js';
+			// import { GUI } from '../../three.js/examples/jsm/libs/dat.gui.module.js';
+            // import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+
+            import { OBJLoader } from '../../three.js/examples/jsm/loaders/OBJLoader.js';
+			import { GodRaysFakeSunShader, GodRaysDepthMaskShader, GodRaysCombineShader, GodRaysGenerateShader } from '../../three.js/examples/jsm/shaders/GodRaysShader.js';
+
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+            
+            let container_width = container.offsetWidth;
+            let container_height = container.offsetHeight;
+            let containerHalfX = container_width / 2;
+            let containerHalfY = container_height / 2;
+
+            let stats;
+            // let controls;
+            // let clock = new THREE.Clock();
+
+            let camera, scene, renderer;
+
+            let matDepth, sphereMesh;
+            let sunPosition = new THREE.Vector3( 0, 1000, -1000 );
+            let screenSpacePosition = new THREE.Vector3();
+
+            let mouseX = 0, mouseY = 0;
+
+            let postprocessing = { enabled: true }
+            let orbitRadius = 200;
+
+            let bgColor = 0x000511;
+            let sunColor = 0xffee00;
+
+            let godrayRenderTatgetResolutionMultiplier = 1.0 / 4.0;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xffffff );
+                // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
+
+                createCamera();
+                // createLights();
+                createMeshes();
+                createRenderer();
+                createPostprocessing();
+                // createGUI();
+                // createSprites();
+                // createControls();
+                createStats();
+                createEvent();
+                
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    update();
+                    stats.begin();
+                    render();
+                    // if ( statsEnabled ) 
+                    // stats.update();
+                    stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 70;
+                let aspect = container_width / container_height;
+                let near = 1;
+                let far = 3000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.z = 200;
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 1, far = 10;
+                // cameraOrtho = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraOrtho.position.z = 10;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // scene.add( new THREE.AmbientLight( 0x222222 ) );
+
+                // let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+                // dirLight.position.set( -3000, 1000, -1000 );  
+                // scene.add( dirLight );
+
+                // let hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+                // hemiLight.position.set( 0, 1000, 0 );
+                // scene.add( hemiLight );
+
+                // let light = new THREE.PointLight( 0xddffdd, 1.0 );
+                // light.position.set( -70, -70, 70 );
+                // scene.add( light );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let path = '../../three.js/examples/textures/cube/SwedishRoyalCastle/';
+                // let format = '.jpg';
+                // let urls = [
+                //     path + 'px' + format, path + 'nx' + format,
+				// 	path + 'py' + format, path + 'ny' + format,
+				// 	path + 'pz' + format, path + 'nz' + format
+                // ];
+
+                // let textureCube = new THREE.CubeTextureLoader().load( urls );
+
+                // parameters = { color: 0xff1100, envMap: textureCube };
+
+                return{
+                    
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = 
+                // createTexture();
+
+                matDepth = new THREE.MeshDepthMaterial();
+                const matScene = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+
+                return{
+                   matScene
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                const geo = new THREE.SphereBufferGeometry( 1, 20, 10 );
+
+                return{
+                    geo
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geos = createGeometries();
+                let mats = createMaterials();
+
+                let loader = new OBJLoader();
+                loader.load( '../../three.js/examples/models/obj/tree.obj', function( obj ){
+
+                    obj.material = mats.matScene;
+                    obj.position.set( 0, -150, -150 );
+                    obj.scale.multiplyScalar( 400 );
+                    scene.add( obj );
+
+                } );
+
+                sphereMesh = new THREE.Mesh( geos.geo, mats.matScene );
+                sphereMesh.scale.multiplyScalar( 20 );
+                scene.add( sphereMesh );
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setClearColor( 0xffffff );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                renderer.autoClear = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+            }
+
+            //創建Postprocessing
+            function createPostprocessing(){
+
+                postprocessing.scene = new THREE.Scene();
+
+                postprocessing.camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, -10000, 10000 );
+                postprocessing.camera.position.z = 100;
+
+                postprocessing.scene.add( postprocessing.camera );
+
+                let pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat };
+                postprocessing.rtTextureColors = new THREE.WebGLRenderTarget( container_width, container_height, pars );
+
+                postprocessing.rtTextureDepth = new THREE.WebGLRenderTarget( container_width, container_height, pars );
+                postprocessing.rtTextureDepthMask = new THREE.WebGLRenderTarget( container_width, container_height, pars );
+
+                let adjustedWidth = container_width * godrayRenderTatgetResolutionMultiplier;
+                let adjustedHeight = container_height * godrayRenderTatgetResolutionMultiplier;
+                postprocessing.rtTextureGodRays1 = new THREE.WebGLRenderTarget( container_width, container_height, pars );
+                postprocessing.rtTextureGodRays2 = new THREE.WebGLRenderTarget( container_width, container_height, pars );
+
+                let godraysMaskShader = GodRaysDepthMaskShader;
+                postprocessing.godraysMaskUniforms = THREE.UniformsUtils.clone( godraysMaskShader.uniforms );
+                postprocessing.materialGodrayDepthMask = new THREE.ShaderMaterial( {
+
+                    uniforms: postprocessing.godraysMaskUniforms,
+                    vertexShader: godraysMaskShader.vertexShader,
+                    fragmentShader: godraysMaskShader.fragmentShader
+
+                } );
+
+                let godraysGenShader = GodRaysGenerateShader;
+                postprocessing.godraysGenUniforms = THREE.UniformsUtils.clone( godraysGenShader.uniforms );
+                postprocessing.materialGodrayGenerate = new THREE.ShaderMaterial( {
+
+                    uniforms: postprocessing.godraysGenUniforms,
+                    vertexShader: godraysGenShader.vertexShader,
+                    fragmentShader: godraysGenShader.fragmentShader
+
+                } );
+
+                let godraysCombineShader = GodRaysCombineShader;
+                postprocessing.godraysCombineUniforms = THREE.UniformsUtils.clone( godraysCombineShader.uniforms );
+                postprocessing.materialGodrayCombine = new THREE.ShaderMaterial( {
+
+                    uniforms: postprocessing.godraysCombineUniforms,
+                    vertexShader: godraysCombineShader.vertexShader,
+                    fragmentShader: godraysCombineShader.fragmentShader
+
+                } );
+
+                postprocessing.godraysCombineUniforms.fGodRayIntensity.value = 0.75;
+
+                let godraysFakeSunShader = GodRaysFakeSunShader;
+                postprocessing.godraysFakeSunUniforms = THREE.UniformsUtils.clone( godraysFakeSunShader.uniforms );
+                postprocessing.materialGodrayFakeSun = new THREE.ShaderMaterial( {
+
+                    uniforms: postprocessing.godraysFakeSunUniforms,
+                    vertexShader: godraysFakeSunShader.vertexShader,
+                    fragmentShader: godraysFakeSunShader.fragmentShader
+
+                } );
+
+                postprocessing.godraysFakeSunUniforms.bgColor.value.setHex( bgColor );
+                postprocessing.godraysFakeSunUniforms.sunColor.value.setHex( sunColor );
+
+                postprocessing.quad = new THREE.Mesh(
+                    new THREE.PlaneBufferGeometry( 1.0, 1.0 ),
+                    postprocessing.materialGodrayGenerate
+                );
+                postprocessing.quad.position.z = -9900;
+                postprocessing.scene.add( postprocessing.quad );
+
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                // if ( gui ) gui.destroy();
+
+                // let gui = new GUI();
+                // gui.add( effectController, "focus", 10.0, 3000.0, 10 ).onChange( matChanger );
+                // gui.add( effectController, "aperture", 0, 10.0, 0.1 ).onChange( matChanger );
+                // gui.add( effectController, "maxblur", 0.0, 3.0, 0.025 ).onChange( matChanger );
+
+                // gui.open();
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                stats = new Stats();
+                container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                // document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                document.addEventListener( 'mousemove', onMouseMove, false );
+                // document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                // document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+                document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+                document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                containerHalfX = container.offsetWidth / 2;
+                containerHalfY = container.offsetHeight / 2;
+                // containerThirdX = container.offsetWidth / 3;
+
+                container_width = container.offsetWidth;
+                container_height = container.offsetHeight;
+
+                camera.aspect = container_width / container_height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container_width, container_height );
+                postprocessing.rtTextureColors.setSize( container_width, container_height );
+                postprocessing.rtTextureDepth.setSize( container_width, container_height );
+                postprocessing.rtTextureDepthMask.setSize( container_width, container_height );
+
+                let adjustedWidth = container_width * godrayRenderTatgetResolutionMultiplier;
+                let adjustedHeight = container_height * godrayRenderTatgetResolutionMultiplier;
+                postprocessing.rtTextureGodRays1.setSize( adjustedWidth, adjustedHeight );
+                postprocessing.rtTextureGodRays2.setSize( adjustedWidth, adjustedHeight );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            function onDocumentMouseDown( event ){
+
+                // event.preventDefault();
+
+                // isUserInteracting = true;
+
+                // onPointerDownPointX = event.offsetX;
+                // onPointerDownPointY = event.offsetY;
+
+                // onPointerDownLon = lon;
+                // onPointerDownLat = lat;
+
+            }
+
+            function onDocumentMouseMove( event ){
+
+                // if( isUserInteracting == true ){
+                    
+                //     lon = ( onPointerDownPointX - event.offsetX ) * 0.1 + onPointerDownLon;
+                //     lat = ( event.offsetY - onPointerDownPointY ) * 0.1 + onPointerDownLat;
+
+                // }
+
+            }
+
+            function onDocumentMouseUp(){
+
+                // isUserInteracting = false;
+
+            }
+
+            function onDocumentMouseWheel( event ){
+
+                // distance += event.deltaY * 0.05;
+                // distance = THREE.Math.clamp( distance, 1, 50 );
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                mouseX = event.offsetX - containerHalfX;
+                mouseY = event.offsetY - containerHalfY;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            function onDocumentTouchStart( event ){
+
+                if( event.touches.length == 1 ){
+
+                    event.preventDefault();
+
+                    mouseX = event.touches[0].pageX - containerHalfX;
+                    mouseY = event.touches[0].pageY - containerHalfY;
+
+                }
+
+            }
+
+            function onDocumentTouchMove( event ){
+
+                if( event.touches.length == 1 ){
+
+                    event.preventDefault();
+
+                    mouseX = event.touches[0].pageX - containerHalfX;
+                    mouseY = event.touches[0].pageY - containerHalfY;
+                    
+                }
+
+            }
+
+            //Object事件
+            function update(){
+
+                let time = Date.now() / 4000;
+
+                sphereMesh.position.x = orbitRadius * Math.cos( time );
+                sphereMesh.position.z = orbitRadius * Math.sin( time ) - 100;
+
+                camera.position.x += ( mouseX - camera.position.x ) * 0.036;
+                camera.position.y += ( -mouseY - camera.position.y ) * 0.036;
+
+                camera.lookAt( scene.position );
+
+            }
+
+            function getStepSize( filterLen, tapsPerPass, pass ){
+
+                return filterLen * Math.pow( tapsPerPass, -pass );
+
+            }
+
+            function filterGodRays( inputTex, renderTarget, stepSize ){
+
+                postprocessing.scene.overrideMaterial = postprocessing.materialGodrayGenerate;
+
+                postprocessing.godraysGenUniforms["fStepSize"].value = stepSize;
+                postprocessing.godraysGenUniforms["tInput"].value = inputTex;
+
+                renderer.setRenderTarget( renderTarget );
+                renderer.render( postprocessing.scene, postprocessing.camera );
+                postprocessing.scene.overrideMaterial = null;
+
+            }
+
+            //渲染更新
+            function render(){
+
+                if( postprocessing.enabled ){
+
+                    screenSpacePosition.copy( sunPosition ).project( camera );
+
+                    screenSpacePosition.x = ( screenSpacePosition.x + 1 ) / 2;
+                    screenSpacePosition.y = ( screenSpacePosition.y + 1 ) / 2;
+
+                    postprocessing.godraysGenUniforms["vSunPositionScreenSpace"].value.x = screenSpacePosition.x;
+                    postprocessing.godraysGenUniforms["vSunPositionScreenSpace"].value.y = screenSpacePosition.y;
+
+                    postprocessing.godraysFakeSunUniforms["vSunPositionScreenSpace"].value.x = screenSpacePosition.x;
+                    postprocessing.godraysFakeSunUniforms["vSunPositionScreenSpace"].value.y = screenSpacePosition.y;
+
+                    //畫出天空和太陽
+
+                    renderer.setRenderTarget( postprocessing.rtTextureColors );
+                    renderer.clear( true, true, false );
+
+                    let sunsqH = 0.74 * container_height;
+                    let sunsqW = 0.74 * container_height;
+
+                    screenSpacePosition.x *= container_width;
+                    screenSpacePosition.y *= container_height;
+
+                    renderer.setScissor( screenSpacePosition.x - sunsqW / 2, screenSpacePosition.y - sunsqH / 2, sunsqH );
+                    renderer.setScissorTest( true );
+
+                    postprocessing.godraysFakeSunUniforms["fAspect"].value = container_width / container_height;
+
+                    postprocessing.scene.overrideMaterial = postprocessing.materialGodrayFakeSun;
+                    renderer.setRenderTarget( postprocessing.rtTextureColors );
+                    renderer.render( postprocessing.scene, postprocessing.camera );
+
+                    renderer.setScissorTest( false );
+
+                    //畫出環境
+
+                    //colors
+
+                    scene.overrideMaterial = null;
+                    renderer.setRenderTarget( postprocessing.rtTextureColors );
+                    renderer.render( scene, camera );
+
+                    //depth
+
+                    scene.overrideMaterial = matDepth;
+                    renderer.setRenderTarget( postprocessing.rtTextureDepth );
+                    renderer.clear();
+                    renderer.render( scene, camera );
+
+                    //
+
+                    postprocessing.godraysMaskUniforms["tInput"].value = postprocessing.rtTextureDepth.texture;
+
+                    postprocessing.scene.overrideMaterial = postprocessing.materialGodrayDepthMask;
+                    renderer.setRenderTarget( postprocessing.rtTextureDepthMask );
+                    renderer.render( postprocessing.scene, postprocessing.camera );
+
+                    let filterLen = 1.0;
+
+                    let TAPS_PER_PASS = 6.0;
+
+                    filterGodRays( postprocessing.rtTextureDepthMask.texture, postprocessing.rtTextureGodRays2, getStepSize( filterLen, TAPS_PER_PASS, 1.0 ) );
+                    filterGodRays( postprocessing.rtTextureGodRays2.texture, postprocessing.rtTextureGodRays1, getStepSize( filterLen, TAPS_PER_PASS, 2.0 ) );
+                    filterGodRays( postprocessing.rtTextureGodRays1.texture, postprocessing.rtTextureGodRays2, getStepSize( filterLen, TAPS_PER_PASS, 3.0 ) );
+
+                    postprocessing.godraysCombineUniforms["tColors"].value = postprocessing.rtTextureColors.texture;
+                    postprocessing.godraysCombineUniforms["tGodRays"].value = postprocessing.rtTextureGodRays2.texture;
+
+                    postprocessing.scene.overrideMaterial = postprocessing.materialGodrayCombine;
+
+                    renderer.setRenderTarget( null );
+                    renderer.render( postprocessing.scene, postprocessing.camera );
+                    postprocessing.scene.overrideMaterial = null
+                    
+                }else{
+
+                    renderer.setRenderTarget( null );
+                    renderer.clear();
+                    renderer.render( scene, camera );
+
+                }                
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>
