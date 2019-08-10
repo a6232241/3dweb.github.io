@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>postprocessing-nodes</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>postprocessing - nodes</p>
+        </div>
+
+        <script src="../../three.js/build/three.js"></script>
+		<script src="../../three.js/examples/js/libs/dat.gui.min.js"></script>
+
+        <script type="module">
+
+			import '../../three.js/examples/js/nodes/THREE.Nodes.js';
+			import '../../three.js/examples/js/loaders/NodeMaterialLoader.js';
+
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+            
+            let container_width = container.clientWidth;
+            let container_height = container.clientHeight;
+
+            // let stats;
+            // let controls;
+
+            let clock = new THREE.Clock();
+
+            let camera, scene, renderer;
+
+            let object = new THREE.Object3D();
+            let light, nodepost;
+
+            let gui;
+
+            let frame = new THREE.NodeFrame();
+
+            let param = {
+                
+                example: new URL( window.location.href ).searchParams.get( 'e' ) || 'color-adjustment'
+
+            };
+
+            var textureLoader = new THREE.TextureLoader();
+
+			var lensflare2 = textureLoader.load( '../../three.js/examples/textures/lensflare/lensflare0.png' );
+			lensflare2.wrapS = lensflare2.wrapT = THREE.RepeatWrapping;
+
+			var decalNormal = textureLoader.load( '../../three.js/examples/textures/decal/decal-normal.jpg' );
+			decalNormal.wrapS = decalNormal.wrapT = THREE.RepeatWrapping;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xffffff );
+                scene.fog = new THREE.Fog( 0x0066ff, 1, 1000 );
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                createPostprocessing();
+                updateMat();
+                // loadObject();
+                // createSprites();
+                // createControls();
+                // createStats();
+                createEvent();
+                
+
+                renderer.setAnimationLoop( ( )=> {
+
+                    update();
+                    // stats.begin();
+                    render();
+                    // if ( statsEnabled ) 
+                    // stats.update();
+                    // stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 70;
+                let aspect = container_width / container_height;
+                let near = 1;
+                let far = 1000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.z = 400;
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 1, far = 10;
+                // cameraOrtho = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraOrtho.position.z = 10;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                scene.add( new THREE.AmbientLight( 0x999999 ) );
+
+                light = new THREE.DirectionalLight( 0xffffff );
+                light.position.set( 1, 1, 1 );  
+                scene.add( light );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let loader = new THREE.TextureLoader();
+
+                return{
+                    
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = createTexture();
+
+                // const torusKnotMat = new THREE.MeshNormalMaterial();
+                
+
+                return{
+
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+                
+                // const torusKnotGeo = new THREE.TorusKnotBufferGeometry( 3, 1, 256, 32 );
+                const geo = new THREE.SphereBufferGeometry( 1, 4, 4 );
+
+                return{
+                    geo
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                let geos = createGeometries();
+                // let mats = createMaterials();
+
+                scene.add( object );
+
+                for( let i = 0; i < 100; i++ ){
+
+                    let mat = new THREE.MeshPhongMaterial( { color: 0x888888 + ( 0x888888 * Math.random() ), flatShading: true } );
+
+                    let mesh = new THREE.Mesh( geos.geo, mat );
+                    mesh.position.set( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 ).normalize();
+                    mesh.position.multiplyScalar( Math.random() * 400 );
+                    mesh.rotation.set( Math.random() * 2, Math.random() * 2, Math.random() * 2 );
+                    mesh.scale.setScalar( 10 + ( Math.random() * 40 ) );
+                    object.add( mesh );
+                }
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                // renderer.autoClearColor = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+            }
+
+            //創建Postprocessing
+            function createPostprocessing(){
+
+                nodepost = new THREE.NodePostProcessing( renderer );
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                if ( gui ) gui.destroy();
+
+                gui = new dat.GUI();
+                gui.add( param, 'example', {
+					'basic / color-adjustment': 'color-adjustment',
+					'basic / blends': 'blends',
+					'basic / fade': 'fade',
+					'basic / invert': 'invert',
+					'basic / blur': 'blur',
+					'adv / motion-blur': 'motion-blur',
+					'adv / saturation': 'saturation',
+					'adv / refraction': 'refraction',
+					'adv / mosaic': 'mosaic'
+                }).onFinishChange( function(){
+
+                    updateMat();
+
+                } );
+                gui.open();
+
+            }
+
+            function updateMat(){
+
+                let name = param.example;
+
+                createGUI();
+
+                switch( name ){
+                    
+                    case 'color-adjustment':
+
+                        var screen = new THREE.ScreenNode();
+
+						var hue = new THREE.FloatNode();
+						var sataturation = new THREE.FloatNode( 1 );
+						var vibrance = new THREE.FloatNode();
+						var brightness = new THREE.FloatNode( 0 );
+						var contrast = new THREE.FloatNode( 1 );
+
+						var hueNode = new THREE.ColorAdjustmentNode( screen, hue, THREE.ColorAdjustmentNode.HUE );
+						var satNode = new THREE.ColorAdjustmentNode( hueNode, sataturation, THREE.ColorAdjustmentNode.SATURATION );
+						var vibranceNode = new THREE.ColorAdjustmentNode( satNode, vibrance, THREE.ColorAdjustmentNode.VIBRANCE );
+						var brightnessNode = new THREE.ColorAdjustmentNode( vibranceNode, brightness, THREE.ColorAdjustmentNode.BRIGHTNESS );
+						var contrastNode = new THREE.ColorAdjustmentNode( brightnessNode, contrast, THREE.ColorAdjustmentNode.CONTRAST );
+						
+                        nodepost.output = contrastNode;
+
+                        //GUI
+						addGUI( 'hue', hue.value, function ( val ) {
+
+							hue.value = val;
+
+						}, false, 0, Math.PI * 2 );
+
+						addGUI( 'saturation', sataturation.value, function ( val ) {
+
+							sataturation.value = val;
+
+						}, false, 0, 2 );
+
+                        addGUI( 'vibrance', vibrance.value, function( val ){
+                            
+                            vibrance.value = val;
+
+                        }, false, -1, 1 );
+
+                        addGUI( 'brightness', brightness.value, function( val ){
+                            
+                            brightness.value = val;
+
+                        }, false, 0, .5 );
+
+                        addGUI( 'contrast', contrast.value, function( val ){
+                            
+                            contrast.value = val;
+
+                        }, false, 0, 2 );
+
+                        break;
+
+                        case 'fade':
+
+                        var color = new THREE.ColorNode( 0xffffff );
+                        var percent = new THREE.FloatNode( .5 );
+
+                        var fade = new THREE.Math3Node(
+                            new THREE.ScreenNode(),
+                            color,
+                            percent,
+                            THREE.Math3Node.MIX
+                        );
+
+                        nodepost.output = fade;
+
+                        //GUI
+                        addGUI( 'color', color.value.getHex(), function( val ){
+                            
+                            color.value.setHex( val );
+
+                        }, true );
+
+                        addGUI( 'fade', percent.value, function( val ){
+                            
+                            percent.value = val;
+
+                        }, false, 0, 1 );
+
+                        break;
+
+                    case 'invert':
+
+                        var alpha = new THREE.FloatNode( 1 );
+
+						var screen = new THREE.ScreenNode();
+
+						var inverted = new THREE.Math1Node( screen, THREE.Math1Node.INVERT );
+
+						var fade = new THREE.Math3Node(
+							screen,
+							inverted,
+							alpha,
+							THREE.Math3Node.MIX
+						);
+
+                        nodepost.output = fade;
+
+                        //GUI
+                        addGUI( 'alpha', alpha.value, function( val ){
+                            
+                            alpha.value = val ;
+
+                        }, false, 0, 1 );
+
+                        break;
+
+                    case 'blends':
+
+						// POST
+						var multiply = new THREE.OperatorNode(
+							new THREE.ScreenNode(),
+							new THREE.TextureNode( lensflare2 ),
+							THREE.OperatorNode.ADD
+						);
+
+						nodepost.output = multiply;
+
+						// GUI
+						addGUI( 'blend', {
+							'addition': THREE.OperatorNode.ADD,
+							'subtract': THREE.OperatorNode.SUB,
+							'multiply': THREE.OperatorNode.MUL,
+							'division': THREE.OperatorNode.DIV
+						}, function ( val ) {
+							multiply.op = val;
+							nodepost.needsUpdate = true;
+						} );
+
+						break;
+
+                    
+					case 'saturation':
+
+						// PASS
+						var screen = new THREE.ScreenNode();
+						var sat = new THREE.FloatNode( 0 );
+						var satrgb = new THREE.FunctionNode( [
+							"vec3 satrgb( vec3 rgb, float adjustment ) {",
+							// include luminance function from LuminanceNode
+							"	vec3 intensity = vec3( luminance( rgb ) );",
+							"	return mix( intensity, rgb, adjustment );",
+							"}"
+						].join( "\n" ), [ THREE.LuminanceNode.Nodes.luminance ] );
+
+						var saturation = new THREE.FunctionCallNode( satrgb );
+						saturation.inputs.rgb = screen;
+						saturation.inputs.adjustment = sat;
+						nodepost.output = saturation;
+
+						// GUI
+						addGUI( 'saturation', sat.value, function ( val ) {
+							sat.value = val;
+						}, false, 0, 2 );
+
+						break;
+
+                    case 'refraction':
+
+						// POST
+						var normal = new THREE.TextureNode( decalNormal );
+						var normalXY = new THREE.SwitchNode( normal, 'xy' );
+						var scale = new THREE.FloatNode( .5 );
+
+						var normalXYFlip = new THREE.Math1Node(
+							normalXY,
+							THREE.Math1Node.INVERT
+						);
+
+						var offsetNormal = new THREE.OperatorNode(
+							normalXYFlip,
+							new THREE.FloatNode( .5 ),
+							THREE.OperatorNode.ADD
+						);
+
+						var scavarexture = new THREE.OperatorNode(
+							new THREE.SwitchNode( normal, 'z' ),
+							offsetNormal,
+							THREE.OperatorNode.MUL
+						);
+
+						var scaleNormal = new THREE.Math3Node(
+							new THREE.FloatNode( 1 ),
+							scavarexture,
+							scale,
+							THREE.Math3Node.MIX
+						);
+
+						var offsetCoord = new THREE.OperatorNode(
+							new THREE.UVNode(),
+							scaleNormal,
+							THREE.OperatorNode.MUL
+						);
+
+						var screen = new THREE.ScreenNode( offsetCoord );
+						nodepost.output = screen;
+
+						// GUI
+						addGUI( 'scale', scale.value, function ( val ) {
+							scale.value = val;
+						}, false, 0, 1 );
+
+						addGUI( 'invert', false, function ( val ) {
+							offsetNormal.a = val ? normalXYFlip : normalXY;
+							nodepost.needsUpdate = true;
+						} );
+
+						break;
+
+                    case 'motion-blur':
+
+						// POST
+						var size = renderer.getDrawingBufferSize( new THREE.Vector2() );
+
+						var screen = new THREE.ScreenNode();
+
+						var previousFrame = new THREE.RTTNode( size.width, size.height, screen );
+
+						var motionBlur = new THREE.Math3Node(
+							previousFrame,
+							screen,
+							new THREE.FloatNode( .5 ),
+							THREE.Math3Node.MIX
+						);
+
+						var currentFrame = new THREE.RTTNode( size.width, size.height, motionBlur );
+						currentFrame.saveTo = previousFrame;
+
+						nodepost.output = currentFrame;
+
+						break;
+
+                    case 'mosaic':
+						// POST
+						var scale = new THREE.FloatNode( 128 );
+						var fade = new THREE.FloatNode( 1 );
+						var uv = new THREE.UVNode();
+
+						var blocks = new THREE.OperatorNode(
+							uv,
+							scale,
+							THREE.OperatorNode.MUL
+						);
+
+						var blocksSize = new THREE.Math1Node(
+							blocks,
+							THREE.Math1Node.FLOOR
+						);
+
+						var mosaicUV = new THREE.OperatorNode(
+							blocksSize,
+							scale,
+							THREE.OperatorNode.DIV
+						);
+
+						var fadeScreen = new THREE.Math3Node(
+							uv,
+							mosaicUV,
+							fade,
+							THREE.Math3Node.MIX
+						);
+
+						nodepost.output = new THREE.ScreenNode( fadeScreen );
+
+						// GUI
+						addGUI( 'scale', scale.value, function ( val ) {
+							scale.value = val;
+						}, false, 16, 1024 );
+
+						addGUI( 'fade', fade.value, function ( val ) {
+							fade.value = val;
+						}, false, 0, 1 );
+
+						addGUI( 'mask', false, function ( val ) {
+							fadeScreen.c = val ? new THREE.TextureNode( lensflare2 ) : fade;
+							nodepost.needsUpdate = true;
+						} );
+
+						break;
+
+                    case 'blur':
+
+						// POST
+						var size = renderer.getDrawingBufferSize( new THREE.Vector2() );
+
+						var blurScreen = new THREE.BlurNode( new THREE.ScreenNode() );
+						blurScreen.size = new THREE.Vector2( size.width, size.height );
+
+						nodepost.output = blurScreen;
+
+						// GUI
+						addGUI( 'blurX', blurScreen.radius.x, function ( val ) {
+							blurScreen.radius.x = val;
+						}, false, 0, 15 );
+
+						addGUI( 'blurY', blurScreen.radius.y, function ( val ) {
+							blurScreen.radius.y = val;
+						}, false, 0, 15 );
+
+						break;
+                    
+                }
+                
+                nodepost.needsUpdate = true;
+            
+            }
+
+            function addGUI( name, value, callback, isColor, min, max ) {
+
+				var node;
+
+				param[ name ] = value;
+
+				if ( isColor ) {
+
+					node = gui.addColor( param, name ).onChange( function () {
+						callback( param[ name ] );
+					} );
+
+				} else if ( typeof value == 'object' ) {
+
+					param[ name ] = value[ Object.keys( value )[ 0 ] ];
+					node = gui.add( param, name, value ).onChange( function () {
+						callback( param[ name ] );
+					} );
+
+				} else {
+
+					node = gui.add( param, name, min, max ).onChange( function () {
+						callback( param[ name ] );
+					} );
+
+				}
+
+				return node;
+			}
+
+            //載入Object
+            function loadObject(){
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+
+                // controls.lookSpeed = 0.0125;
+                // controls.movementSpeed = 500;
+                // controls.lookVertical = true;
+
+                // controls.enablePan = false;
+                // controls.minDistance = 50;
+                // controls.maxDistance = 200;
+
+                // controls.panSpeed = 0.8;
+                // controls.rotateSpeed = 1.0;
+                // controls.zoomSpeed = 1.2;
+
+                // controls.noZoom = false;
+                // controls.noPan = false;
+                // controls.noFly = false;
+
+                // controls.lookAt( scene.position );
+                // controls.target.set( 0, 2, 0 );
+                // controls.addEventListener('change', renderer);
+                // controls.update();
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                // stats = new Stats();
+                // container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                // document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                // document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+                // document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                // document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.clientWidth / 2;
+                // containerHalfY = container.clientHeight / 2;
+                // containerThirdX = container.clientWidth / 3;
+
+                container_width = container.clientWidth;
+                container_height = container.clientHeight;
+
+                camera.aspect = container_width / container_height;
+                camera.updateProjectionMatrix();
+
+                nodepost.setSize( container_width, container_height );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            function onDocumentMouseDown( event ){
+
+                // event.preventDefault();
+
+                // isUserInteracting = true;
+
+                // onPointerDownPointX = event.clientX;
+                // onPointerDownPointY = event.clientY;
+
+                // onPointerDownLon = lon;
+                // onPointerDownLat = lat;
+
+            }
+
+            function onDocumentMouseMove( event ){
+
+                // if( isUserInteracting == true ){
+                    
+                //     lon = ( onPointerDownPointX - event.clientX ) * 0.1 + onPointerDownLon;
+                //     lat = ( event.clientY - onPointerDownPointY ) * 0.1 + onPointerDownLat;
+
+                // }
+
+            }
+
+            function onDocumentMouseUp(){
+
+                // isUserInteracting = false;
+
+            }
+
+            function onDocumentMouseWheel( event ){
+
+                // distance += event.deltaY * 0.05;
+                // distance = THREE.Math.clamp( distance, 1, 50 );
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = ( event.clientX - clientHalfX ) * 10;
+                // mouseY = ( event.clientY - clientHalfY ) * 10;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            //Object事件
+            function update(){
+
+            //    let delta = clock.getDelta();
+
+                object.rotation.x += 0.005;
+                object.rotation.y += 0.01;
+
+            }
+
+            //渲染更新
+            function render(){
+
+                let delta = clock.getDelta();
+
+                frame.update( delta );
+
+                nodepost.render( scene, camera, frame );
+
+                // renderer.render( scene, camera );
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>

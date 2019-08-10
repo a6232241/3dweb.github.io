@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>postprocessing-pixel</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+        <div id="info">
+            <p>postprocessing - pixel</p>
+        </div>
+
+        <script type="module">
+
+            import * as THREE from '../../three.js/build/three.module.js';
+
+			// import Stats from '../../three.js/examples/jsm/libs/stats.module.js';
+			import { GUI } from '../../three.js/examples/jsm/libs/dat.gui.module.js';
+            // import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+            // import { OBJLoader } from '../../three.js/examples/jsm/loaders/OBJLoader.js';
+            import { TrackballControls } from '../../three.js/examples/jsm/controls/TrackballControls.js';
+
+			import { EffectComposer } from '../../three.js/examples/jsm/postprocessing/EffectComposer.js';
+            import { RenderPass } from '../../three.js/examples/jsm/postprocessing/RenderPass.js';
+			import { ShaderPass } from '../../three.js/examples/jsm/postprocessing/ShaderPass.js';
+            import { PixelShader } from '../../three.js/examples/jsm/shaders/PixelShader.js';
+
+            // if( WEBGL.isWebGLAvailable() === false ){
+
+            //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+            // }
+            
+            let container = document.querySelector('#scene-container');
+            
+            let container_width = container.offsetWidth;
+            let container_height = container.offsetHeight;
+            // let containerHalfX = container_width / 2;
+            // let containerHalfY = container_height / 2;
+
+            // let stats;
+            let controls;
+            // let clock = new THREE.Clock();
+
+            let scene, camera, renderer;
+
+            let gui;
+
+            let composer;
+            let pixelPass;
+            let params = {
+                pixelSize: 16,
+                postprocessing: true
+            };
+
+            let group = new THREE.Group();
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0x444444 );
+                // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
+
+                createCamera();
+                createLights();
+                createMeshes();
+                createRenderer();
+                createPostprocessing();
+                createGUI();
+                // createSprites();
+                createControls();
+                // createStats();
+                createEvent();
+                
+                renderer.setAnimationLoop( ( )=> {
+
+                    // stats.begin();
+                    update();
+                    render();
+                    // if ( statsEnabled ) 
+                    // stats.update();
+                    // stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 75;
+                let aspect = container_width / container_height;
+                let near = 1;
+                let far = 10000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( 0, 0, 30 );
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 3, far = 10;
+                // cameraO = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraO.position.z = 7;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // scene.add( new THREE.AmbientLight( 0xaaaaaa, 0.2 ) );
+
+                let dirLight = new THREE.DirectionalLight( 0xffffff, .5 );
+                dirLight.position.set( 150, 75, 150 );
+                scene.add( dirLight );
+
+                let dirLight2 = new THREE.DirectionalLight( 0xffffff, .2 );
+                dirLight2.position.set( -150, 75, -150 );
+                scene.add( dirLight2 );
+
+                let dirLight3 = new THREE.DirectionalLight( 0xffffff, .1 );
+                dirLight3.position.set( 0, 125, 0 );
+                scene.add( dirLight3 );
+
+                let hemiLight = new THREE.HemisphereLight( 0xfceafc, 0x000000, .8 );
+                scene.add( hemiLight );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let path = '../../three.js/examples/textures/cube/SwedishRoyalCastle/';
+                // let format = '.jpg';
+                // let urls = [
+                //     path + 'px' + format, path + 'nx' + format,
+				// 	path + 'py' + format, path + 'ny' + format,
+				// 	path + 'pz' + format, path + 'nz' + format
+                // ];
+
+                // let textureCube = new THREE.CubeTextureLoader().load( urls );
+
+                // parameters = { color: 0xff1100, envMap: textureCube };
+
+
+                return{
+                    // texture
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = createTexture();
+
+                // const mat = new THREE.MeshPhongMaterial( { color: 0xffaaff } );
+
+                return{
+
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                // const geo = new THREE.SphereBufferGeometry( 3, 48, 24 );
+
+                return{
+
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                // let geos = createGeometries();
+                // let mats = createMaterials();
+
+                scene.add( group );
+
+                let geos = [
+                    new THREE.SphereBufferGeometry( 1, 64, 64 ),
+                    new THREE.BoxBufferGeometry( 1, 1, 1 ),
+                    new THREE.ConeBufferGeometry( 1, 1, 32 ),
+                    new THREE.TetrahedronBufferGeometry( 1 ),
+                    new THREE.TorusKnotBufferGeometry( 1, .4 )
+                ]
+
+                for( let i = 0; i < 25; i++ ){
+
+                    let geo = geos[ Math.floor( Math.random() * geos.length ) ];
+
+                    let color = new THREE.Color();
+                    color.setHSL( Math.random(), .7 + .2 * Math.random(), .5 + .1 * Math.random() );
+
+                    let mat = new THREE.MeshPhongMaterial( { color: color, shininess: 200 } );
+
+                    let mesh = new THREE.Mesh( geo, mat );
+
+                    let s = 4 + Math.random() * 10;
+                    mesh.scale.set( s, s, s );
+
+                    mesh.position.set( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 ).normalize();
+                    mesh.position.multiplyScalar( Math.random() * 200 );
+                    mesh.rotation.set( Math.random() * 2 , Math.random() * 2, Math.random() * 2 );
+
+                    group.add( mesh );
+
+                }
+
+
+            }
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                // renderer.autoClear = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+            }
+
+            //創建Postprocessing
+            function createPostprocessing(){
+
+                composer = new EffectComposer( renderer );
+
+                let renderPass = new RenderPass( scene, camera );
+                composer.addPass( renderPass );
+
+                pixelPass = new ShaderPass( PixelShader );
+                pixelPass.uniforms[ "resolution" ].value = new THREE.Vector2( container_width, container_height );
+                pixelPass.uniforms[ "resolution" ].value.multiplyScalar( window.devicePixelRatio );
+                pixelPass.uniforms[ "pixelSize" ].value = params.pixelSize;
+                composer.addPass( pixelPass );
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                if ( gui ) gui.destroy();
+
+                gui = new GUI( { width: 300 } );
+                gui.add( params, "pixelSize", 2, 32, 2 ).onChange( function( val ){
+
+                    pixelPass.uniforms[ "pixelSize" ].value = val;
+
+                });
+                gui.add( params, "postprocessing" );
+                gui.open();
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+                controls = new TrackballControls( camera, renderer.domElement );
+                controls.rotateSpeed = 0.05;
+                controls.panSpeed = 0.8;
+                controls.zoomSpeed = 1.5;
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                // stats = new Stats();
+                // container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                // document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                // document.addEventListener( 'mousemove', onDocumentTouchMove, false );
+                // document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                // document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+                // document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+                // document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.offsetWidth / 2;
+                // containerHalfY = container.offsetHeight / 2;
+                // containerThirdX = container.offsetWidth / 3;
+
+                container_width = container.offsetWidth;
+                container_height = container.offsetHeight;
+
+                let aspect = container_width / container_height;
+
+                camera.aspect = aspect;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( container_width, container_height );
+
+                pixelPass.uniforms[ "resolution" ].value.set( container_width, container_height ).multiplyScalar( window.devicePixelRatio );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            function onDocumentMouseDown( event ){
+
+                // event.preventDefault();
+
+                // isUserInteracting = true;
+
+                // onPointerDownPointX = event.offsetX;
+                // onPointerDownPointY = event.offsetY;
+
+                // onPointerDownLon = lon;
+                // onPointerDownLat = lat;
+
+            }
+
+            function onDocumentMouseMove( event ){
+
+                // if( isUserInteracting == true ){
+                    
+                //     lon = ( onPointerDownPointX - event.offsetX ) * 0.1 + onPointerDownLon;
+                //     lat = ( event.offsetY - onPointerDownPointY ) * 0.1 + onPointerDownLat;
+
+                // }
+
+            }
+
+            function onDocumentMouseUp(){
+
+                // isUserInteracting = false;
+
+            }
+
+            function onDocumentMouseWheel( event ){
+
+                // distance += event.deltaY * 0.05;
+                // distance = THREE.Math.clamp( distance, 1, 50 );
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = event.offsetX - containerHalfX;
+                // mouseY = event.offsetY - containerHalfY;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            function onDocumentTouchStart( event ){
+
+                // if( event.touches.length == 1 ){
+
+                //     event.preventDefault();
+
+                //     mouseX = event.touches[0].pageX - containerHalfX;
+                //     mouseY = event.touches[0].pageY - containerHalfY;
+
+                // }
+
+            }
+
+            function onDocumentTouchMove( event ){
+
+                let x, y ;
+
+                if( event.changedTouches ){
+
+                    x = event.changedTouches[0].pageX;
+                    y = event.changedTouches[0].pageY;
+                    
+                } else {
+
+                    x = event.clientX;
+                    y = event.clientY;
+
+                }
+
+                mouse.x = ( x / container_width ) * 2 - 1;
+                mouse.y = - ( y / container_height ) * 2 + 1;
+
+            }
+
+            //Object事件
+            function update(){
+
+                controls.update();
+
+                group.rotation.y += .0015;
+                group.rotation.z += .001;
+
+            }
+
+            //渲染更新
+            function render(){
+
+                if( params.postprocessing ){
+
+                    composer.render();
+                    
+                }else{
+
+                    renderer.render( scene, camera );
+
+                }
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>
