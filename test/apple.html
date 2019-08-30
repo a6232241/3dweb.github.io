@@ -159,7 +159,7 @@
 				let map = loader.load( '../models/fbx/apple/maps/AM130_021_diff_01.jpg');
 
 				let fbxLoader = new FBXLoader();
-				fbxLoader.load( '../models/fbx/apple/Food00021.fbx', function ( obj ) {
+				fbxLoader.load( '../models/fbx/apple/Food00021.FBX', function ( obj ) {
 
 					if( obj.isMesh ){
 
@@ -227,7 +227,7 @@
 
                 // controls = new OrbitControls( camera, renderer.domElement );
 				controls = new OrbitControls( camera, renderer.domElement );
-				controls.target.set( 0, 8, 0 );
+				controls.target.set( 0, 4, 0 );
                 // controls.rotateSpeed = 0.05;
                 // controls.panSpeed = 0.8;
                 // controls.zoomSpeed = 1.5;
