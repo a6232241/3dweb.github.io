@@ -67,12 +67,12 @@
             //創建相機
             function createCamera(){
 
-                let fov = 25;
+                let fov = 30;
                 let aspect = container_width / container_height;
                 let near = 1;
                 let far = 2000;
                 camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
-                camera.position.set( 25, 10, 25 );
+                camera.position.set( 5, 10, 25 );
 
                 // let left = - containerHalfX;
                 // let right = containerHalfX;
@@ -89,13 +89,17 @@
 
                 // scene.add( new THREE.AmbientLight( 0xaaaaaa, 0.2 ) );
 
-                let dirLight = new THREE.DirectionalLight( 0xffffff );
+                let dirLight = new THREE.DirectionalLight( 0xffaaaa, 0.7 );
                 dirLight.position.set( 0, 1, 0 );
                 scene.add( dirLight );
 
-				let hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+				let hemiLight = new THREE.HemisphereLight( 0xffffff, 0x770000, 0.7 );
 				hemiLight.position.set( 0, 1, 0 );
                 scene.add( hemiLight );
+
+                let pointLight = new THREE.PointLight( 0xffffff );
+                pointLight.position.set( -15, 5, 5 );
+                scene.add( pointLight );
 
             }
 
@@ -156,18 +160,53 @@
 			function loadingModel(){
 
 				let loader = new THREE.TextureLoader();
-				let map = loader.load( '../models/fbx/apple/maps/AM130_021_diff_01.jpg');
 
 				let fbxLoader = new FBXLoader();
-				fbxLoader.load( '../models/fbx/apple/Food00021.FBX', function ( obj ) {
+				fbxLoader.load( '../models/fbx/apple/Food00021.FBX', function ( apple ) {
 
-					if( obj.isMesh ){
+                    let arr = [];
 
-						obj.material.map = map;
+					apple.traverse( function( obj ){
 
-					}
+                        if( obj.isMesh ){
 
-					scene.add( obj );
+                            arr.push( obj );
+
+                        }
+
+                    } );
+
+                    for( let i = 0; i < arr.length; i++ ){
+
+                        if( i < 2 ){
+
+                            arr[i].material = new THREE.MeshPhongMaterial( {
+                                map: loader.load( '../models/fbx/apple/maps/AM130_021_diff_02.jpg'),
+                                normalMap: loader.load( '../models/fbx/apple/maps/AM130_021_norm 01.jpg' ),
+                                metalness: 0.9,
+                                roughness: 0.5
+                            } );
+
+                        }else if( i < 4 ){
+
+                            arr[i].material = new THREE.MeshPhongMaterial( {
+                                map: loader.load( '../models/fbx/apple/maps/AM130_021_diff_02.jpg'),
+                                normalMap: loader.load( '../models/fbx/apple/maps/AM130_021_norm 02.jpg' )
+                            } );
+
+                        }else{
+
+                            arr[i].material = new THREE.MeshPhongMaterial( {
+                                map: loader.load( '../models/fbx/apple/maps/AM130_021_diff_01.jpg'),
+                                normalMap: loader.load( '../models/fbx/apple/maps/AM130_021_norm 04.jpg' ),
+                                bumpMap: loader.load( '../models/fbx/apple/maps/AM130_021_bump_01.jpg')
+                            } );
+
+                        }
+
+                    }
+
+					scene.add( apple );
 
 				} );
 
@@ -227,7 +266,7 @@
 
                 // controls = new OrbitControls( camera, renderer.domElement );
 				controls = new OrbitControls( camera, renderer.domElement );
-				controls.target.set( 0, 4, 0 );
+				controls.target.set( 0, 3, 0 );
                 // controls.rotateSpeed = 0.05;
                 // controls.panSpeed = 0.8;
                 // controls.zoomSpeed = 1.5;
