@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>BakeryProduct6_LOD1</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+		
+		<script type="module">
+			
+			import * as THREE from '../three.js/build/three.module.js';
+
+			import { OrbitControls } from '../three.js/examples/jsm/controls/OrbitControls.js';
+			import { GLTFLoader } from '../three.js/examples/jsm/loaders/GLTFLoader.js';
+
+
+			let container = document.querySelector('#scene-container');
+            
+            let container_width = container.offsetWidth;
+            let container_height = container.offsetHeight;
+            // let containerHalfX = container_width / 2;
+            // let containerHalfY = container_height / 2;
+
+            // let stats;
+            let controls;
+            // let clock = new THREE.Clock();
+
+            let scene, camera, renderer;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xffffff );
+                // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
+
+                createCamera();
+                createLights();
+				createMeshes();
+				loadingModel();
+                createRenderer();
+                // createPostprocessing();
+                // createGUI();
+                // createSprites();
+                createControls();
+                // createStats();
+                createEvent();
+                
+                renderer.setAnimationLoop( ( )=> {
+
+                    // stats.begin();
+                    // update();
+                    render();
+                    // if ( statsEnabled ) 
+                    // stats.update();
+                    // stats.end();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 30;
+                let aspect = container_width / container_height;
+                let near = 1;
+                let far = 2000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( 5, 10, 25 );
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 3, far = 10;
+                // cameraO = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraO.position.z = 7;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // scene.add( new THREE.AmbientLight( 0xaaaaaa, 0.2 ) );
+
+                let dirLight = new THREE.DirectionalLight( 0xffaaaa, 0.7 );
+                dirLight.position.set( 0, 1, 0 );
+                scene.add( dirLight );
+
+				let hemiLight = new THREE.HemisphereLight( 0xffffff, 0x777700, 0.7 );
+				hemiLight.position.set( 0, 1, 0 );
+                scene.add( hemiLight );
+
+                let pointLight = new THREE.PointLight( 0xffffff );
+                pointLight.position.set( -15, 5, 5 );
+                scene.add( pointLight );
+
+            }
+
+            //創建紋理
+            function createTexture(){
+
+                // let path = '../../three.js/examples/textures/cube/SwedishRoyalCastle/';
+                // let format = '.jpg';
+                // let urls = [
+                //     path + 'px' + format, path + 'nx' + format,
+				// 	path + 'py' + format, path + 'ny' + format,
+				// 	path + 'pz' + format, path + 'nz' + format
+                // ];
+
+                // let textureCube = new THREE.CubeTextureLoader().load( urls );
+
+                // parameters = { color: 0xff1100, envMap: textureCube };
+
+
+                return{
+                    // texture
+                };
+
+            }
+
+            //創建材質
+            function createMaterials(){
+
+                // let textures = createTexture();
+
+                // const mat = new THREE.MeshPhongMaterial( { color: 0xffaaff } );
+
+                return{
+
+                };
+
+            }
+
+            //創建幾何
+            function createGeometries(){
+
+                // const geo = new THREE.SphereBufferGeometry( 3, 48, 24 );
+
+                return{
+
+                };
+
+            }
+
+            //實現網格
+            function createMeshes(){
+
+                // let geos = createGeometries();
+                // let mats = createMaterials();
+
+			}
+			
+			function loadingModel(){
+
+                let loader = new THREE.TextureLoader();
+
+				let gltfLoader = new GLTFLoader();
+				gltfLoader.load( '../models/gltf/BakeryProduct6_LOD1/BakeryProduct6_LOD1.gltf', function ( gltf ) {
+
+                    console.log( gltf.scene.children );
+
+                    gltf.scene.traverse( function( child ){
+
+                        if( child.isMesh ){
+
+                            child.material.normalMap = loader.load( '../models/gltf/BakeryProduct6_LOD1/6406_BakeryProduct6_Normal.png');
+                            child.material.roughnessMap = loader.load( '../models/gltf/BakeryProduct6_LOD1/6410_BakeryProduct6_Roughness.png');
+
+                            child.position.set( 0, 3, 0 );
+                            child.scale.set( 80, 80, 80 );
+
+                        }
+
+                    } );
+
+					scene.add( gltf.scene );
+
+				} );
+
+			}
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                // renderer.gammaInput = true;
+                // renderer.gammaOutput = true;
+                // renderer.gammaFactor = 2.2;
+                // renderer.autoClear = false;
+                
+                // renderer.shadowMap.enabled = true;
+                // renderer.shadowMap.type = THREE.BasicShadowMap;
+
+                // renderer.physicallyCorrectLights = true;
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //新增動畫
+            function addMorph( mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization ){
+
+            }
+
+            //創建Postprocessing
+            function createPostprocessing(){
+
+                // composer = new EffectComposer( renderer );
+
+            }
+
+            //創建GUI
+            function createGUI(){
+
+                // if ( gui ) gui.destroy();
+
+                // gui = new GUI( { width: 300 } );
+                // gui.add( params, "pixelSize", 2, 32, 2 ).onChange( function( val ){
+
+                //     pixelPass.uniforms[ "pixelSize" ].value = val;
+
+                // });
+                // gui.add( params, "postprocessing" );
+                // gui.open();
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.target.set( 0, 3, 0 );
+                // controls.rotateSpeed = 0.05;
+                // controls.panSpeed = 0.8;
+                // controls.zoomSpeed = 1.5;
+
+            }
+
+            //新增執行效率
+            function createStats(){
+
+            // if( statsEnabled ){
+                // stats = new Stats();
+                // container.appendChild( stats.dom );
+            // }
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+                // window.addEventListener( 'keydown', onWindowKeyDown, false );
+                // document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                // document.addEventListener( 'mousemove', onDocumentTouchMove, false );
+                // document.addEventListener( 'mouseup', onDocumentMouseUp, false );
+                // document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+                // document.addEventListener( 'touchstart', onDocumentTouchStart, false );
+                // document.addEventListener( 'touchmove', onDocumentTouchMove, false );
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                // containerHalfX = container.offsetWidth / 2;
+                // containerHalfY = container.offsetHeight / 2;
+                // containerThirdX = container.offsetWidth / 3;
+
+                container_width = container.offsetWidth;
+                container_height = container.offsetHeight;
+
+                let aspect = container_width / container_height;
+
+                camera.aspect = aspect;
+				camera.updateProjectionMatrix();
+				
+				renderer.setSize( container_width, container_height );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            function onDocumentMouseDown( event ){
+
+                // event.preventDefault();
+
+                // isUserInteracting = true;
+
+                // onPointerDownPointX = event.offsetX;
+                // onPointerDownPointY = event.offsetY;
+
+                // onPointerDownLon = lon;
+                // onPointerDownLat = lat;
+
+            }
+
+            function onDocumentMouseMove( event ){
+
+                // if( isUserInteracting == true ){
+                    
+                //     lon = ( onPointerDownPointX - event.offsetX ) * 0.1 + onPointerDownLon;
+                //     lat = ( event.offsetY - onPointerDownPointY ) * 0.1 + onPointerDownLat;
+
+                // }
+
+            }
+
+            function onDocumentMouseUp(){
+
+                // isUserInteracting = false;
+
+            }
+
+            function onDocumentMouseWheel( event ){
+
+                // distance += event.deltaY * 0.05;
+                // distance = THREE.Math.clamp( distance, 1, 50 );
+
+            }
+
+            //滑鼠移動事件
+            function onMouseMove( event ){
+
+                // mouseX = event.offsetX - containerHalfX;
+                // mouseY = event.offsetY - containerHalfY;
+
+            }
+
+            //鍵盤按鍵事件
+            function onWindowKeyDown( event ){
+
+                // switch ( event.keyCode ){
+
+                //     case 84: //t
+                //         showHUD = !showHUD;
+                //         break;
+
+                // }
+
+            }
+
+            function onDocumentTouchStart( event ){
+
+                // if( event.touches.length == 1 ){
+
+                //     event.preventDefault();
+
+                //     mouseX = event.touches[0].pageX - containerHalfX;
+                //     mouseY = event.touches[0].pageY - containerHalfY;
+
+                // }
+
+            }
+
+            function onDocumentTouchMove( event ){
+
+                // let x, y ;
+
+                // if( event.changedTouches ){
+
+                //     x = event.changedTouches[0].pageX;
+                //     y = event.changedTouches[0].pageY;
+                    
+                // } else {
+
+                //     x = event.clientX;
+                //     y = event.clientY;
+
+                // }
+
+                // mouse.x = ( x / container_width ) * 2 - 1;
+                // mouse.y = - ( y / container_height ) * 2 + 1;
+
+            }
+
+            //Object事件
+            function update(){
+
+            }
+
+            //渲染更新
+            function render(){
+
+                // if( params.postprocessing ){
+
+                //     composer.render();
+                    
+                // }else{
+
+					controls.update();
+
+                    renderer.render( scene, camera );
+
+                // }
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>
