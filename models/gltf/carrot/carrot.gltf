@@ -1,0 +1,198 @@
+{
+	"asset": {
+		"generator": "Unity 2018.1.8f1",
+		"extras": {
+			"exporterVersion" : "2.2.1"
+		},
+		"version": "2.0"
+	},
+	"accessors": [
+		{
+			"bufferView": 2,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2826,
+			"max": [ 0.0745347, 0.02367997, 0.0189614 ],
+			"min": [ -0.08242874, -0.0002102265, -0.02876447 ],
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 2,
+			"byteOffset": 33912,
+			"componentType": 5126,
+			"count": 2826,
+			"max": [ 0.9999331, 0.9998042, 0.9995104 ],
+			"min": [ -0.9930651, -0.999954, -0.9999981 ],
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 1,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2826,
+			"max": [ 0.9648253, 0.9967386 ],
+			"min": [ 0.002496956, 0.002678121 ],
+			"type": "VEC2"
+		},
+		{
+			"bufferView": 3,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2826,
+			"max": [ 0.9896609, 0.9862297, 0.9996384, 1 ],
+			"min": [ -0.979487, -0.9890606, -0.9985542, -1 ],
+			"type": "VEC4"
+		},
+		{
+			"bufferView": 0,
+			"byteOffset": 0,
+			"componentType": 5123,
+			"count": 16440,
+			"max": [ 2825 ],
+			"min": [ 0 ],
+			"type": "SCALAR"
+		}
+	],
+	"buffers": [
+		{
+			"byteLength": 168528,
+			"uri": "carrot.bin"
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 32880,
+			"target": 34963,
+			"byteOffset": 135648
+		},
+		{
+			"buffer": 0,
+			"byteLength": 22608,
+			"target": 34962,
+			"byteStride": 8,
+			"byteOffset": 0
+		},
+		{
+			"buffer": 0,
+			"byteLength": 67824,
+			"target": 34962,
+			"byteStride": 12,
+			"byteOffset": 22608
+		},
+		{
+			"buffer": 0,
+			"byteLength": 45216,
+			"target": 34962,
+			"byteStride": 16,
+			"byteOffset": 90432
+		}
+	],
+	"extensionsRequired": [
+		"KHR_materials_pbrSpecularGlossiness"
+	],
+	"extensionsUsed": [
+		"KHR_materials_pbrSpecularGlossiness"
+	],
+	"images": [
+		{
+			"uri": "Assets/a/Carrot/Carrot_BaseColor&Albedo.jpg"
+		},
+		{
+			"uri": "Assets/a/Carrot/Carrot_Normal.jpg"
+		},
+		{
+			"uri": "Assets/a/Carrot/Carrot_AmbientOcclusion.jpg"
+		}
+	],
+	"materials": [
+		{
+			"extensions": {
+				"KHR_materials_pbrSpecularGlossiness": {
+					"diffuseTexture" : {
+						"index" : 0,
+						"texCoord" : 0
+					},
+					"diffuseFactor": [1, 1, 1, 1],
+					"specularFactor": [0.2, 0.2, 0.2],
+					"glossinessFactor": 0.392				}
+
+			},
+			"normalTexture" : {
+				"index" : 1,
+				"texCoord" : 0,
+				"scale" : 1
+			},
+			"emissiveFactor": [0, 0, 0],
+			"occlusionTexture" : {
+				"index" : 2,
+				"texCoord" : 0,
+				"strength" : 1
+			},
+			"doubleSided": false,
+			"name": "New Material"
+		}
+	],
+	"meshes": [
+		{
+			"name": "mesh_carrot_16048carrot",
+			"primitives": [
+				{
+					"attributes": {
+						"POSITION": 0,
+						"NORMAL": 1,
+						"TEXCOORD_0": 2,
+						"TANGENT": 3
+					},
+					"indices": 4,
+					"material": 0,
+					"mode": 4
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"name": "UnityGlTF_root",
+			"children": [
+				1
+			]
+		},
+		{
+			"name": "node_carrot_-129748",
+			"mesh": 0,
+			"matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+		}
+	],
+	"samplers": [
+		{
+			"magFilter": 9729,
+			"minFilter": 9985,
+			"wrapS": 10497,
+			"wrapT": 10497
+		}
+	],
+	"scenes": [
+		{
+			"name":"defaultScene",
+			"nodes": [
+				0
+			]
+		}
+	],
+	"scene": 0,
+	"textures": [
+		{
+			"sampler": 0,
+			"source": 0
+		},
+		{
+			"sampler": 0,
+			"source": 1
+		},
+		{
+			"sampler": 0,
+			"source": 2
+		}
+	]
+}

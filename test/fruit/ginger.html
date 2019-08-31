@@ -3,10 +3,10 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>banana</title>
+        <title>ginger</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="../css/styles.css">
+        <link rel="stylesheet" href="../../css/styles.css">
     </head>
     <body>
         <div id="scene-container">
@@ -14,10 +14,10 @@
 		
 		<script type="module">
 			
-			import * as THREE from '../three.js/build/three.module.js';
+			import * as THREE from '../../three.js/build/three.module.js';
 
-			import { OrbitControls } from '../three.js/examples/jsm/controls/OrbitControls.js';
-			import { FBXLoader } from '../three.js/examples/jsm/loaders/FBXLoader.js';
+			import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+			import { GLTFLoader } from '../../three.js/examples/jsm/loaders/GLTFLoader.js';
 
 
 			let container = document.querySelector('#scene-container');
@@ -38,7 +38,6 @@
 
                 createCamera();
                 createLights();
-				// createMeshes();
 				loadingModel();
                 createRenderer();
                 // createGUI();
@@ -61,7 +60,7 @@
                 let near = 1;
                 let far = 2000;
                 camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
-                camera.position.set( 20, 20, 35 );
+                camera.position.set( 5, 10, 25 );
 
                 // let left = - containerHalfX;
                 // let right = containerHalfX;
@@ -76,17 +75,13 @@
             //創建光源
             function createLights(){
 
-                // scene.add( new THREE.AmbientLight( 0xaaaaaa, 0.2 ) );
+                scene.add( new THREE.AmbientLight( 0xffffff, 0.7 ) );
 
-                let dirLight = new THREE.DirectionalLight( 0xffaaaa, 0.7 );
+                let dirLight = new THREE.DirectionalLight( 0xffffff, 0.7 );
                 dirLight.position.set( 0, 1, 0 );
                 scene.add( dirLight );
 
-				let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffff00, 0.7 );
-				hemiLight.position.set( 0, 1, 0 );
-                scene.add( hemiLight );
-
-                let pointLight = new THREE.PointLight( 0xffffff, 0.4 );
+                let pointLight = new THREE.PointLight( 0xffffff );
                 pointLight.position.set( -15, 5, 5 );
                 scene.add( pointLight );
 
@@ -94,55 +89,29 @@
 
 			function loadingModel(){
 
-				let loader = new THREE.TextureLoader();
+                let loader = new THREE.TextureLoader();
 
-				let fbxLoader = new FBXLoader();
-				fbxLoader.load( '../models/fbx/banana/Food00028.FBX', function ( fbx ) {
+				let gltfLoader = new GLTFLoader();
+				gltfLoader.load( '../../models/gltf/Ginger/Ginger.gltf', function ( gltf ) {
 
-                    let arr = [];
+                    console.log( gltf.scene.children );
 
-					fbx.traverse( function( obj ){
+                    gltf.scene.traverse( function( child ){
 
-                        if( obj.isMesh ){
+                        if( child.isMesh ){
 
-                            arr.push( obj );
+                            child.material.normalMap = loader.load( '../../models/gltf/Ginger/Assets/a/Ginger/Ginger_Normal.jpg');
+                            child.material.specularMap = loader.load( '../../models/gltf/Ginger/Assets/a/Ginger/Ginger_Specular.png');
+                            child.material.emissiveMap = loader.load( '../../models/gltf/Ginger/Assets/a/Ginger/Ginger_BaseColor&Albedo.jpg');
+                            child.material.alphaMap = loader.load( '../../models/gltf/Ginger/Assets/a/Ginger/Ginger_AmbientOcclusion.jpg');
+
+                            child.scale.setScalar( 220 );
 
                         }
 
                     } );
 
-                    console.log( arr.length );
-
-                    for( let i = 0; i < arr.length; i++ ){
-
-                        if( i < 1 ){
-
-                            arr[i].material = new THREE.MeshPhongMaterial( {
-                                map: loader.load( '../models/fbx/banana/maps/AM130_028_diffuse_03.jpg'),
-                                normalMap: loader.load( '../models/fbx/banana/maps/AM130_028_normals_03.jpg' ),
-                            } );
-
-                        }else if( i < 2 ){
-
-                            arr[i].material = new THREE.MeshPhongMaterial( {
-                                map: loader.load( '../models/fbx/banana/maps/AM130_028_diffuse_02.jpg'),
-                                normalMap: loader.load( '../models/fbx/banana/maps/AM130_028_normals_02.jpg' )
-                            } );
-
-                        }else{
-
-                            arr[i].material = new THREE.MeshPhongMaterial( {
-                                map: loader.load( '../models/fbx/banana/maps/AM130_028_diffuse_01.jpg'),
-                                normalMap: loader.load( '../models/fbx/banana/maps/AM130_028_normals_04.jpg' ),
-                                bumpMap: loader.load( '../models/fbx/banana/maps/AM130_028_bump_01.jpg'),
-                                emissiveMap: loader.load( '../models/fbx/banana/maps/AM130_028_blend_01.jpg')
-                            } );
-
-                        }
-
-                    }
-
-					scene.add( fbx );
+					scene.add( gltf.scene );
 
 				} );
 
@@ -210,6 +179,11 @@
                 // controls.handleResize();
 
                 // render();
+
+            }
+
+            //Object事件
+            function update(){
 
             }
 

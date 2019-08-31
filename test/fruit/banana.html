@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>banana</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+		
+		<script type="module">
+			
+			import * as THREE from '../../three.js/build/three.module.js';
+
+			import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+			import { FBXLoader } from '../../three.js/examples/jsm/loaders/FBXLoader.js';
+
+
+			let container = document.querySelector('#scene-container');
+            
+            let container_width = container.offsetWidth;
+            let container_height = container.offsetHeight;
+
+            let controls;
+
+            let scene, camera, renderer;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xffffff );
+                // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
+
+                createCamera();
+                createLights();
+				// createMeshes();
+				loadingModel();
+                createRenderer();
+                // createGUI();
+                createControls();
+                createEvent();
+                
+                renderer.setAnimationLoop( ( )=> {
+
+                    // update();
+                    render();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 30;
+                let aspect = container_width / container_height;
+                let near = 1;
+                let far = 2000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( 20, 20, 35 );
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 3, far = 10;
+                // cameraO = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraO.position.z = 7;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                // scene.add( new THREE.AmbientLight( 0xaaaaaa, 0.2 ) );
+
+                let dirLight = new THREE.DirectionalLight( 0xffaaaa, 0.7 );
+                dirLight.position.set( 0, 1, 0 );
+                scene.add( dirLight );
+
+				let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffff00, 0.7 );
+				hemiLight.position.set( 0, 1, 0 );
+                scene.add( hemiLight );
+
+                let pointLight = new THREE.PointLight( 0xffffff, 0.4 );
+                pointLight.position.set( -15, 5, 5 );
+                scene.add( pointLight );
+
+            }
+
+			function loadingModel(){
+
+				let loader = new THREE.TextureLoader();
+
+				let fbxLoader = new FBXLoader();
+				fbxLoader.load( '../../models/fbx/banana/Food00028.FBX', function ( fbx ) {
+
+                    let arr = [];
+
+					fbx.traverse( function( obj ){
+
+                        if( obj.isMesh ){
+
+                            arr.push( obj );
+
+                        }
+
+                    } );
+
+                    console.log( arr.length );
+
+                    for( let i = 0; i < arr.length; i++ ){
+
+                        if( i < 1 ){
+
+                            arr[i].material = new THREE.MeshPhongMaterial( {
+                                map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_03.jpg'),
+                                normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_03.jpg' ),
+                            } );
+
+                        }else if( i < 2 ){
+
+                            arr[i].material = new THREE.MeshPhongMaterial( {
+                                map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_02.jpg'),
+                                normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_02.jpg' )
+                            } );
+
+                        }else{
+
+                            arr[i].material = new THREE.MeshPhongMaterial( {
+                                map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_01.jpg'),
+                                normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_04.jpg' ),
+                                bumpMap: loader.load( '../../models/fbx/banana/maps/AM130_028_bump_01.jpg'),
+                                emissiveMap: loader.load( '../../models/fbx/banana/maps/AM130_028_blend_01.jpg')
+                            } );
+
+                        }
+
+                    }
+
+					scene.add( fbx );
+
+				} );
+
+			}
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //創建GUI
+            function createGUI(){
+
+                // if ( gui ) gui.destroy();
+
+                // gui = new GUI( { width: 300 } );
+                // gui.add( params, "pixelSize", 2, 32, 2 ).onChange( function( val ){
+
+                //     pixelPass.uniforms[ "pixelSize" ].value = val;
+
+                // });
+                // gui.add( params, "postprocessing" );
+                // gui.open();
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.target.set( 0, 3, 0 );
+                // controls.rotateSpeed = 0.05;
+                // controls.panSpeed = 0.8;
+                // controls.zoomSpeed = 1.5;
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                container_width = container.offsetWidth;
+                container_height = container.offsetHeight;
+
+                let aspect = container_width / container_height;
+
+                camera.aspect = aspect;
+				camera.updateProjectionMatrix();
+				
+				renderer.setSize( container_width, container_height );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            //渲染更新
+            function render(){
+
+                controls.update();
+
+                renderer.render( scene, camera );
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>

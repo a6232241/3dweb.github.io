@@ -1,0 +1,209 @@
+{
+	"asset": {
+		"generator": "Unity 2018.1.8f1",
+		"extras": {
+			"exporterVersion" : "2.2.1"
+		},
+		"version": "2.0"
+	},
+	"accessors": [
+		{
+			"bufferView": 2,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 1642,
+			"max": [ 0.04079335, 0.05355579, 0.0434686 ],
+			"min": [ -0.02292218, 9.163559E-05, -0.03993029 ],
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 2,
+			"byteOffset": 19704,
+			"componentType": 5126,
+			"count": 1642,
+			"max": [ 0.9998651, 0.9990207, 0.9972585 ],
+			"min": [ -0.9979979, -0.9992483, -0.9968334 ],
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 1,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 1642,
+			"max": [ 0.999378, 0.9990621 ],
+			"min": [ 0.00057725, 0 ],
+			"type": "VEC2"
+		},
+		{
+			"bufferView": 3,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 1642,
+			"max": [ 0.4367301, 0.9998538, 0.9889687, 1 ],
+			"min": [ -0.9995029, -0.9988955, -0.9989999, -1 ],
+			"type": "VEC4"
+		},
+		{
+			"bufferView": 0,
+			"byteOffset": 0,
+			"componentType": 5123,
+			"count": 9402,
+			"max": [ 1641 ],
+			"min": [ 0 ],
+			"type": "SCALAR"
+		}
+	],
+	"buffers": [
+		{
+			"byteLength": 97620,
+			"uri": "Mango.bin"
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 18804,
+			"target": 34963,
+			"byteOffset": 78816
+		},
+		{
+			"buffer": 0,
+			"byteLength": 13136,
+			"target": 34962,
+			"byteStride": 8,
+			"byteOffset": 0
+		},
+		{
+			"buffer": 0,
+			"byteLength": 39408,
+			"target": 34962,
+			"byteStride": 12,
+			"byteOffset": 13136
+		},
+		{
+			"buffer": 0,
+			"byteLength": 26272,
+			"target": 34962,
+			"byteStride": 16,
+			"byteOffset": 52544
+		}
+	],
+	"extensionsRequired": [
+		"KHR_materials_pbrSpecularGlossiness"
+	],
+	"extensionsUsed": [
+		"KHR_materials_pbrSpecularGlossiness"
+	],
+	"images": [
+		{
+			"uri": "Assets/a/Mango/Mango_BaseColor&Albedo.jpg"
+		},
+		{
+			"uri": "Assets/a/Mango/Mango_Specular.png"
+		},
+		{
+			"uri": "Assets/a/Mango/Mango_Normal.jpg"
+		},
+		{
+			"uri": "Assets/a/Mango/Mango_AmbientOcclusion.jpg"
+		}
+	],
+	"materials": [
+		{
+			"extensions": {
+				"KHR_materials_pbrSpecularGlossiness": {
+					"diffuseTexture" : {
+						"index" : 0,
+						"texCoord" : 0
+					},
+					"diffuseFactor": [1, 1, 1, 1],
+					"specularGlossinessTexture" : {
+						"index" : 1,
+						"texCoord" : 0
+					},
+					"specularFactor": [1, 1, 1],
+					"glossinessFactor": 1				}
+
+			},
+			"normalTexture" : {
+				"index" : 2,
+				"texCoord" : 0,
+				"scale" : 1
+			},
+			"emissiveFactor": [0, 0, 0],
+			"occlusionTexture" : {
+				"index" : 3,
+				"texCoord" : 0,
+				"strength" : 1
+			},
+			"doubleSided": false,
+			"name": "New Material"
+		}
+	],
+	"meshes": [
+		{
+			"name": "mesh_MangoLOD1_16234Mango",
+			"primitives": [
+				{
+					"attributes": {
+						"POSITION": 0,
+						"NORMAL": 1,
+						"TEXCOORD_0": 2,
+						"TANGENT": 3
+					},
+					"indices": 4,
+					"material": 0,
+					"mode": 4
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"name": "UnityGlTF_root",
+			"children": [
+				1
+			]
+		},
+		{
+			"name": "node_Mango_-225128",
+			"mesh": 0,
+			"matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+		}
+	],
+	"samplers": [
+		{
+			"magFilter": 9729,
+			"minFilter": 9985,
+			"wrapS": 10497,
+			"wrapT": 10497
+		}
+	],
+	"scenes": [
+		{
+			"name":"defaultScene",
+			"nodes": [
+				0
+			]
+		}
+	],
+	"scene": 0,
+	"textures": [
+		{
+			"sampler": 0,
+			"source": 0
+		},
+		{
+			"sampler": 0,
+			"source": 1
+		},
+		{
+			"sampler": 0,
+			"source": 2
+		},
+		{
+			"sampler": 0,
+			"source": 3
+		}
+	]
+}

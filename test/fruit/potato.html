@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+ <html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>potato</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/styles.css">
+    </head>
+    <body>
+        <div id="scene-container">
+        </div>
+		
+		<script type="module">
+			
+			import * as THREE from '../../three.js/build/three.module.js';
+
+			import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+			import { GLTFLoader } from '../../three.js/examples/jsm/loaders/GLTFLoader.js';
+
+
+			let container = document.querySelector('#scene-container');
+            
+            let container_width = container.offsetWidth;
+            let container_height = container.offsetHeight;
+
+            let controls;
+
+            let scene, camera, renderer;
+
+            //建立場景
+            function init(){
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xffffff );
+                // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
+
+                createCamera();
+                createLights();
+				loadingModel();
+                createRenderer();
+                // createGUI();
+                createControls();
+                createEvent();
+                
+                renderer.setAnimationLoop( ( )=> {
+
+                    // update();
+                    render();
+
+                });
+            }
+
+            //創建相機
+            function createCamera(){
+
+                let fov = 30;
+                let aspect = container_width / container_height;
+                let near = 1;
+                let far = 2000;
+                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
+                camera.position.set( -25, 10, 25 );
+
+                // let left = - containerHalfX;
+                // let right = containerHalfX;
+                // let top = containerHalfY;
+                // let bottom = - containerHalfY;
+                // near = 3, far = 10;
+                // cameraO = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
+                // cameraO.position.z = 7;
+
+            }
+
+            //創建光源
+            function createLights(){
+
+                scene.add( new THREE.AmbientLight( 0xffffff ) );
+
+                let dirLight = new THREE.DirectionalLight( 0xffffff, 0.7 );
+                dirLight.position.set( 0, 1, 0 );
+                scene.add( dirLight );
+
+                let pointLight = new THREE.PointLight( 0xffffff );
+                pointLight.position.set( -15, 5, 5 );
+                scene.add( pointLight );
+
+            }
+
+			function loadingModel(){
+
+                let loader = new THREE.TextureLoader();
+
+				let gltfLoader = new GLTFLoader();
+				gltfLoader.load( '../../models/gltf/Potato/Potato.gltf', function ( gltf ) {
+
+                    console.log( gltf.scene.children );
+
+                    gltf.scene.traverse( function( child ){
+
+                        if( child.isMesh ){
+
+                            child.material.normalMap = loader.load( '../../models/gltf/Potato/Assets/a/Potato/Potato_Normal.jpg');
+                            child.material.specularMap = loader.load( '../../models/gltf/Potato/Assets/a/Potato/Potato_Specular.png');
+                            child.material.emissiveMap = loader.load( '../../models/gltf/Potato/Assets/a/Potato/Potato_BaseColor&Albedo.jpg');
+                            child.material.alphaMap = loader.load( '../../models/gltf/Potato/Assets/a/Potato/Potato_AmbientOcclusion.jpg');
+
+                            child.position.y = -3;
+                            child.scale.setScalar( 270 );
+
+                        }
+
+                    } );
+
+					scene.add( gltf.scene );
+
+				} );
+
+			}
+
+            //實現渲染
+            function createRenderer(){
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( container_width, container_height );
+                renderer.setPixelRatio( window.devicePixelRatio );
+
+                container.appendChild( renderer.domElement );
+
+            }
+            
+            //創建GUI
+            function createGUI(){
+
+                // if ( gui ) gui.destroy();
+
+                // gui = new GUI( { width: 300 } );
+                // gui.add( params, "pixelSize", 2, 32, 2 ).onChange( function( val ){
+
+                //     pixelPass.uniforms[ "pixelSize" ].value = val;
+
+                // });
+                // gui.add( params, "postprocessing" );
+                // gui.open();
+
+            }
+
+            //實現控制
+            function createControls(){
+
+                // controls = new OrbitControls( camera, renderer.domElement );
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.target.set( 0, 3, 0 );
+                // controls.rotateSpeed = 0.05;
+                // controls.panSpeed = 0.8;
+                // controls.zoomSpeed = 1.5;
+
+            }
+
+            //創建事件
+            function createEvent(){
+
+                window.addEventListener('resize', onWindowResize, false);
+
+            }
+
+            //設備視窗更新
+            function onWindowResize(){
+
+                container_width = container.offsetWidth;
+                container_height = container.offsetHeight;
+
+                let aspect = container_width / container_height;
+
+                camera.aspect = aspect;
+				camera.updateProjectionMatrix();
+				
+				renderer.setSize( container_width, container_height );
+
+                // controls.handleResize();
+
+                // render();
+
+            }
+
+            //Object事件
+            function update(){
+
+            }
+
+            //渲染更新
+            function render(){
+
+                controls.update();
+
+                renderer.render( scene, camera );
+
+            }
+
+            init();
+
+        </script>
+
+    </body>
+</html>

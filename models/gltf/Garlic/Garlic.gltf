@@ -1,0 +1,209 @@
+{
+	"asset": {
+		"generator": "Unity 2018.1.8f1",
+		"extras": {
+			"exporterVersion" : "2.2.1"
+		},
+		"version": "2.0"
+	},
+	"accessors": [
+		{
+			"bufferView": 2,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2388,
+			"max": [ 0.01700511, 0.01508707, 0.01526475 ],
+			"min": [ -0.01700511, -0.01511852, -0.01526475 ],
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 2,
+			"byteOffset": 28656,
+			"componentType": 5126,
+			"count": 2388,
+			"max": [ 0.9967704, 0.9996933, 0.9969778 ],
+			"min": [ -0.9999129, -0.9991142, -0.9999382 ],
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 1,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2388,
+			"max": [ 0.840379, 0.9968934 ],
+			"min": [ 0.001953, 0.003747 ],
+			"type": "VEC2"
+		},
+		{
+			"bufferView": 3,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2388,
+			"max": [ 0.9995529, 0.999424, 0.9997287, 1 ],
+			"min": [ -0.9966866, -0.9998721, -0.9982826, -1 ],
+			"type": "VEC4"
+		},
+		{
+			"bufferView": 0,
+			"byteOffset": 0,
+			"componentType": 5123,
+			"count": 12285,
+			"max": [ 2387 ],
+			"min": [ 0 ],
+			"type": "SCALAR"
+		}
+	],
+	"buffers": [
+		{
+			"byteLength": 139194,
+			"uri": "Garlic.bin"
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 24570,
+			"target": 34963,
+			"byteOffset": 114624
+		},
+		{
+			"buffer": 0,
+			"byteLength": 19104,
+			"target": 34962,
+			"byteStride": 8,
+			"byteOffset": 0
+		},
+		{
+			"buffer": 0,
+			"byteLength": 57312,
+			"target": 34962,
+			"byteStride": 12,
+			"byteOffset": 19104
+		},
+		{
+			"buffer": 0,
+			"byteLength": 38208,
+			"target": 34962,
+			"byteStride": 16,
+			"byteOffset": 76416
+		}
+	],
+	"extensionsRequired": [
+		"KHR_materials_pbrSpecularGlossiness"
+	],
+	"extensionsUsed": [
+		"KHR_materials_pbrSpecularGlossiness"
+	],
+	"images": [
+		{
+			"uri": "Assets/a/Garlic/Garlic_BaseColor&Albedo.jpg"
+		},
+		{
+			"uri": "Assets/a/Garlic/Garlic_Specular.png"
+		},
+		{
+			"uri": "Assets/a/Garlic/Garlic_Normal.jpg"
+		},
+		{
+			"uri": "Assets/a/Garlic/Garlic_AmbientOcclusion.jpg"
+		}
+	],
+	"materials": [
+		{
+			"extensions": {
+				"KHR_materials_pbrSpecularGlossiness": {
+					"diffuseTexture" : {
+						"index" : 0,
+						"texCoord" : 0
+					},
+					"diffuseFactor": [1, 1, 1, 1],
+					"specularGlossinessTexture" : {
+						"index" : 1,
+						"texCoord" : 0
+					},
+					"specularFactor": [1, 1, 1],
+					"glossinessFactor": 1				}
+
+			},
+			"normalTexture" : {
+				"index" : 2,
+				"texCoord" : 0,
+				"scale" : 1
+			},
+			"emissiveFactor": [0, 0, 0],
+			"occlusionTexture" : {
+				"index" : 3,
+				"texCoord" : 0,
+				"strength" : 1
+			},
+			"doubleSided": false,
+			"name": "New Material"
+		}
+	],
+	"meshes": [
+		{
+			"name": "mesh_GarlicLOD1_16184GarlicLOD1",
+			"primitives": [
+				{
+					"attributes": {
+						"POSITION": 0,
+						"NORMAL": 1,
+						"TEXCOORD_0": 2,
+						"TANGENT": 3
+					},
+					"indices": 4,
+					"material": 0,
+					"mode": 4
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"name": "UnityGlTF_root",
+			"children": [
+				1
+			]
+		},
+		{
+			"name": "node_GarlicLOD1_-156680",
+			"mesh": 0,
+			"matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 8.956715E-05, 0.01487023, 5.572475E-05, 1]
+		}
+	],
+	"samplers": [
+		{
+			"magFilter": 9729,
+			"minFilter": 9985,
+			"wrapS": 10497,
+			"wrapT": 10497
+		}
+	],
+	"scenes": [
+		{
+			"name":"defaultScene",
+			"nodes": [
+				0
+			]
+		}
+	],
+	"scene": 0,
+	"textures": [
+		{
+			"sampler": 0,
+			"source": 0
+		},
+		{
+			"sampler": 0,
+			"source": 1
+		},
+		{
+			"sampler": 0,
+			"source": 2
+		},
+		{
+			"sampler": 0,
+			"source": 3
+		}
+	]
+}

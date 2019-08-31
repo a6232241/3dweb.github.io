@@ -1,0 +1,209 @@
+{
+	"asset": {
+		"generator": "Unity 2018.1.8f1",
+		"extras": {
+			"exporterVersion" : "2.2.1"
+		},
+		"version": "2.0"
+	},
+	"accessors": [
+		{
+			"bufferView": 2,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2307,
+			"max": [ 0.0247167, 0.04508152, 0.0242225 ],
+			"min": [ -0.02470354, -0.00034881, -0.0239636 ],
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 2,
+			"byteOffset": 27684,
+			"componentType": 5126,
+			"count": 2307,
+			"max": [ 0.9970901, 0.9996345, 0.9990101 ],
+			"min": [ -0.9998109, -0.9996507, -0.9990562 ],
+			"type": "VEC3"
+		},
+		{
+			"bufferView": 1,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2307,
+			"max": [ 0.9307793, 0.9980172 ],
+			"min": [ 0.002267562, 0.002713813 ],
+			"type": "VEC2"
+		},
+		{
+			"bufferView": 3,
+			"byteOffset": 0,
+			"componentType": 5126,
+			"count": 2307,
+			"max": [ 0.9995782, 0.9953665, 0.9978303, 1 ],
+			"min": [ -0.9990884, -0.9883249, -0.9997854, 1 ],
+			"type": "VEC4"
+		},
+		{
+			"bufferView": 0,
+			"byteOffset": 0,
+			"componentType": 5123,
+			"count": 13032,
+			"max": [ 2306 ],
+			"min": [ 0 ],
+			"type": "SCALAR"
+		}
+	],
+	"buffers": [
+		{
+			"byteLength": 136800,
+			"uri": "apple.bin"
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 26064,
+			"target": 34963,
+			"byteOffset": 110736
+		},
+		{
+			"buffer": 0,
+			"byteLength": 18456,
+			"target": 34962,
+			"byteStride": 8,
+			"byteOffset": 0
+		},
+		{
+			"buffer": 0,
+			"byteLength": 55368,
+			"target": 34962,
+			"byteStride": 12,
+			"byteOffset": 18456
+		},
+		{
+			"buffer": 0,
+			"byteLength": 36912,
+			"target": 34962,
+			"byteStride": 16,
+			"byteOffset": 73824
+		}
+	],
+	"extensionsRequired": [
+		"KHR_materials_pbrSpecularGlossiness"
+	],
+	"extensionsUsed": [
+		"KHR_materials_pbrSpecularGlossiness"
+	],
+	"images": [
+		{
+			"uri": "Assets/Apple/Apple_BaseColor&Albedo.jpg"
+		},
+		{
+			"uri": "Assets/Apple/Apple_Specular.png"
+		},
+		{
+			"uri": "Assets/Apple/Apple_Normal.jpg"
+		},
+		{
+			"uri": "Assets/Apple/Apple_AmbientOcclusion.jpg"
+		}
+	],
+	"materials": [
+		{
+			"extensions": {
+				"KHR_materials_pbrSpecularGlossiness": {
+					"diffuseTexture" : {
+						"index" : 0,
+						"texCoord" : 0
+					},
+					"diffuseFactor": [1, 1, 1, 1],
+					"specularGlossinessTexture" : {
+						"index" : 1,
+						"texCoord" : 0
+					},
+					"specularFactor": [1, 1, 1],
+					"glossinessFactor": 1				}
+
+			},
+			"normalTexture" : {
+				"index" : 2,
+				"texCoord" : 0,
+				"scale" : 1
+			},
+			"emissiveFactor": [0, 0, 0],
+			"occlusionTexture" : {
+				"index" : 3,
+				"texCoord" : 0,
+				"strength" : 1
+			},
+			"doubleSided": false,
+			"name": "New Material"
+		}
+	],
+	"meshes": [
+		{
+			"name": "mesh_AppleLOD1_15082Apple",
+			"primitives": [
+				{
+					"attributes": {
+						"POSITION": 0,
+						"NORMAL": 1,
+						"TEXCOORD_0": 2,
+						"TANGENT": 3
+					},
+					"indices": 4,
+					"material": 0,
+					"mode": 4
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"name": "UnityGlTF_root",
+			"children": [
+				1
+			]
+		},
+		{
+			"name": "node_Apple_-5386",
+			"mesh": 0,
+			"matrix": [3.860523, 0, 0, 0, 0, 3.860523, 0, 0, 0, 0, 3.860523, 0, 0, 0, 0, 1]
+		}
+	],
+	"samplers": [
+		{
+			"magFilter": 9729,
+			"minFilter": 9985,
+			"wrapS": 10497,
+			"wrapT": 10497
+		}
+	],
+	"scenes": [
+		{
+			"name":"defaultScene",
+			"nodes": [
+				0
+			]
+		}
+	],
+	"scene": 0,
+	"textures": [
+		{
+			"sampler": 0,
+			"source": 0
+		},
+		{
+			"sampler": 0,
+			"source": 1
+		},
+		{
+			"sampler": 0,
+			"source": 2
+		},
+		{
+			"sampler": 0,
+			"source": 3
+		}
+	]
+}
