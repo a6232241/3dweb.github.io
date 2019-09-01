@@ -122,7 +122,7 @@
 						"texCoord" : 0
 					},
 					"specularFactor": [1, 1, 1],
-					"glossinessFactor": 0.4				}
+					"glossinessFactor": 1				}
 
 			},
 			"normalTexture" : {
