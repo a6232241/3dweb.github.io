@@ -77,15 +77,18 @@
             //創建光源
             function createLights(){
 
-                scene.add( new THREE.AmbientLight( 0xffffff, 0.9 ) );
+                scene.add( new THREE.AmbientLight( 0xffffff ) );
 
-                let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
-                dirLight.position.set( 0, 1, 0 );
-                scene.add( dirLight );
+                // let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+                // dirLight.position.set( 0, 1, 0 );
+                // scene.add( dirLight );
 
-                let pointLight = new THREE.PointLight( 0xffffff );
-                pointLight.position.set( -15, 5, 5 );
-                scene.add( pointLight );
+                // let pointLight = new THREE.PointLight( 0xffffff );
+                // pointLight.position.set( -15, 5, 5 );
+                // scene.add( pointLight );
+
+                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff );
+                scene.add( hemiLight );
 
             }
 
