@@ -25,6 +25,8 @@
             let container_width = container.offsetWidth;
             let container_height = container.offsetHeight;
 
+            let group = new THREE.Group();
+
             let controls;
 
             let scene, camera, renderer;
@@ -33,7 +35,7 @@
             function init(){
 
                 scene = new THREE.Scene();
-                // scene.background = new THREE.Color( 0xffffff );
+                scene.background = new THREE.Color( 0xffffff );
                 // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
 
                 createCamera();
@@ -46,7 +48,7 @@
                 
                 renderer.setAnimationLoop( ( )=> {
 
-                    // update();
+                    update();
                     render();
 
                 });
@@ -75,9 +77,9 @@
             //創建光源
             function createLights(){
 
-                scene.add( new THREE.AmbientLight( 0xffffff, 0.7 ) );
+                scene.add( new THREE.AmbientLight( 0xff0000, 0.5 ) );
 
-                let dirLight = new THREE.DirectionalLight( 0xffffff, 0.7 );
+                let dirLight = new THREE.DirectionalLight( 0xffffff, 0.9 );
                 dirLight.position.set( 0, 1, 0 );
                 scene.add( dirLight );
 
@@ -92,7 +94,7 @@
                 let loader = new THREE.TextureLoader();
 
 				let gltfLoader = new GLTFLoader();
-				gltfLoader.load( '../../models/gltf/apple/apple.gltf', function ( gltf ) {
+				gltfLoader.load( '../../models/gltf/apple/apple.glb', function ( gltf ) {
 
                     console.log( gltf.scene.children );
 
@@ -112,7 +114,8 @@
 
                     } );
 
-					scene.add( gltf.scene );
+					group.add( gltf.scene );
+                    scene.add( group );
 
 				} );
 
@@ -185,6 +188,8 @@
 
             //Object事件
             function update(){
+
+                group.rotation.y += 0.03;
 
             }
 

@@ -29,11 +29,13 @@
 
             let scene, camera, renderer;
 
+            let group = new THREE.Group();
+
             //建立場景
             function init(){
 
                 scene = new THREE.Scene();
-                // scene.background = new THREE.Color( 0xffffff );
+                scene.background = new THREE.Color( 0xffffff );
                 // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
 
                 createCamera();
@@ -46,7 +48,7 @@
                 
                 renderer.setAnimationLoop( ( )=> {
 
-                    // update();
+                    update();
                     render();
 
                 });
@@ -92,7 +94,7 @@
                 let loader = new THREE.TextureLoader();
 
 				let gltfLoader = new GLTFLoader();
-				gltfLoader.load( '../../models/gltf/Ginger/Ginger.gltf', function ( gltf ) {
+				gltfLoader.load( '../../models/gltf/Ginger/Ginger.glb', function ( gltf ) {
 
                     console.log( gltf.scene.children );
 
@@ -111,7 +113,9 @@
 
                     } );
 
-					scene.add( gltf.scene );
+                    group.add( gltf.scene );
+
+					scene.add( group );
 
 				} );
 
@@ -184,6 +188,8 @@
 
             //Object事件
             function update(){
+
+                group.rotation.y += 0.03;
 
             }
 
