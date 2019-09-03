@@ -78,7 +78,7 @@
             //創建光源
             function createLights(){
 
-                scene.add( new THREE.AmbientLight( 0xffffff ) );
+                scene.add( new THREE.AmbientLight( 0xffffff, 0.5 ) );
 
                 // let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
                 // dirLight.position.set( 0, 1, 0 );
@@ -88,7 +88,7 @@
                 // pointLight.position.set( -15, 5, 5 );
                 // scene.add( pointLight );
 
-                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff );
+                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.5 );
                 scene.add( hemiLight );
 
 
@@ -127,6 +127,7 @@
 					                .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] ),
                                 map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_03.jpg'),
                                 normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_03.jpg' ),
+                                reflectivity: 0.1
                             } );
 
                         }else if( i < 2 ){
@@ -136,7 +137,8 @@
                                     .setPath( '../../skybox/sh/' )
 					                .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] ),
                                 map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_02.jpg'),
-                                normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_02.jpg' )
+                                normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_02.jpg' ),
+                                reflectivity: 0.1
                             } );
 
                         }else{
@@ -148,7 +150,8 @@
                                 map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_01.jpg'),
                                 normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_04.jpg' ),
                                 bumpMap: loader.load( '../../models/fbx/banana/maps/AM130_028_bump_01.jpg'),
-                                emissiveMap: loader.load( '../../models/fbx/banana/maps/AM130_028_blend_01.jpg')
+                                emissiveMap: loader.load( '../../models/fbx/banana/maps/AM130_028_blend_01.jpg'),
+                                reflectivity: 0.1
                             } );
 
                         }
