@@ -77,24 +77,28 @@
             //創建光源
             function createLights(){
 
-                scene.add( new THREE.AmbientLight( 0xffffff, 0.7 ) );
+                scene.add( new THREE.AmbientLight( 0x563723, 0.1 ) );
 
-                let dirLight = new THREE.DirectionalLight( 0xffffff, 0.7 );
-                dirLight.position.set( 0, 1, 0 );
-                scene.add( dirLight );
+                // let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+                // dirLight.position.set( 0, 1, 0 );
+                // scene.add( dirLight );
 
-                let pointLight = new THREE.PointLight( 0xffffff );
-                pointLight.position.set( -15, 5, 5 );
-                scene.add( pointLight );
+                // let pointLight = new THREE.PointLight( 0xffffff );
+                // pointLight.position.set( -15, 5, 5 );
+                // scene.add( pointLight );
+
+                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff );
+                scene.add( hemiLight );
+
 
             }
 
 			function loadingModel(){
 
-                let loader = new THREE.TextureLoader();
+                let loader = new THREE.CubeTextureLoader();
 
 				let gltfLoader = new GLTFLoader();
-				gltfLoader.load( '../../models/gltf/Onion/Onion.glb', function ( gltf ) {
+				gltfLoader.load( '../../models/gltf/Onion/Onion.gltf', function ( gltf ) {
 
                     console.log( gltf.scene.children );
 
@@ -102,9 +106,9 @@
 
                         if( child.isMesh ){
 
-                            child.material.normalMap = loader.load( '../../models/gltf/Onion/Assets/a/Onion/Onion_Normal.jpg');
-                            child.material.specularMap = loader.load( '../../models/gltf/Onion/Assets/a/Onion/Onion_Specular.png');
-                            child.material.emissiveMap = loader.load( '../../models/gltf/Onion/Assets/a/Onion/Onion_BaseColor&Albedo.jpg');
+                            child.material.envMap = loader
+                                .setPath( '../../skybox/sh/' )
+					            .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] );
 
                             child.position.y = -3;
                             child.scale.setScalar( 370 );

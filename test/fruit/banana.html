@@ -78,25 +78,27 @@
             //創建光源
             function createLights(){
 
-                // scene.add( new THREE.AmbientLight( 0xaaaaaa, 0.2 ) );
+                scene.add( new THREE.AmbientLight( 0xffffff ) );
 
-                let dirLight = new THREE.DirectionalLight( 0xffaaaa, 0.7 );
-                dirLight.position.set( 0, 1, 0 );
-                scene.add( dirLight );
+                // let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+                // dirLight.position.set( 0, 1, 0 );
+                // scene.add( dirLight );
 
-				let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffff00, 0.7 );
-				hemiLight.position.set( 0, 1, 0 );
+                // let pointLight = new THREE.PointLight( 0xffffff );
+                // pointLight.position.set( -15, 5, 5 );
+                // scene.add( pointLight );
+
+                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff );
                 scene.add( hemiLight );
 
-                let pointLight = new THREE.PointLight( 0xffffff, 0.4 );
-                pointLight.position.set( -15, 5, 5 );
-                scene.add( pointLight );
 
             }
 
 			function loadingModel(){
 
 				let loader = new THREE.TextureLoader();
+
+                let cubeLoader = new THREE.CubeTextureLoader();
 
 				let fbxLoader = new FBXLoader();
 				fbxLoader.load( '../../models/fbx/banana/Food00028.FBX', function ( fbx ) {
@@ -120,6 +122,9 @@
                         if( i < 1 ){
 
                             arr[i].material = new THREE.MeshPhongMaterial( {
+                                envMap: cubeLoader
+                                    .setPath( '../../skybox/sh/' )
+					                .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] ),
                                 map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_03.jpg'),
                                 normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_03.jpg' ),
                             } );
@@ -127,6 +132,9 @@
                         }else if( i < 2 ){
 
                             arr[i].material = new THREE.MeshPhongMaterial( {
+                                envMap: cubeLoader
+                                    .setPath( '../../skybox/sh/' )
+					                .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] ),
                                 map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_02.jpg'),
                                 normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_02.jpg' )
                             } );
@@ -134,6 +142,9 @@
                         }else{
 
                             arr[i].material = new THREE.MeshPhongMaterial( {
+                                envMap: cubeLoader
+                                    .setPath( '../../skybox/sh/' )
+					                .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] ),
                                 map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_01.jpg'),
                                 normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_04.jpg' ),
                                 bumpMap: loader.load( '../../models/fbx/banana/maps/AM130_028_bump_01.jpg'),
