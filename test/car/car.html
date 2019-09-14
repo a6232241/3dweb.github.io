@@ -31,6 +31,17 @@
 
             let group = new THREE.Group();
 
+            let progressBarDiv;
+            progressBarDiv = document.createElement( 'div' );
+            progressBarDiv.innerText = "Loding...";
+            progressBarDiv.style.fontSize = "3em";
+            progressBarDiv.style.color = "#888";
+            progressBarDiv.style.display = "block";
+            progressBarDiv.style.position = "absolute";
+            progressBarDiv.style.top = "50%";
+            progressBarDiv.style.width = "100%";
+            progressBarDiv.style.textAlign = "center";
+
             //建立場景
             function init(){
 
@@ -62,7 +73,7 @@
                 let near = 1;
                 let far = 2000;
                 camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
-                camera.position.set( -7, 5, 0 );
+                camera.position.set( -5, 4, -7 );
 
                 // let left = - containerHalfX;
                 // let right = containerHalfX;
@@ -87,12 +98,15 @@
                 // pointLight.position.set( -15, 5, 5 );
                 // scene.add( pointLight );
 
-                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.7 );
+                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.3 );
                 scene.add( hemiLight );
 
             }
 
 			function loadingModel(){
+
+                updateProgressBar( 0 );
+                showProgressBar();
 
                 let loader = new THREE.CubeTextureLoader();
 
@@ -111,7 +125,6 @@
                                 .setPath( '../../skybox/sh/' )
 					            .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] );
 
-                            child.position.x = 3;
                             // child.scale.setScalar( 2 );
 
                         }
@@ -122,9 +135,49 @@
 
 					scene.add( group );
 
-				} );
+                    hideProgressBar();
+
+				}, onProgress, onError );
 
 			}
+
+            function showProgressBar(){
+
+                document.body.appendChild( progressBarDiv );
+
+            }
+
+            function hideProgressBar(){
+
+                document.body.removeChild( progressBarDiv );
+
+            }
+
+            function onProgress( xhr ){
+
+                if( xhr.lengthComputable ){
+
+                    updateProgressBar( xhr.loaded / xhr.total );
+
+                    console.log( Math.round( xhr.loaded / xhr.total * 100, 2 ) + '% downloaded' );
+
+                }
+
+            }
+
+            function updateProgressBar( fraction ){
+
+                progressBarDiv.innerText = "Loading..." + Math.round( fraction * 100, 2 ) + '%';
+                
+            }
+
+            function onError(){
+
+                let message = "Error loading model";
+                progressBarDiv.innerText = message;
+                console.log( message );
+
+            }
 
             //實現渲染
             function createRenderer(){
@@ -158,7 +211,7 @@
 
                 // controls = new OrbitControls( camera, renderer.domElement );
 				controls = new OrbitControls( camera, renderer.domElement );
-				controls.target.set( 3, 0, 0 );
+				// controls.target.set( 5, 0, 0 );
                 // controls.rotateSpeed = 0.05;
                 // controls.panSpeed = 0.8;
                 // controls.zoomSpeed = 1.5;
@@ -194,7 +247,7 @@
             //Object事件
             function update(){
 
-                // group.rotation.y += 0.03;
+                group.rotation.y += 0.01;
 
             }
 
