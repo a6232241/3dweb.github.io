@@ -21,7 +21,7 @@
 
 			import Stats from '../../three.js/examples/jsm/libs/stats.module.js';
 			import { GUI } from '../../three.js/examples/jsm/libs/dat.gui.module.js';
-            // import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+            import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
 
 			import { EffectComposer } from '../../three.js/examples/jsm/postprocessing/EffectComposer.js';
 			import { ShaderPass } from '../../three.js/examples/jsm/postprocessing/ShaderPass.js';
@@ -71,7 +71,7 @@
                 createPostprocessing();
                 createGUI();
                 // createSprites();
-                // createControls();
+                createControls();
                 createStats();
                 createEvent();
                 
@@ -79,7 +79,7 @@
                 renderer.setAnimationLoop( ( )=> {
 
                     stats.begin();
-                    update();
+                    // update();
                     render();
                     // if ( statsEnabled ) 
                     // stats.update();
@@ -257,8 +257,8 @@
             //實現控制
             function createControls(){
 
-                // controls = new OrbitControls( camera, renderer.domElement );
-                // controls.update();
+                let controls = new OrbitControls( camera, renderer.domElement );
+                controls.update();
 
             }
 
