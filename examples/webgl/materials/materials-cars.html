@@ -4,12 +4,12 @@
 <title>material-cars</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<script src="three/build/three.js"></script>
-<script src="three/examples/js/loaders/DRACOLoader.js"></script>
-<script src="three/examples/js/loaders/GLTFLoader.js"></script>
-<script src="three/examples/js/Car.js"></script>
-<script src="three/examples/js/WebGL.js"></script>
-<script src="three/examples/js/libs/stats.min.js"></script>
+<script src="../../../three.js/build/three.js"></script>
+<script src="../../../three.js/examples/js/loaders/DRACOLoader.js"></script>
+<script src="../../../three.js/examples/js/loaders/GLTFLoader.js"></script>
+<script src="../../../three.js/examples/js/Car.js"></script>
+<script src="../../../three.js/examples/js/WebGL.js"></script>
+<script src="../../../three.js/examples/js/libs/stats.min.js"></script>
 <style>
 body{
 	font-family:Monospace;
@@ -75,7 +75,7 @@ body{
 		scene.fog=new THREE.Fog(0xd7cbb1,1,80);
 		
 		envMap=new THREE.CubeTextureLoader()
-				.setPath('three/examples/textures/cube/skyboxsun25deg/')
+				.setPath('../../../three.js/examples/textures/cube/skyboxsun25deg/')
 				.load(['px.jpg','nx.jpg','py.jpg','ny.jpg','pz.jpg','nz.jpg']);
 				
 		scene.background=envMap;
@@ -136,10 +136,10 @@ body{
 	}
 	
 	function initCar(){
-		THREE.DRACOLoader.setDecoderPath('three/examples/js/libs/draco/gltf/');
+		THREE.DRACOLoader.setDecoderPath('../../../three.js/examples/js/libs/draco/gltf/');
 		var loader=new THREE.GLTFLoader();
 		loader.setDRACOLoader(new THREE.DRACOLoader());
-		loader.load('three/examples/models/gltf/ferrari.glb',function(gltf){
+		loader.load('../../../three.js/examples/models/gltf/ferrari.glb',function(gltf){
 			carModel=gltf.scene.children[0];
 			carModel.add(lightHolder);
 			car.setModel(carModel);
@@ -152,7 +152,7 @@ body{
 			});
 			
 			//shadow
-			var texture=new THREE.TextureLoader().load('three/examples/models/gltf/ferrari_ao.png');
+			var texture=new THREE.TextureLoader().load('../../../three.js/examples/models/gltf/ferrari_ao.png');
 			var shadow=new THREE.Mesh(
 				new THREE.PlaneBufferGeometry(0.655*4,1.3*4).rotateX(-Math.PI/2),
 				new THREE.MeshBasicMaterial({map:texture, opacity:0.8, transparent:true})
