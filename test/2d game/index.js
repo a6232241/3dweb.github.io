@@ -30,6 +30,7 @@ let camera, scene, renderer;
 let sphere, sphereBody;
 let groundHalf = new CANNON.Vec3(170, 5, 5);
 let groundSite = new CANNON.Vec3(-490, -330, 0);
+let groundSite2 = new CANNON.Vec3(95, -250, 0);
 let sphereSite = new CANNON.Vec3(-490, -280, 0);
 
 let world;
@@ -41,6 +42,8 @@ let blocker = document.getElementById("blocker");
 let instructions = document.getElementById("instructions");
 
 //鍵盤控制
+let canLeft = false;
+let canRight = false;
 let canJump = false;
 
 let speed = 0;
@@ -211,6 +214,16 @@ function createMeshes() {
     ground.position.set(groundSite.x, groundSite.y, groundSite.z);
     scene.add(ground);
 
+    let groundGeo2 = new THREE.BoxGeometry(groundHalf.x * 3, groundHalf.y * 2, groundHalf.z * 2, 20, 32);
+    let ground2 = new THREE.Mesh(groundGeo2, groundMat);
+    ground2.position.set(groundSite2.x, groundSite2.y, groundSite2.z);
+    scene.add(ground2);
+
+    // let groundGeo3 = new THREE.BoxGeometry(groundHalf.x * 2, groundHalf.y * 2, groundHalf.z * 2, 20, 32);
+    // let ground3 = new THREE.Mesh(groundGeo3, groundMat);
+    // ground.position.set(groundSite.x, groundSite.y, groundSite.z);
+    // scene.add(ground);
+
     // 球網格
     let sphereGeometry = new THREE.SphereGeometry(30, 32, 32);
     let sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x33aaaa });
@@ -241,7 +254,15 @@ function createPhysical() {
         mass: 0,
         position: groundSite,
     });
+    let groundBody2 = new CANNON.Body({
+        shape: new CANNON.Box(new CANNON.Vec3(groundHalf.x * 1.5, groundHalf.y, groundHalf.z)),
+        material: groundCM,
+        mass: 0,
+        position: groundSite2,
+    });
+
     world.add(groundBody);
+    world.add(groundBody2);
 
     // 建立球剛體
     let sphereShape = new CANNON.Sphere(30);
@@ -335,6 +356,10 @@ function createEvent() {
         instructions.style.display = '';
     });
 
+    sphereBody.addEventListener('collide', function(){
+        canJump = true;
+    })
+
 }
 
 function onWindowKeyDown(event) {
@@ -343,18 +368,28 @@ function onWindowKeyDown(event) {
 
         case 37:// left
         case 65:// a
-            speed = -5 * 100;
-            sphereBody.velocity.x = speed;
+            if(canJump){
+                speed = -5 * 100;
+                sphereBody.velocity.x = speed;
+            }
             break;
 
         case 39:// right
         case 68:// d
-            speed = 5 * 100;
-            sphereBody.velocity.x = speed;
+            if(canJump){
+                speed = 5 * 100;
+                sphereBody.velocity.x = speed;
+            }
             break;
 
         case 32:// space
-            canJump = true;
+            if(canJump){
+                canLeft = false;
+                canRight = false;
+                canJump = false;
+                speed = 20 * 50;
+                sphereBody.velocity.y = speed;
+            }
             break;
     }
 }
@@ -365,20 +400,16 @@ function onWindowKeyUp(event) {
 
         case 37:// left
         case 65:// a
-            speed = 0;
-            sphereBody.velocity.x = speed;
+            canLeft = false;
             break;
 
         case 39:// right
         case 68:// d
-            speed = 0;
-            sphereBody.velocity.x = speed;
+            canRight = false;
             break;
 
         case 32:// space
-            canJump = false
-            speed = 0;
-            sphereBody.velocity.y = speed;
+            canJump = false;
             break;
 
     }
@@ -410,11 +441,6 @@ function onError() {
 //Object事件
 
 function update() {
-
-    if(canJump){
-        speed = 20 * 50;
-        sphereBody.velocity.y = speed;
-    }
 
 }
 
