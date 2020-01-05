@@ -29,21 +29,27 @@ let containerHalfY = container_height / 2;
 
 let camera, scene, renderer;
 
-// 物件和剛體
+// 玩家
 let play, playBody;
+let playHalf = new CANNON.Vec3(50, 50, 50);
+let playSite = new CANNON.Vec3(-490, -260, 0);
+
+// 地板
 let groundHalf = new CANNON.Vec3(170, 3, 100);
 let groundSite = new CANNON.Vec3(-490, -330, 0);
 let groundSite2 = new CANNON.Vec3(95, -250, 0);
-let playHalf = new CANNON.Vec3(50, 50, 50);
-let playSite = new CANNON.Vec3(-490, -260, 0);
+
+//
 let sprite;
+
+// 下雪
 let snowing;
 
+// 物理環境
 let world;
 
-// 載入圖片
+// 載入紋理
 let loader = new THREE.TextureLoader();
-let spriteMap = new THREE.VideoTexture( video );
 
 //控制2d介面
 let controls2d = new PointerLockControls(camera, document.body);
@@ -63,33 +69,22 @@ let speed = 0;
 function init() {
 
     scene = new THREE.Scene();
-    // scene.background = new THREE.Color( 0x444444 );
-    // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
 
-    let axes = new THREE.AxesHelper(200)
+    let axes = new THREE.AxesHelper(2000)
     scene.add(axes)
 
     createCamera();
     createLights();
     createObject();
     createMeshes();
-    // createSnow();
+    createSnow();
     createRenderer();
-    // createPostprocessing();
     createEvent();
     createControls();
-    // createStats();
-
 
     renderer.setAnimationLoop(() => {
-
-        // stats.begin();
         update();
         render();
-        // if ( statsEnabled ) 
-        // stats.update();
-        // stats.end();
-
     });
 }
 
@@ -102,7 +97,7 @@ function createCamera() {
     // let far = 1000;
     // camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     // camera.position.z = 999;
-    // camera.lookAt(scene.position)
+    // camera.lookAt(scene.position);
 
     let left = - containerHalfX;
     let right = containerHalfX;
@@ -116,21 +111,7 @@ function createCamera() {
 
 //創建光源
 function createLights() {
-
     scene.add(new THREE.AmbientLight(0xffffff));
-
-    // let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
-    // dirLight.position.set( -3000, 1000, -1000 );  
-    // scene.add( dirLight );
-
-    // let hemiLight = new THREE.HemiplayLight( 0xffffff, 0x444444 );
-    // hemiLight.position.set( 0, 1000, 0 );
-    // scene.add( hemiLight );
-
-    // let light = new THREE.PointLight( 0xffffff, 1.0, 50, 2 );
-    // light.position.y = 2;
-    // group.add( light );
-
 }
 
 //找出group的中心點
@@ -239,11 +220,11 @@ function createMeshes() {
     play.position.set(playSite.x, playSite.y, playSite.z);
     scene.add(play);
 
-    sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteMap }));
-    sprite.scale.set( 500, 500, 1 );
-    scene.add(sprite);
+    // sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteMap }));
+    // sprite.scale.set(500, 500, 1);
+    // scene.add(sprite);
 
-    console.log(sprite);
+    // console.log(sprite);
 
     createPhysical();
 
@@ -310,35 +291,28 @@ function createPhysical() {
 //增加下雪的特效
 function createSnow() {
 
-    let snowMap = loader().load("https://api.windycitynovelties.com/Data/Media/Catalog/1/600/b757dcbb-4431-439d-9203-394ed3e4dfb8338173_52291_ZOM.jpeg");
-    let geom = new THREE.Geometry();
-    let mat = new THREE.PointCloudMaterial({
-        size: 2,
-        transparent: true,
-        opacity: 0.6,
-        vertexColors: true,
-        color: 0xffffff,
-        sizeAttenuation: true,
-        map: snowMap,
-        depthTest: false
-    });
-
-    for (let i = 0; i < 1500; i++) {
+    let snowMap = loader.load("../../three.js/examples/textures/sprites/snowflake1.png");
+    let snowGeo = new THREE.Geometry();
+    for (let i = 0; i < 50; i++) {
         let particle = new THREE.Vector3(
-            Math.random() * 300 - 300,
-            Math.random() * 250 - 250,
-            Math.random() * 10 - 10
+            Math.random() * 1400 - 700,
+            Math.random() * 700 - 200,
+            1
         );
         particle.velocity = {};
-        particle.velocity.y = 0;
-        geom.vertices.push(particle);
-        // let color = new THREE.Color(0xffffff);
-        // geom.colors.push(color);
+        particle.velocityY = Math.random() * 0.5 - 2;
+        particle.velocityX = Math.random() * 1.5 - 0.5;
+        snowGeo.vertices.push(particle);
     }
-
-    snowing = new THREE.PointCloud(geom, mat);
-    // snowing.position.z = 10;
-    // snowing.verticesNeedsUpdate = true;
+    let snowMat = new THREE.PointsMaterial({
+        size: Math.random() * 10 + 25,
+        map: snowMap,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        transparent: true,
+        opacity: 0.7
+    });
+    snowing = new THREE.Points(snowGeo, snowMat);
 
     scene.add(snowing);
 }
@@ -470,8 +444,6 @@ function update() {
 //渲染更新
 function render() {
 
-    // if( postprocessing.enabled ){
-
     const timeStep = 1.0 / 60.0; // seconds
 
     // 更新剛體位置
@@ -482,30 +454,18 @@ function render() {
     };
 
     // 產生下雪效果
-    // let vertices = snowing.geometry.vertices;
-    // vertices.forEach(v => {
+    snowing.geometry.vertices.forEach(v => {
 
-    //     // v.y = v.y - (v.velocityY);
-    //     // v.x = v.x - (v.velocityX) * .5;
+        v.y += v.velocityY;
+        v.x += v.velocityX;
+        if( v.y <= -350 ) v.y = 700;
+        if( v.x >= 350 || v.x <= -350 ) v.velocityX = v.velocityX * -1;
 
-    //     if (v.y <= -250){
-    //         v.y = 250;
-    //         v.velocity.y = 0;
-    //     }
-    //     v.velocity.y -= Math.random() * .02;
-    //     v.y += v.velocity.y;
+    });
 
-    // });
+    snowing.geometry.verticesNeedUpdate = true;
 
-    // snowing.verticesNeedsUpdate = true;
-
-    renderer.render(scene, camera);
-
-    // }else{
-
-
-
-    // }                
+    renderer.render(scene, camera);            
 
 }
 
