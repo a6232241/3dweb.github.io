@@ -2,7 +2,7 @@ import * as THREE from '../../three.js/build/three.module.js';
 
 import Stats from '../../three.js/examples/jsm/libs/stats.module.js';
 // import { GUI } from '../../three.js/examples/jsm/libs/dat.gui.module.js';
-// import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
 import { PointerLockControls } from '../../three.js/examples/jsm/controls/PointerLockControls.js';
 
 
@@ -13,6 +13,8 @@ import { SVGLoader } from '../../three.js/examples/jsm/loaders/SVGLoader.js';
 //     document.body.appendChild( WEBGL.getWebGLErrorMessage() );
 
 // }
+
+let controls;
 
 let container = document.querySelector('#scene-container');
 
@@ -27,13 +29,21 @@ let containerHalfY = container_height / 2;
 
 let camera, scene, renderer;
 
-let sphere, sphereBody;
-let groundHalf = new CANNON.Vec3(170, 5, 5);
+// 物件和剛體
+let play, playBody;
+let groundHalf = new CANNON.Vec3(170, 3, 100);
 let groundSite = new CANNON.Vec3(-490, -330, 0);
 let groundSite2 = new CANNON.Vec3(95, -250, 0);
-let sphereSite = new CANNON.Vec3(-490, -280, 0);
+let playHalf = new CANNON.Vec3(50, 50, 50);
+let playSite = new CANNON.Vec3(-490, -260, 0);
+let sprite;
+let snowing;
 
 let world;
+
+// 載入圖片
+let loader = new THREE.TextureLoader();
+let spriteMap = new THREE.VideoTexture( video );
 
 //控制2d介面
 let controls2d = new PointerLockControls(camera, document.body);
@@ -46,6 +56,7 @@ let canLeft = false;
 let canRight = false;
 let canJump = false;
 
+// 角色速度
 let speed = 0;
 
 //建立場景
@@ -62,11 +73,12 @@ function init() {
     createLights();
     createObject();
     createMeshes();
+    // createSnow();
     createRenderer();
     // createPostprocessing();
-    // createControls();
-    // createStats();
     createEvent();
+    createControls();
+    // createStats();
 
 
     renderer.setAnimationLoop(() => {
@@ -89,7 +101,7 @@ function createCamera() {
     // let near = 0.1;
     // let far = 1000;
     // camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    // camera.position.z = 30;
+    // camera.position.z = 999;
     // camera.lookAt(scene.position)
 
     let left = - containerHalfX;
@@ -111,7 +123,7 @@ function createLights() {
     // dirLight.position.set( -3000, 1000, -1000 );  
     // scene.add( dirLight );
 
-    // let hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+    // let hemiLight = new THREE.HemiplayLight( 0xffffff, 0x444444 );
     // hemiLight.position.set( 0, 1000, 0 );
     // scene.add( hemiLight );
 
@@ -164,9 +176,9 @@ let computeGroupCenter = (function () {
 //載入物件
 function createObject() {
 
-    let loader = new SVGLoader();
+    let SVGloader = new SVGLoader();
 
-    loader.load("./assets/freetileset/svg/Sample.svg", function (data) {
+    SVGloader.load("./assets/freetileset/svg/Sample.svg", function (data) {
         let paths = data.paths;
         let group = new THREE.Group();
         group.scale.multiplyScalar(0.0105);
@@ -194,10 +206,11 @@ function createObject() {
         let groupCenter = computeGroupCenter(group).multiplyScalar(0.0105);
         group.position.x = -groupCenter.x;
         group.position.y = groupCenter.y;
+        console.log(groupCenter);
 
         scene.add(group);
 
-    }, onProgress, onError);
+    });
 
 }
 
@@ -219,22 +232,22 @@ function createMeshes() {
     ground2.position.set(groundSite2.x, groundSite2.y, groundSite2.z);
     scene.add(ground2);
 
-    // let groundGeo3 = new THREE.BoxGeometry(groundHalf.x * 2, groundHalf.y * 2, groundHalf.z * 2, 20, 32);
-    // let ground3 = new THREE.Mesh(groundGeo3, groundMat);
-    // ground.position.set(groundSite.x, groundSite.y, groundSite.z);
-    // scene.add(ground);
+    // play網格
+    let playGeo = new THREE.BoxGeometry(playHalf.x * 2, playHalf.y * 2, playHalf.z * 2, 32, 32);
+    let playMat = new THREE.MeshStandardMaterial();
+    play = new THREE.Mesh(playGeo, playMat);
+    play.position.set(playSite.x, playSite.y, playSite.z);
+    scene.add(play);
 
-    // 球網格
-    let sphereGeometry = new THREE.SphereGeometry(30, 32, 32);
-    let sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x33aaaa });
-    sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-    sphere.position.set(sphereSite.x, sphereSite.y, sphereSite.z);
-    scene.add(sphere);
+    sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteMap }));
+    sprite.scale.set( 500, 500, 1 );
+    scene.add(sprite);
+
+    console.log(sprite);
 
     createPhysical();
 
 }
-
 
 //利用cannon.js建立物理效果
 function createPhysical() {
@@ -264,34 +277,70 @@ function createPhysical() {
     world.add(groundBody);
     world.add(groundBody2);
 
-    // 建立球剛體
-    let sphereShape = new CANNON.Sphere(30);
-    let sphereCM = new CANNON.Material();
-    sphereBody = new CANNON.Body({
-        shape: sphereShape,
-        material: sphereCM,
-        mass: 10,
-        position: sphereSite,
+    // 建立play剛體
+    let playShape = new CANNON.Box(playHalf);
+    let playCM = new CANNON.Material();
+    playBody = new CANNON.Body({
+        shape: playShape,
+        material: playCM,
+        mass: 100,
+        position: playSite,
         angularDamping: 0.9,
         linearDamping: 0.9
     });
-    world.add(sphereBody);
+    world.add(playBody);
 
     // 物理睡眠
     // world.allowSleep = true;
-    // sphereBody.allowSleep = true;
+    // playBody.allowSleep = true;
 
     // // Sleep parameters
-    // sphereBody.sleepSpeedLimit = 0.1; // 如果速度<1(速度==規範速度)，則漸漸減少物理
-    // sphereBody.sleepTimeLimit = 1; // 減少物理效果達1秒，關閉物理
+    // playBody.sleepSpeedLimit = 0.1; // 如果速度<1(速度==規範速度)，則漸漸減少物理
+    // playBody.sleepTimeLimit = 1; // 減少物理效果達1秒，關閉物理
 
     // // 設定兩剛體碰撞時交互作用屬性
-    let sphereGroundContact = new CANNON.ContactMaterial(groundCM, sphereCM, {
+    let playGroundContact = new CANNON.ContactMaterial(groundCM, playCM, {
         friction: 1, // 摩擦力
         restitution: 0.5 // 恢復係數, 衡量兩個物體碰撞後反彈程度
     });
-    world.addContactMaterial(sphereGroundContact);
+    world.addContactMaterial(playGroundContact);
 
+}
+
+//增加下雪的特效
+function createSnow() {
+
+    let snowMap = loader().load("https://api.windycitynovelties.com/Data/Media/Catalog/1/600/b757dcbb-4431-439d-9203-394ed3e4dfb8338173_52291_ZOM.jpeg");
+    let geom = new THREE.Geometry();
+    let mat = new THREE.PointCloudMaterial({
+        size: 2,
+        transparent: true,
+        opacity: 0.6,
+        vertexColors: true,
+        color: 0xffffff,
+        sizeAttenuation: true,
+        map: snowMap,
+        depthTest: false
+    });
+
+    for (let i = 0; i < 1500; i++) {
+        let particle = new THREE.Vector3(
+            Math.random() * 300 - 300,
+            Math.random() * 250 - 250,
+            Math.random() * 10 - 10
+        );
+        particle.velocity = {};
+        particle.velocity.y = 0;
+        geom.vertices.push(particle);
+        // let color = new THREE.Color(0xffffff);
+        // geom.colors.push(color);
+    }
+
+    snowing = new THREE.PointCloud(geom, mat);
+    // snowing.position.z = 10;
+    // snowing.verticesNeedsUpdate = true;
+
+    scene.add(snowing);
 }
 
 //實現渲染
@@ -308,32 +357,6 @@ function createRenderer() {
 
 }
 
-//新增動畫
-function addMorph(mesh, clip, speed, duration, x, y, z, fudgeColor, massOptimization) {
-
-}
-
-//創建Postprocessing
-function createPostprocessing() {
-
-    // composer = new EffectComposer(renderer);
-    // composer.addPass(new RenderPass(scene, camera));
-
-    // pass = new SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
-    // composer.addPass(pass);
-
-}
-
-//新增執行效率
-function createStats() {
-
-    // if( statsEnabled ){
-    // stats = new Stats();
-    // container.appendChild(stats.dom);
-    // }
-
-}
-
 //創建事件
 function createEvent() {
 
@@ -341,22 +364,22 @@ function createEvent() {
     window.addEventListener('keydown', onWindowKeyDown, false);
     window.addEventListener('keyup', onWindowKeyUp, false);
 
-    instructions.addEventListener('click', function () {
-        controls2d.lock();
-    }, false);
+    // instructions.addEventListener('click', function () {
+    //     controls2d.lock();
+    // }, false);
 
-    controls2d.addEventListener('lock', function () {
-        instructions.style.display = 'none';
-        blocker.style.display = 'none';
-    });
+    // controls2d.addEventListener('lock', function () {
+    //     instructions.style.display = 'none';
+    //     blocker.style.display = 'none';
+    // });
 
-    controls2d.addEventListener('unlock', function () {
-        blocker.style.backgroundColor = 'rgba(0,0,0,0.5)';
-        blocker.style.display = 'block';
-        instructions.style.display = '';
-    });
+    // controls2d.addEventListener('unlock', function () {
+    //     blocker.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    //     blocker.style.display = 'block';
+    //     instructions.style.display = '';
+    // });
 
-    sphereBody.addEventListener('collide', function(){
+    playBody.addEventListener('collide', function () {
         canJump = true;
     })
 
@@ -368,27 +391,27 @@ function onWindowKeyDown(event) {
 
         case 37:// left
         case 65:// a
-            if(canJump){
+            if (canJump) {
                 speed = -5 * 100;
-                sphereBody.velocity.x = speed;
+                playBody.velocity.x = speed;
             }
             break;
 
         case 39:// right
         case 68:// d
-            if(canJump){
+            if (canJump) {
                 speed = 5 * 100;
-                sphereBody.velocity.x = speed;
+                playBody.velocity.x = speed;
             }
             break;
 
         case 32:// space
-            if(canJump){
+            if (canJump) {
                 canLeft = false;
                 canRight = false;
                 canJump = false;
                 speed = 20 * 50;
-                sphereBody.velocity.y = speed;
+                playBody.velocity.y = speed;
             }
             break;
     }
@@ -451,11 +474,30 @@ function render() {
 
     const timeStep = 1.0 / 60.0; // seconds
 
+    // 更新剛體位置
     world.step(timeStep)
-    if (sphere) {
-        sphere.position.copy(sphereBody.position);
-        sphere.quaternion.copy(sphereBody.quaternion);
+    if (play) {
+        play.position.copy(playBody.position);
+        play.quaternion.copy(playBody.quaternion);
     };
+
+    // 產生下雪效果
+    // let vertices = snowing.geometry.vertices;
+    // vertices.forEach(v => {
+
+    //     // v.y = v.y - (v.velocityY);
+    //     // v.x = v.x - (v.velocityX) * .5;
+
+    //     if (v.y <= -250){
+    //         v.y = 250;
+    //         v.velocity.y = 0;
+    //     }
+    //     v.velocity.y -= Math.random() * .02;
+    //     v.y += v.velocity.y;
+
+    // });
+
+    // snowing.verticesNeedsUpdate = true;
 
     renderer.render(scene, camera);
 
@@ -464,6 +506,18 @@ function render() {
 
 
     // }                
+
+}
+
+function createControls() {
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    // controls.autoRotate = true;
+    // controls.autoRotateSpeed = 1;
+    controls.addEventListener('change', renderer);
+    controls.panSpeed = 0.1;
+    controls.rotateSpeed = 0.1;
+    controls.update();
 
 }
 
