@@ -6,6 +6,9 @@ body{
     font-family: monospace;
     font-size: 15px;
     line-height: 24px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
 }
 
 h1{

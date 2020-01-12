@@ -14,20 +14,12 @@ import { SVGLoader } from '../../three.js/examples/jsm/loaders/SVGLoader.js';
 
 // }
 
-let controls;
+// let controls;
 
 let container = document.querySelector('#scene-container');
 
-let container_width = container.offsetWidth;
-let container_height = container.offsetHeight;
-let containerHalfX = container_width / 2;
-let containerHalfY = container_height / 2;
-
-// let stats;
-
-// let clock = new THREE.Clock();
-
 let camera, scene, renderer;
+let clock = new THREE.Clock();
 
 // 玩家
 let play, playBody;
@@ -39,9 +31,6 @@ let groundHalf = new CANNON.Vec3(170, 3, 100);
 let groundSite = new CANNON.Vec3(-490, -330, 0);
 let groundSite2 = new CANNON.Vec3(95, -250, 0);
 
-//
-let sprite;
-
 // 下雪
 let snowing;
 
@@ -50,6 +39,8 @@ let world;
 
 // 載入紋理
 let loader = new THREE.TextureLoader();
+let playMap = loader.load("assets/Juggernaut Release/Animations/Juggernaut/Idle/Idle - SpriteSheet.png");
+let annie = new textureAnimator(playMap, 6, 2, 12, 150);
 
 //控制2d介面
 let controls2d = new PointerLockControls(camera, document.body);
@@ -65,6 +56,10 @@ let canJump = false;
 // 角色速度
 let speed = 0;
 
+// 移動動畫
+let run = true;
+let jump = true;
+
 //建立場景
 function init() {
 
@@ -75,12 +70,12 @@ function init() {
 
     createCamera();
     createLights();
-    createObject();
+    createMap();
     createMeshes();
-    createSnow();
+    // createSnow();
     createRenderer();
     createEvent();
-    createControls();
+    // createControls();
 
     renderer.setAnimationLoop(() => {
         update();
@@ -99,10 +94,10 @@ function createCamera() {
     // camera.position.z = 999;
     // camera.lookAt(scene.position);
 
-    let left = - containerHalfX;
-    let right = containerHalfX;
-    let top = containerHalfY;
-    let bottom = - containerHalfY;
+    let left = - container.width * 3;
+    let right = container.width * 3;
+    let top = container.height * 3;
+    let bottom = - container.height * 3;
     let near = 1, far = 1000;
     camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);
     camera.position.z = 1000;
@@ -114,48 +109,8 @@ function createLights() {
     scene.add(new THREE.AmbientLight(0xffffff));
 }
 
-//找出group的中心點
-let computeGroupCenter = (function () {
-    let childBox = new THREE.Box3();
-    let groupBox = new THREE.Box3();
-    let invMatrixWorld = new THREE.Matrix4();
-
-    return function (group, optionalTarget) {
-
-        if (!optionalTarget) optionalTarget = new THREE.Vector3();
-
-        //搜尋group底下的child
-        group.traverse(function (child) {
-
-            //如果child是Mesh
-            if (child instanceof THREE.Mesh) {
-
-                //如果child沒有設置邊界框
-                if (!child.geometry.boundingBox) {
-                    //child設置邊界框
-                    child.geometry.computeBoundingBox();
-                    childBox.copy(child.geometry.boundingBox);
-                    //更新child和child的全部子孫對象
-                    child.updateMatrixWorld(true);
-                    //應用child的matrix4(由transform取出，分別代表translate,scale,rotate,skew)
-                    childBox.applyMatrix4(child.matrixWorld);
-
-                    groupBox.min.min(childBox.min);
-                    groupBox.max.max(childBox.max);
-                }
-            }
-        });
-
-        group.matrixWorld.getInverse(invMatrixWorld);
-        groupBox.applyMatrix4(invMatrixWorld);
-
-        groupBox.getCenter(optionalTarget);
-        return optionalTarget;
-    }
-})();
-
-//載入物件
-function createObject() {
+//載入地圖
+function createMap() {
 
     let SVGloader = new SVGLoader();
 
@@ -214,17 +169,11 @@ function createMeshes() {
     scene.add(ground2);
 
     // play網格
-    let playGeo = new THREE.BoxGeometry(playHalf.x * 2, playHalf.y * 2, playHalf.z * 2, 32, 32);
-    let playMat = new THREE.MeshStandardMaterial();
+    let playGeo = new THREE.BoxGeometry(playHalf.x * 7, playHalf.y * 7, playHalf.z * 7, 32, 32);
+    let playMat = new THREE.MeshStandardMaterial({ map: playMap, transparent: true });
     play = new THREE.Mesh(playGeo, playMat);
     play.position.set(playSite.x, playSite.y, playSite.z);
     scene.add(play);
-
-    // sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteMap }));
-    // sprite.scale.set(500, 500, 1);
-    // scene.add(sprite);
-
-    // console.log(sprite);
 
     createPhysical();
 
@@ -269,6 +218,10 @@ function createPhysical() {
         angularDamping: 0.9,
         linearDamping: 0.9
     });
+    // 禁止轉動
+    playBody.fixedRotation = true;
+    playBody.updateMassProperties();
+
     world.add(playBody);
 
     // 物理睡眠
@@ -320,14 +273,9 @@ function createSnow() {
 //實現渲染
 function createRenderer() {
 
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(container_width, container_height);
+    renderer = new THREE.WebGLRenderer({ canvas: container });
+    renderer.setSize(1000, 650);
     renderer.setPixelRatio(window.devicePixelRatio);
-
-    // renderer.shadowMap.enabled = true;
-    // renderer.shadowMap.type = THREE.BasicShadowMap;
-
-    container.appendChild(renderer.domElement);
 
 }
 
@@ -366,6 +314,7 @@ function onWindowKeyDown(event) {
         case 37:// left
         case 65:// a
             if (canJump) {
+                if(run) runAnnie();
                 speed = -5 * 100;
                 playBody.velocity.x = speed;
             }
@@ -374,6 +323,7 @@ function onWindowKeyDown(event) {
         case 39:// right
         case 68:// d
             if (canJump) {
+                if(run) runAnnie();
                 speed = 5 * 100;
                 playBody.velocity.x = speed;
             }
@@ -381,6 +331,7 @@ function onWindowKeyDown(event) {
 
         case 32:// space
             if (canJump) {
+                if(jump) JumpAnnie();
                 canLeft = false;
                 canRight = false;
                 canJump = false;
@@ -398,15 +349,18 @@ function onWindowKeyUp(event) {
         case 37:// left
         case 65:// a
             canLeft = false;
+            if(!run) idleAnnie();
             break;
 
         case 39:// right
         case 68:// d
             canRight = false;
+            if(!run) idleAnnie();
             break;
 
         case 32:// space
             canJump = false;
+            if(!jump) idleAnnie();
             break;
 
     }
@@ -439,11 +393,6 @@ function onError() {
 
 function update() {
 
-}
-
-//渲染更新
-function render() {
-
     const timeStep = 1.0 / 60.0; // seconds
 
     // 更新剛體位置
@@ -451,21 +400,33 @@ function render() {
     if (play) {
         play.position.copy(playBody.position);
         play.quaternion.copy(playBody.quaternion);
+        if (playBody.position.y <= -450) {
+            playBody.position = playSite;
+        }
     };
 
+    let delta = clock.getDelta();
+    // 紋理更新
+    annie.update(1000 * delta);
+
     // 產生下雪效果
-    snowing.geometry.vertices.forEach(v => {
+    // snowing.geometry.vertices.forEach(v => {
 
-        v.y += v.velocityY;
-        v.x += v.velocityX;
-        if( v.y <= -350 ) v.y = 700;
-        if( v.x >= 350 || v.x <= -350 ) v.velocityX = v.velocityX * -1;
+    //     v.y += v.velocityY;
+    //     v.x += v.velocityX;
+    //     if( v.y <= -350 ) v.y = 700;
+    //     if( v.x >= 350 || v.x <= -350 ) v.velocityX = v.velocityX * -1;
 
-    });
+    // });
 
-    snowing.geometry.verticesNeedUpdate = true;
+    // snowing.geometry.verticesNeedUpdate = true;
 
-    renderer.render(scene, camera);            
+}
+
+// 渲染更新
+function render() {
+
+    renderer.render(scene, camera);
 
 }
 
@@ -479,6 +440,100 @@ function createControls() {
     controls.rotateSpeed = 0.1;
     controls.update();
 
+}
+
+// 找出group的中心點
+let computeGroupCenter = (function () {
+    let childBox = new THREE.Box3();
+    let groupBox = new THREE.Box3();
+    let invMatrixWorld = new THREE.Matrix4();
+
+    return function (group, optionalTarget) {
+
+        if (!optionalTarget) optionalTarget = new THREE.Vector3();
+
+        //搜尋group底下的child
+        group.traverse(function (child) {
+
+            //如果child是Mesh
+            if (child instanceof THREE.Mesh) {
+
+                //如果child沒有設置邊界框
+                if (!child.geometry.boundingBox) {
+                    //child設置邊界框
+                    child.geometry.computeBoundingBox();
+                    childBox.copy(child.geometry.boundingBox);
+                    //更新child和child的全部子孫對象
+                    child.updateMatrixWorld(true);
+                    //應用child的matrix4(由transform取出，分別代表translate,scale,rotate,skew)
+                    childBox.applyMatrix4(child.matrixWorld);
+
+                    groupBox.min.min(childBox.min);
+                    groupBox.max.max(childBox.max);
+                }
+            }
+        });
+
+        group.matrixWorld.getInverse(invMatrixWorld);
+        groupBox.applyMatrix4(invMatrixWorld);
+
+        groupBox.getCenter(optionalTarget);
+        return optionalTarget;
+    }
+})();
+
+function textureAnimator(texture, tilesHoriz, tilesVert, numTiles, tileDispDuration) {
+
+    this.tilesHorizontal = tilesHoriz;                // 水平圖片數
+    this.tilesVertical = tilesVert;                  // 垂直圖片數
+    this.numberOfTiles = numTiles;                  // 圖片總數
+
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.LinearFilter;
+    texture.repeat.set(1 / this.tilesHorizontal, 1 / this.tilesVertical);
+
+    this.tileDisplayDuration = tileDispDuration;    // 圖片持續時間
+    this.currentDisplayTime = 0;                    // 當前圖片顯示了多久
+    this.currentTile = 0;                           // 當前圖片是哪張
+
+    this.update = millisec => {
+
+        this.currentDisplayTime += millisec;
+        while (this.currentDisplayTime > this.tileDisplayDuration) {
+            this.currentDisplayTime -= this.tileDisplayDuration;
+            this.currentTile++;
+            if (this.currentTile == this.numberOfTiles) this.currentTile = 0;
+            let currentColumn = this.currentTile % this.tilesHorizontal;
+            texture.offset.x = currentColumn / this.tilesHorizontal;
+            let currentRow = Math.floor(this.currentTile / this.tilesHorizontal);
+            texture.offset.y = currentRow / this.tilesVertical;
+        }
+
+    }
+}
+
+function idleAnnie(){
+    playMap = loader.load("assets/Juggernaut Release/Animations/Juggernaut/Idle/Idle - SpriteSheet.png");
+    play.material.map = playMap;
+    annie = new textureAnimator(playMap, 6, 2, 12, 150);
+    run = true;
+    jump = true;
+}
+
+function runAnnie(){
+    playMap = loader.load("assets/Juggernaut Release/Animations/Juggernaut/Run/Run - SpriteSheet.png");
+    play.material.map = playMap;
+    annie = new textureAnimator(playMap, 4, 4, 16, 150);
+    run = false;
+}
+
+function JumpAnnie(){
+    playMap = loader.load("assets/Juggernaut Release/Animations/Juggernaut/Jumps/Jump Start/Jump Start - SpriteSheet.png");
+    play.material.map = playMap;
+    annie = new textureAnimator(playMap, 5, 2, 10, 150);
+    jump = false;
+    run = false;
 }
 
 init();
