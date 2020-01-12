@@ -23,7 +23,7 @@ let clock = new THREE.Clock();
 
 // 玩家
 let play, playBody;
-let playHalf = new CANNON.Vec3(50, 50, 50);
+let playHalf = new CANNON.Vec3(30, 30, 30);
 let playSite = new CANNON.Vec3(-490, -260, 0);
 
 // 地板
@@ -39,8 +39,14 @@ let world;
 
 // 載入紋理
 let loader = new THREE.TextureLoader();
-let playMap = loader.load("assets/Juggernaut Release/Animations/Juggernaut/Idle/Idle - SpriteSheet.png");
-let annie = new textureAnimator(playMap, 6, 2, 12, 150);
+let playMap = [
+    loader.load("assets/Juggernaut Release/Animations/Juggernaut/Idle/Idle - SpriteSheet.png"),
+    loader.load("assets/Juggernaut Release/Animations/Juggernaut/Run/Run - SpriteSheet.png"),
+    loader.load("assets/Juggernaut Release/Animations/Juggernaut/Jumps/Jump Start/Jump Start - SpriteSheet.png"),
+    loader.load("assets/Juggernaut Release/Animations/Juggernaut/Jumps/Jump Fall/Jump Fall_000.png"),
+];
+
+let annie = new textureAnimator(playMap[0], 6, 2, 12, 150);
 
 //控制2d介面
 let controls2d = new PointerLockControls(camera, document.body);
@@ -57,8 +63,10 @@ let canJump = false;
 let speed = 0;
 
 // 移動動畫
+let idle = true;
 let run = true;
-let jump = true;
+let jumpStart = true;
+let jumpEnd = false;
 
 //建立場景
 function init() {
@@ -169,8 +177,8 @@ function createMeshes() {
     scene.add(ground2);
 
     // play網格
-    let playGeo = new THREE.BoxGeometry(playHalf.x * 7, playHalf.y * 7, playHalf.z * 7, 32, 32);
-    let playMat = new THREE.MeshStandardMaterial({ map: playMap, transparent: true });
+    let playGeo = new THREE.BoxGeometry(playHalf.x * 11, playHalf.y * 11, playHalf.z * 11, 32, 32);
+    let playMat = new THREE.MeshStandardMaterial({ map: playMap[3], alphaTest: 0.3,side: THREE.DoubleSide });
     play = new THREE.Mesh(playGeo, playMat);
     play.position.set(playSite.x, playSite.y, playSite.z);
     scene.add(play);
@@ -216,7 +224,8 @@ function createPhysical() {
         mass: 100,
         position: playSite,
         angularDamping: 0.9,
-        linearDamping: 0.9
+        linearDamping: 0.9,
+        velocity: new CANNON.Vec3(0,0,0)
     });
     // 禁止轉動
     playBody.fixedRotation = true;
@@ -233,11 +242,11 @@ function createPhysical() {
     // playBody.sleepTimeLimit = 1; // 減少物理效果達1秒，關閉物理
 
     // // 設定兩剛體碰撞時交互作用屬性
-    let playGroundContact = new CANNON.ContactMaterial(groundCM, playCM, {
-        friction: 1, // 摩擦力
-        restitution: 0.5 // 恢復係數, 衡量兩個物體碰撞後反彈程度
-    });
-    world.addContactMaterial(playGroundContact);
+    // let playGroundContact = new CANNON.ContactMaterial(groundCM, playCM, {
+    //     friction: 1, // 摩擦力
+    //     restitution: 0.3 // 恢復係數, 衡量兩個物體碰撞後反彈程度
+    // });
+    // world.addContactMaterial(playGroundContact);
 
 }
 
@@ -303,6 +312,9 @@ function createEvent() {
 
     playBody.addEventListener('collide', function () {
         canJump = true;
+        jumpStart = true;
+        jumpEnd = false;
+        idle = true;
     })
 
 }
@@ -314,8 +326,9 @@ function onWindowKeyDown(event) {
         case 37:// left
         case 65:// a
             if (canJump) {
+                play.scale.x = -1;
                 if(run) runAnnie();
-                speed = -5 * 100;
+                speed = -5 * 200;
                 playBody.velocity.x = speed;
             }
             break;
@@ -323,17 +336,15 @@ function onWindowKeyDown(event) {
         case 39:// right
         case 68:// d
             if (canJump) {
+                play.scale.x = 1;
                 if(run) runAnnie();
-                speed = 5 * 100;
+                speed = 5 * 200;
                 playBody.velocity.x = speed;
             }
             break;
 
         case 32:// space
             if (canJump) {
-                if(jump) JumpAnnie();
-                canLeft = false;
-                canRight = false;
                 canJump = false;
                 speed = 20 * 50;
                 playBody.velocity.y = speed;
@@ -348,19 +359,16 @@ function onWindowKeyUp(event) {
 
         case 37:// left
         case 65:// a
-            canLeft = false;
             if(!run) idleAnnie();
             break;
 
         case 39:// right
         case 68:// d
-            canRight = false;
             if(!run) idleAnnie();
             break;
 
         case 32:// space
             canJump = false;
-            if(!jump) idleAnnie();
             break;
 
     }
@@ -402,12 +410,29 @@ function update() {
         play.quaternion.copy(playBody.quaternion);
         if (playBody.position.y <= -450) {
             playBody.position = playSite;
+            // playBody.quaternion = new CANNON.Quaternion(0,0,0,0);
         }
     };
 
     let delta = clock.getDelta();
     // 紋理更新
     annie.update(1000 * delta);
+    // console.log(playBody.velocity);
+
+    // 檢查是否為無法跳躍的狀態
+    if(!canJump){
+        // 檢查是否為已經在撥放跳躍的狀態
+        if(jumpStart){
+            if(playBody.velocity.y > 1) JumpStartAnnie(); 
+        }
+        if(jumpEnd){
+            if(playBody.velocity.y < 0) JumpEndAnnie(); 
+        }
+    }
+
+    if(!jumpEnd){
+        if(idle) idleAnnie();
+    }
 
     // 產生下雪效果
     // snowing.geometry.vertices.forEach(v => {
@@ -514,25 +539,28 @@ function textureAnimator(texture, tilesHoriz, tilesVert, numTiles, tileDispDurat
 }
 
 function idleAnnie(){
-    playMap = loader.load("assets/Juggernaut Release/Animations/Juggernaut/Idle/Idle - SpriteSheet.png");
-    play.material.map = playMap;
-    annie = new textureAnimator(playMap, 6, 2, 12, 150);
+    play.material.map = playMap[0];
+    annie = new textureAnimator(playMap[0], 6, 2, 12, 150);
+    idle = false;
     run = true;
-    jump = true;
 }
 
 function runAnnie(){
-    playMap = loader.load("assets/Juggernaut Release/Animations/Juggernaut/Run/Run - SpriteSheet.png");
-    play.material.map = playMap;
-    annie = new textureAnimator(playMap, 4, 4, 16, 150);
+    play.material.map = playMap[1];
+    annie = new textureAnimator(playMap[1], 4, 4, 16, 150);
     run = false;
 }
 
-function JumpAnnie(){
-    playMap = loader.load("assets/Juggernaut Release/Animations/Juggernaut/Jumps/Jump Start/Jump Start - SpriteSheet.png");
-    play.material.map = playMap;
-    annie = new textureAnimator(playMap, 5, 2, 10, 150);
-    jump = false;
+function JumpStartAnnie(){
+    play.material.map = playMap[2];
+    annie = new textureAnimator(playMap[2], 5, 2, 10, 150);
+    run = false;
+    jumpStart = false;
+    jumpEnd = true;
+}
+
+function JumpEndAnnie(){
+    play.material.map = playMap[3];
     run = false;
 }
 
