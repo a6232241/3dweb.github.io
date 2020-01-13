@@ -18,18 +18,29 @@ import { SVGLoader } from '../../three.js/examples/jsm/loaders/SVGLoader.js';
 
 let container = document.querySelector('#scene-container');
 
-let camera, scene, renderer;
+let camera, scene, renderer, scene1, scene2;
 let clock = new THREE.Clock();
 
 // 玩家
 let play, playBody;
-let playHalf = new CANNON.Vec3(30, 30, 30);
+let playHalf = new CANNON.Vec3(50, 50, 50);
+let playBodyHalf = new CANNON.Vec3(30, 50, 30);
 let playSite = new CANNON.Vec3(-490, -260, 0);
 
 // 地板
 let groundHalf = new CANNON.Vec3(170, 3, 100);
 let groundSite = new CANNON.Vec3(-490, -330, 0);
-let groundSite2 = new CANNON.Vec3(95, -250, 0);
+let groundSite2 = new CANNON.Vec3(95, -245, 0);
+let groundSite3 = new CANNON.Vec3(125, -80, 0);
+let groundSite4 = new CANNON.Vec3(-350, -25, 0);
+let groundSite5 = new CANNON.Vec3(-70, 150, 0);
+let groundSite6 = new CANNON.Vec3(170, 250, 0);
+let groundSite7 = new CANNON.Vec3(540, 290, 0);
+
+// 牆壁
+let wallHalf = new CANNON.Vec3(5, 500, 100);
+let wallSite = new CANNON.Vec3(-650, -30, 0);
+let wallSite2 = new CANNON.Vec3(650, -30, 0);
 
 // 下雪
 let snowing;
@@ -55,12 +66,10 @@ let blocker = document.getElementById("blocker");
 let instructions = document.getElementById("instructions");
 
 //鍵盤控制
-let canLeft = false;
-let canRight = false;
 let canJump = false;
 
 // 角色速度
-let speed = 0;
+let speed = 5;
 
 // 移動動畫
 let idle = true;
@@ -71,16 +80,17 @@ let jumpEnd = false;
 //建立場景
 function init() {
 
-    scene = new THREE.Scene();
+    scene1 = new THREE.Scene();
+    scene2 = new THREE.Scene();
 
-    let axes = new THREE.AxesHelper(2000)
-    scene.add(axes)
+    scene = scene1;
 
     createCamera();
     createLights();
     createMap();
-    createMeshes();
-    // createSnow();
+    createPlay();
+    createSnow();
+    createAudio();
     createRenderer();
     createEvent();
     // createControls();
@@ -91,7 +101,7 @@ function init() {
     });
 }
 
-//創建相機
+// 創建相機
 function createCamera() {
 
     // let fov = 65;
@@ -112,12 +122,12 @@ function createCamera() {
 
 }
 
-//創建光源
+// 創建光源
 function createLights() {
     scene.add(new THREE.AmbientLight(0xffffff));
 }
 
-//載入地圖
+// 載入地圖
 function createMap() {
 
     let SVGloader = new SVGLoader();
@@ -154,31 +164,75 @@ function createMap() {
 
         scene.add(group);
 
-    });
-
-}
-
-//實現網格
-function createMeshes() {
+    }, onProgress, onError);
 
     // 地圖網格
     let groundMat = new THREE.MeshLambertMaterial({
         color: 0xcccccc,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.01
     });
-    let groundGeo = new THREE.BoxGeometry(groundHalf.x * 2, groundHalf.y * 2, groundHalf.z * 2, 20, 32);
+
+    let wallGeo = new THREE.BoxGeometry(wallHalf.x * 2, wallHalf.y * 2, wallHalf.z * 2, 32, 32);
+    let wall = new THREE.Mesh(wallGeo, groundMat);
+    wall.position.set(wallSite.x, wallSite.y, wallSite.z);
+    scene.add(wall);
+
+    let wall2Geo = new THREE.BoxGeometry(wallHalf.x * 2, wallHalf.y * 2, wallHalf.z * 2, 32, 32);
+    let wall2 = new THREE.Mesh(wall2Geo, groundMat);
+    wall2.position.set(wallSite2.x, wallSite2.y, wallSite2.z);
+    scene.add(wall2);
+
+    let groundGeo = new THREE.BoxGeometry(groundHalf.x * 2, groundHalf.y * 2, groundHalf.z * 2, 32, 32);
     let ground = new THREE.Mesh(groundGeo, groundMat);
     ground.position.set(groundSite.x, groundSite.y, groundSite.z);
     scene.add(ground);
 
-    let groundGeo2 = new THREE.BoxGeometry(groundHalf.x * 3, groundHalf.y * 2, groundHalf.z * 2, 20, 32);
+    let groundGeo2 = new THREE.BoxGeometry(groundHalf.x * 3, groundHalf.y * 2, groundHalf.z * 2, 32, 32);
     let ground2 = new THREE.Mesh(groundGeo2, groundMat);
     ground2.position.set(groundSite2.x, groundSite2.y, groundSite2.z);
     scene.add(ground2);
 
+    let groundGeo3 = new THREE.BoxGeometry(groundHalf.x * 2, groundHalf.y * 2, groundHalf.z * 2, 32, 32);
+    let ground3 = new THREE.Mesh(groundGeo3, groundMat);
+    ground3.position.set(groundSite3.x, groundSite3.y, groundSite3.z);
+    scene.add(ground3);
+
+    let groundGeo4 = new THREE.BoxGeometry(groundHalf.x * 1.5, groundHalf.y * 2, groundHalf.z * 2, 32, 32);
+    let ground4 = new THREE.Mesh(groundGeo4, groundMat);
+    ground4.position.set(groundSite4.x, groundSite4.y, groundSite4.z);
+    scene.add(ground4);
+
+    let groundGeo5 = new THREE.BoxGeometry(groundHalf.x, groundHalf.y * 2, groundHalf.z * 2, 32, 32);
+    let ground5 = new THREE.Mesh(groundGeo5, groundMat);
+    ground5.position.set(groundSite5.x, groundSite5.y, groundSite5.z);
+    scene.add(ground5);
+
+    let groundGeo6 = new THREE.BoxGeometry(groundHalf.x, groundHalf.y * 2, groundHalf.z * 2, 32, 32);
+    let ground6 = new THREE.Mesh(groundGeo6, groundMat);
+    ground6.position.set(groundSite6.x, groundSite6.y, groundSite6.z);
+    scene.add(ground6);
+
+    let groundGeo7 = new THREE.BoxGeometry(groundHalf.x * 1.5, groundHalf.y * 2, groundHalf.z * 2, 32, 32);
+    let ground7 = new THREE.Mesh(groundGeo7, groundMat);
+    ground7.position.set(groundSite7.x, groundSite7.y, groundSite7.z);
+    scene.add(ground7);
+
+}
+
+// 創建角色
+function createPlay() {
+
     // play網格
-    let playGeo = new THREE.BoxGeometry(playHalf.x * 11, playHalf.y * 11, playHalf.z * 11, 32, 32);
-    let playMat = new THREE.MeshStandardMaterial({ map: playMap[3], alphaTest: 0.3,side: THREE.DoubleSide });
+    let playGeo = new THREE.BoxGeometry(playHalf.x * 7, playHalf.y * 7, playHalf.z * 7, 32, 32);
+    let playMat = new THREE.MeshStandardMaterial({
+        map: playMap[3],
+        alphaTest: 0.1,
+        side: THREE.DoubleSide,
+        emissive: 0xdddddd,
+        emissiveIntensity: 0.2
+    });
     play = new THREE.Mesh(playGeo, playMat);
     play.position.set(playSite.x, playSite.y, playSite.z);
     scene.add(play);
@@ -187,7 +241,7 @@ function createMeshes() {
 
 }
 
-//利用cannon.js建立物理效果
+// 利用cannon.js建立物理效果
 function createPhysical() {
 
     // 建立物理世界
@@ -199,39 +253,96 @@ function createPhysical() {
 
     // 建立地板剛體
     let groundCM = new CANNON.Material();
+
+    let wallBody = new CANNON.Body({
+        shape: new CANNON.Box(wallHalf),
+        material: groundCM,
+        mass: 0,
+        position: wallSite,
+    });
+    world.add(wallBody);
+
+    let wallBody2 = new CANNON.Body({
+        shape: new CANNON.Box(wallHalf),
+        material: groundCM,
+        mass: 0,
+        position: wallSite2,
+    });
+    world.add(wallBody2);
+
     let groundBody = new CANNON.Body({
         shape: new CANNON.Box(groundHalf),
         material: groundCM,
         mass: 0,
         position: groundSite,
     });
+    world.add(groundBody);
+
     let groundBody2 = new CANNON.Body({
         shape: new CANNON.Box(new CANNON.Vec3(groundHalf.x * 1.5, groundHalf.y, groundHalf.z)),
         material: groundCM,
         mass: 0,
         position: groundSite2,
     });
-
-    world.add(groundBody);
     world.add(groundBody2);
 
+    let groundBody3 = new CANNON.Body({
+        shape: new CANNON.Box(new CANNON.Vec3(groundHalf.x, groundHalf.y, groundHalf.z)),
+        material: groundCM,
+        mass: 0,
+        position: groundSite3,
+    });
+    world.add(groundBody3);
+
+    let groundBody4 = new CANNON.Body({
+        shape: new CANNON.Box(new CANNON.Vec3(groundHalf.x * 0.75, groundHalf.y, groundHalf.z)),
+        material: groundCM,
+        mass: 0,
+        position: groundSite4,
+    });
+    world.add(groundBody4);
+
+    let groundBody5 = new CANNON.Body({
+        shape: new CANNON.Box(new CANNON.Vec3(groundHalf.x * 0.5, groundHalf.y, groundHalf.z)),
+        material: groundCM,
+        mass: 0,
+        position: groundSite5,
+    });
+    world.add(groundBody5);
+
+    let groundBody6 = new CANNON.Body({
+        shape: new CANNON.Box(new CANNON.Vec3(groundHalf.x * 0.5, groundHalf.y, groundHalf.z)),
+        material: groundCM,
+        mass: 0,
+        position: groundSite6,
+    });
+    world.add(groundBody6);
+
+    let groundBody7 = new CANNON.Body({
+        shape: new CANNON.Box(new CANNON.Vec3(groundHalf.x * 0.75, groundHalf.y, groundHalf.z)),
+        material: groundCM,
+        mass: 0,
+        position: groundSite7,
+    });
+    world.add(groundBody7);
+
     // 建立play剛體
-    let playShape = new CANNON.Box(playHalf);
+    let playShape = new CANNON.Box(playBodyHalf);
     let playCM = new CANNON.Material();
     playBody = new CANNON.Body({
         shape: playShape,
         material: playCM,
-        mass: 100,
+        mass: 1000,
         position: playSite,
-        angularDamping: 0.9,
-        linearDamping: 0.9,
-        velocity: new CANNON.Vec3(0,0,0)
+        angularDamping: 1, // 角度阻力
+        linearDamping: 0.9, // 線性阻力
+        velocity: new CANNON.Vec3(0, 0, 0)
     });
-    // 禁止轉動
-    playBody.fixedRotation = true;
-    playBody.updateMassProperties();
-
     world.add(playBody);
+
+    // 禁止轉動
+    // playBody.fixedRotation = true;
+    // playBody.updateMassProperties();
 
     // 物理睡眠
     // world.allowSleep = true;
@@ -242,22 +353,22 @@ function createPhysical() {
     // playBody.sleepTimeLimit = 1; // 減少物理效果達1秒，關閉物理
 
     // // 設定兩剛體碰撞時交互作用屬性
-    // let playGroundContact = new CANNON.ContactMaterial(groundCM, playCM, {
-    //     friction: 1, // 摩擦力
-    //     restitution: 0.3 // 恢復係數, 衡量兩個物體碰撞後反彈程度
-    // });
-    // world.addContactMaterial(playGroundContact);
+    let playGroundContact = new CANNON.ContactMaterial(groundCM, playCM, {
+        friction: 0, // 摩擦力
+        restitution: 0.3 // 恢復係數, 衡量兩個物體碰撞後反彈程度
+    });
+    world.addContactMaterial(playGroundContact);
 
 }
 
-//增加下雪的特效
+// 增加下雪的特效
 function createSnow() {
 
     let snowMap = loader.load("../../three.js/examples/textures/sprites/snowflake1.png");
     let snowGeo = new THREE.Geometry();
     for (let i = 0; i < 50; i++) {
         let particle = new THREE.Vector3(
-            Math.random() * 1400 - 700,
+            Math.random() * 1200 - 600,
             Math.random() * 700 - 200,
             1
         );
@@ -279,7 +390,26 @@ function createSnow() {
     scene.add(snowing);
 }
 
-//實現渲染
+// 創建音效
+function createAudio() {
+
+    // 創建監視
+    let listener = new THREE.AudioListener()
+    camera.add(listener);
+
+    // 控制播放
+    let sound = new THREE.Audio(listener);
+
+    // 加載音樂
+    let mediaElement = new Audio('../../three.js/examples/sounds/376737_Skullbeatz___Bad_Cat_Maste.mp3');
+    mediaElement.loop = true;;
+    // mediaElement.play();
+
+    sound.setMediaElementSource( mediaElement );
+
+}
+
+// 實現渲染
 function createRenderer() {
 
     renderer = new THREE.WebGLRenderer({ canvas: container });
@@ -288,27 +418,27 @@ function createRenderer() {
 
 }
 
-//創建事件
+// 創建事件
 function createEvent() {
 
     // window.addEventListener('resize', onWindowResize, false);
     window.addEventListener('keydown', onWindowKeyDown, false);
     window.addEventListener('keyup', onWindowKeyUp, false);
 
-    // instructions.addEventListener('click', function () {
-    //     controls2d.lock();
-    // }, false);
+    instructions.addEventListener('click', function () {
+        controls2d.lock();
+    }, false);
 
-    // controls2d.addEventListener('lock', function () {
-    //     instructions.style.display = 'none';
-    //     blocker.style.display = 'none';
-    // });
+    controls2d.addEventListener('lock', function () {
+        instructions.style.display = 'none';
+        blocker.style.display = 'none';
+    });
 
-    // controls2d.addEventListener('unlock', function () {
-    //     blocker.style.backgroundColor = 'rgba(0,0,0,0.5)';
-    //     blocker.style.display = 'block';
-    //     instructions.style.display = '';
-    // });
+    controls2d.addEventListener('unlock', function () {
+        blocker.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        blocker.style.display = 'block';
+        instructions.style.display = '';
+    });
 
     playBody.addEventListener('collide', function () {
         canJump = true;
@@ -327,9 +457,9 @@ function onWindowKeyDown(event) {
         case 65:// a
             if (canJump) {
                 play.scale.x = -1;
-                if(run) runAnnie();
-                speed = -5 * 200;
-                playBody.velocity.x = speed;
+                if (run) runAnnie();
+                speed <= 300 ? speed += 100 : speed = 200;
+                playBody.velocity.x = -speed;
             }
             break;
 
@@ -337,8 +467,8 @@ function onWindowKeyDown(event) {
         case 68:// d
             if (canJump) {
                 play.scale.x = 1;
-                if(run) runAnnie();
-                speed = 5 * 200;
+                if (run) runAnnie();
+                speed <= 300 ? speed += 100 : speed = 200;
                 playBody.velocity.x = speed;
             }
             break;
@@ -346,7 +476,7 @@ function onWindowKeyDown(event) {
         case 32:// space
             if (canJump) {
                 canJump = false;
-                speed = 20 * 50;
+                speed <= 700 ? speed = 20 * 45 : speed = 20 * 35;
                 playBody.velocity.y = speed;
             }
             break;
@@ -359,22 +489,23 @@ function onWindowKeyUp(event) {
 
         case 37:// left
         case 65:// a
-            if(!run) idleAnnie();
+            if (!run) idleAnnie();
             break;
 
         case 39:// right
         case 68:// d
-            if(!run) idleAnnie();
+            if (!run) idleAnnie();
             break;
 
         case 32:// space
             canJump = false;
+            speed = 5;
             break;
 
     }
 }
 
-//載入等待
+// 載入等待
 function onProgress(xhr) {
     if (xhr.lengthComputable) {
         // updateProgressBar(xhr.loaded / xhr.total);
@@ -385,19 +516,14 @@ function onProgress(xhr) {
     }
 }
 
-//載入失敗
+// 載入失敗
 function onError() {
     let message = "Error loading model";
     instructions.innerText = message;
     console.log(message);
 }
 
-//載入%數
-// function updateProgressBar(fraction) {
-//     instructions.getElementsByTagName('span')[0].innerText = 'Loading...' + Math.round(fraction * 100, 2) + '%';            
-// }
-
-//Object事件
+let life = 0;
 
 function update() {
 
@@ -408,11 +534,26 @@ function update() {
     if (play) {
         play.position.copy(playBody.position);
         play.quaternion.copy(playBody.quaternion);
-        if (playBody.position.y <= -450) {
-            playBody.position = playSite;
-            // playBody.quaternion = new CANNON.Quaternion(0,0,0,0);
-        }
     };
+    if (playBody.position.y <= -750) {
+        if( life > 0 ){
+            console.log("超出界外");
+            playBody.position = playSite;
+            play.position.copy(playBody.position);
+            life--;
+        }else{
+            blocker.getElementsByTagName('span')[0].innerText = "GameOver";
+            scene = scene1;
+            // scene2.add(camera);
+            // scene2.add(new THREE.AmbientLight(0xffffff));
+            // let geo = new THREE.BoxBufferGeometry(50,50,50,32,32);
+            // let mat = new THREE.MeshStandardMaterial({color:0xffffff});
+            // let mesh = new THREE.Mesh(geo,mat);
+            // scene2.add(mesh);
+            // scene2.add(play);
+            // scene = scene2;
+        }        
+    }
 
     let delta = clock.getDelta();
     // 紋理更新
@@ -420,31 +561,31 @@ function update() {
     // console.log(playBody.velocity);
 
     // 檢查是否為無法跳躍的狀態
-    if(!canJump){
+    if (!canJump) {
         // 檢查是否為已經在撥放跳躍的狀態
-        if(jumpStart){
-            if(playBody.velocity.y > 1) JumpStartAnnie(); 
+        if (jumpStart) {
+            if (playBody.velocity.y > 1) JumpStartAnnie();
         }
-        if(jumpEnd){
-            if(playBody.velocity.y < 0) JumpEndAnnie(); 
+        if (jumpEnd) {
+            if (playBody.velocity.y < 0) JumpEndAnnie();
         }
     }
 
-    if(!jumpEnd){
-        if(idle) idleAnnie();
+    if (!jumpEnd) {
+        if (idle) idleAnnie();
     }
 
     // 產生下雪效果
-    // snowing.geometry.vertices.forEach(v => {
+    snowing.geometry.vertices.forEach(v => {
 
-    //     v.y += v.velocityY;
-    //     v.x += v.velocityX;
-    //     if( v.y <= -350 ) v.y = 700;
-    //     if( v.x >= 350 || v.x <= -350 ) v.velocityX = v.velocityX * -1;
+        v.y += v.velocityY;
+        v.x += v.velocityX;
+        if (v.y <= -350) v.y = 700;
+        if (v.x >= 350 || v.x <= -350) v.velocityX = v.velocityX * -1;
 
-    // });
+    });
 
-    // snowing.geometry.verticesNeedUpdate = true;
+    snowing.geometry.verticesNeedUpdate = true;
 
 }
 
@@ -507,6 +648,7 @@ let computeGroupCenter = (function () {
     }
 })();
 
+// 雪碧圖紋理
 function textureAnimator(texture, tilesHoriz, tilesVert, numTiles, tileDispDuration) {
 
     this.tilesHorizontal = tilesHoriz;                // 水平圖片數
@@ -538,20 +680,23 @@ function textureAnimator(texture, tilesHoriz, tilesVert, numTiles, tileDispDurat
     }
 }
 
-function idleAnnie(){
+// 切換為靜止動畫
+function idleAnnie() {
     play.material.map = playMap[0];
     annie = new textureAnimator(playMap[0], 6, 2, 12, 150);
     idle = false;
     run = true;
 }
 
-function runAnnie(){
+// 切換為跑步動畫
+function runAnnie() {
     play.material.map = playMap[1];
     annie = new textureAnimator(playMap[1], 4, 4, 16, 150);
     run = false;
 }
 
-function JumpStartAnnie(){
+// 切換為開始跳躍動畫
+function JumpStartAnnie() {
     play.material.map = playMap[2];
     annie = new textureAnimator(playMap[2], 5, 2, 10, 150);
     run = false;
@@ -559,7 +704,8 @@ function JumpStartAnnie(){
     jumpEnd = true;
 }
 
-function JumpEndAnnie(){
+// 切換為下降動畫
+function JumpEndAnnie() {
     play.material.map = playMap[3];
     run = false;
 }
