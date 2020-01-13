@@ -458,7 +458,7 @@ function onWindowKeyDown(event) {
             if (canJump) {
                 play.scale.x = -1;
                 if (run) runAnnie();
-                speed <= 300 ? speed += 100 : speed = 200;
+                speed <= 300 ? speed += 150 : speed = 200;
                 playBody.velocity.x = -speed;
             }
             break;
@@ -468,7 +468,7 @@ function onWindowKeyDown(event) {
             if (canJump) {
                 play.scale.x = 1;
                 if (run) runAnnie();
-                speed <= 300 ? speed += 100 : speed = 200;
+                speed <= 300 ? speed += 150 : speed = 200;
                 playBody.velocity.x = speed;
             }
             break;
@@ -523,7 +523,7 @@ function onError() {
     console.log(message);
 }
 
-let life = 0;
+let life = 1;
 
 function update() {
 
@@ -543,7 +543,8 @@ function update() {
             life--;
         }else{
             blocker.getElementsByTagName('span')[0].innerText = "GameOver";
-            scene = scene1;
+            blocker.getElementsByTagName('span')[1].innerText = "重新開始";
+            controls2d.unlock();
             // scene2.add(camera);
             // scene2.add(new THREE.AmbientLight(0xffffff));
             // let geo = new THREE.BoxBufferGeometry(50,50,50,32,32);
@@ -552,7 +553,11 @@ function update() {
             // scene2.add(mesh);
             // scene2.add(play);
             // scene = scene2;
-        }        
+        }
+
+    }else if(playBody.position.x >= 540 && playBody.position.y >= 290){
+        blocker.getElementsByTagName('span')[0].innerText = "Game Completed";
+
     }
 
     let delta = clock.getDelta();
