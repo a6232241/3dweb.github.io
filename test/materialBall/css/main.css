@@ -1,0 +1,33 @@
+
+#btnNav{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#red{
+    border: none;
+    background-color: red;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 30px;
+    margin: 10px;
+    cursor: pointer;
+}
+#green{
+    border: none;
+    background-color: green;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 30px;
+    margin: 10px;
+    cursor: pointer;
+}
+#blue{
+    border: none;
+    background-color: blue;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 30px;
+    margin: 10px;
+    cursor: pointer;
+}

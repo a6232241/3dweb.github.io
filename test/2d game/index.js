@@ -69,6 +69,7 @@ let instructions = document.getElementById("instructions");
 let canLeft = false;
 let canRight = false;
 let canJump = false;
+let clickJump = false;
 
 // 角色速度
 let speed = 10;
@@ -249,7 +250,7 @@ function createPhysical() {
     // 建立物理世界
     world = new CANNON.World();
     // 設定重力場為 y 軸 -9.8 m/s²
-    world.gravity.set(0, -9.8 * 100, 0);
+    world.gravity.set(0, -9.8 * 200, 0);
     // 碰撞偵測
     world.broadphase = new CANNON.NaiveBroadphase();
 
@@ -357,7 +358,7 @@ function createPhysical() {
     // // 設定兩剛體碰撞時交互作用屬性
     let playGroundContact = new CANNON.ContactMaterial(groundCM, playCM, {
         friction: 0, // 摩擦力
-        restitution: 0.3 // 恢復係數, 衡量兩個物體碰撞後反彈程度
+        restitution: 0.1 // 恢復係數, 衡量兩個物體碰撞後反彈程度
     });
     world.addContactMaterial(playGroundContact);
 
@@ -466,11 +467,7 @@ function onWindowKeyDown(event) {
             break;
 
         case 32:// space
-            if (canJump) {
-                canJump = false;
-                speed <= 700 ? speed = 20 * 45 : speed = 20 * 35;
-                playBody.velocity.y = speed;
-            }
+            clickJump = true;
             break;
     }
 }
@@ -493,6 +490,7 @@ function onWindowKeyUp(event) {
 
         case 32:// space
             canJump = false;
+            clickJump = false;
             break;
 
     }
@@ -570,22 +568,17 @@ function update() {
         left();
     }else if (canRight){
         right();
-    }else{
-        speed = 100;
-        playBody.velocity.x != 10 ? playBody.velocity.x /= 1.2 : speed = 0;
+    }else if(canJump){
+        speed = 10;
+        playBody.velocity.x != 0 ? playBody.velocity.x *= 0.8 : playBody.velocity.x = 0;
     }
 
-    // 產生下雪效果
-    snowing.geometry.vertices.forEach(v => {
 
-        v.y += v.velocityY;
-        v.x += v.velocityX;
-        if (v.y <= -350) v.y = 700;
-        if (v.x >= 350 || v.x <= -350) v.velocityX = v.velocityX * -1;
+    if(clickJump){
+        jump();
+    }
 
-    });
-
-    snowing.geometry.verticesNeedUpdate = true;
+    snowAnnie();
 
 }
 
@@ -726,6 +719,30 @@ function right(){
         speed <= 350 ? speed *= 2.5 : speed = 350;
         playBody.velocity.x = speed;
     }
+}
+
+function jump(){
+    if (canJump) {
+        canJump = false;
+        speed  = 10 * 100;
+        playBody.velocity.y = speed;
+    }
+}
+
+// 產生下雪效果
+function snowAnnie(){
+
+    snowing.geometry.vertices.forEach(v => {
+
+        v.y += v.velocityY;
+        v.x += v.velocityX;
+        if (v.y <= -350) v.y = 700;
+        if (v.x >= 350 || v.x <= -350) v.velocityX = v.velocityX * -1;
+
+    });
+
+    snowing.geometry.verticesNeedUpdate = true;
+
 }
 
 init();

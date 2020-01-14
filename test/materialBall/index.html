@@ -8,14 +8,25 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 
 <body>
-    <canvas id="scene-container">
-    </canvas>
-    <div id="info">
-        <p>materialBall</p>
+    <div class="threejs">
+        <canvas id="scene-container"></canvas>
+        <div id="info">
+            <p>materialBall</p>
+        </div>
     </div>
+
+    <div id="btnNav">
+        <button id="red">red</button>
+        <button id="green">green</button>
+        <button id="blue">blue</button>
+    </div>
+
+
+
     <script type="module">
         import * as THREE from '../../three.js/build/three.module.js';
 
@@ -37,6 +48,11 @@
 
         let gui;
 
+        // 控制顏色
+        let red = document.getElementById('red');
+        let green = document.getElementById('green');
+        let blue = document.getElementById('blue');
+
         //建立場景
         function init() {
 
@@ -51,7 +67,7 @@
             createBall();
             createGUI();
             createRenderer();
-            // createEvent();
+            createEvent();
             createControls();
 
             renderer.setAnimationLoop(() => {
@@ -110,7 +126,6 @@
             gui = new GUI();
             gui.addColor(param, 'color').onChange(function (val) {
                 ball.material.color.setHex(val);
-                // console.log(ball.material.color.getHex());
                 render();
             });
 
@@ -119,8 +134,26 @@
         function createRenderer() {
 
             renderer = new THREE.WebGLRenderer({ canvas: container });
-            renderer.setSize(1000, 650);
+            renderer.setSize(800, 500);
             renderer.setPixelRatio(window.devicePixelRatio);
+
+        }
+
+        function createEvent(){
+
+            red.addEventListener('click', function(){
+                ball.material.color.setHex(0xff0000);
+            });
+
+            green.addEventListener('click', function(){
+                ball.material.color.setHex(0x00ff00);
+            });
+
+            blue.addEventListener('click', function(){
+                ball.material.color.setHex(0x0000ff);
+            });
+
+
 
         }
 
