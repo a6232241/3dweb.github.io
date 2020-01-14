@@ -66,10 +66,12 @@ let blocker = document.getElementById("blocker");
 let instructions = document.getElementById("instructions");
 
 //鍵盤控制
+let canLeft = false;
+let canRight = false;
 let canJump = false;
 
 // 角色速度
-let speed = 5;
+let speed = 10;
 
 // 移動動畫
 let idle = true;
@@ -332,7 +334,7 @@ function createPhysical() {
     playBody = new CANNON.Body({
         shape: playShape,
         material: playCM,
-        mass: 1000,
+        mass: 100,
         position: playSite,
         angularDamping: 1, // 角度阻力
         linearDamping: 0.9, // 線性阻力
@@ -455,22 +457,12 @@ function onWindowKeyDown(event) {
 
         case 37:// left
         case 65:// a
-            if (canJump) {
-                play.scale.x = -1;
-                if (run) runAnnie();
-                speed <= 300 ? speed += 150 : speed = 200;
-                playBody.velocity.x = -speed;
-            }
+            canLeft = true;
             break;
 
         case 39:// right
         case 68:// d
-            if (canJump) {
-                play.scale.x = 1;
-                if (run) runAnnie();
-                speed <= 300 ? speed += 150 : speed = 200;
-                playBody.velocity.x = speed;
-            }
+            canRight = true;
             break;
 
         case 32:// space
@@ -489,17 +481,18 @@ function onWindowKeyUp(event) {
 
         case 37:// left
         case 65:// a
+            canLeft = false;
             if (!run) idleAnnie();
             break;
 
         case 39:// right
         case 68:// d
+            canRight = false;
             if (!run) idleAnnie();
             break;
 
         case 32:// space
             canJump = false;
-            speed = 5;
             break;
 
     }
@@ -535,6 +528,8 @@ function update() {
         play.position.copy(playBody.position);
         play.quaternion.copy(playBody.quaternion);
     };
+
+    // 判斷遊戲成功或失敗
     if (playBody.position.y <= -750) {
         if( life > 0 ){
             console.log("超出界外");
@@ -545,18 +540,11 @@ function update() {
             blocker.getElementsByTagName('span')[0].innerText = "GameOver";
             blocker.getElementsByTagName('span')[1].innerText = "重新開始";
             controls2d.unlock();
-            // scene2.add(camera);
-            // scene2.add(new THREE.AmbientLight(0xffffff));
-            // let geo = new THREE.BoxBufferGeometry(50,50,50,32,32);
-            // let mat = new THREE.MeshStandardMaterial({color:0xffffff});
-            // let mesh = new THREE.Mesh(geo,mat);
-            // scene2.add(mesh);
-            // scene2.add(play);
-            // scene = scene2;
         }
 
     }else if(playBody.position.x >= 540 && playBody.position.y >= 290){
         blocker.getElementsByTagName('span')[0].innerText = "Game Completed";
+        controls2d.unlock();
 
     }
 
@@ -576,8 +564,15 @@ function update() {
         }
     }
 
-    if (!jumpEnd) {
-        if (idle) idleAnnie();
+    if (!jumpEnd) if (idle) idleAnnie();
+
+    if(canLeft) {
+        left();
+    }else if (canRight){
+        right();
+    }else{
+        speed = 100;
+        playBody.velocity.x != 10 ? playBody.velocity.x /= 1.2 : speed = 0;
     }
 
     // 產生下雪效果
@@ -713,6 +708,24 @@ function JumpStartAnnie() {
 function JumpEndAnnie() {
     play.material.map = playMap[3];
     run = false;
+}
+
+function left(){
+    if (canJump) {
+        play.scale.x = -1;
+        if (run) runAnnie();
+        speed <= 350 ? speed *= 2.5 : speed = 350;
+        playBody.velocity.x = -speed;
+    }
+}
+
+function right(){
+    if (canJump) {
+        play.scale.x = 1;
+        if (run) runAnnie();
+        speed <= 350 ? speed *= 2.5 : speed = 350;
+        playBody.velocity.x = speed;
+    }
 }
 
 init();
