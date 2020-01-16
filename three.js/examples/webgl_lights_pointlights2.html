@@ -13,20 +13,13 @@
 			<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - point lights WebGL demo
 		</div>
 
-		<script src="../build/three.js"></script>
+		<script type="module">
 
-		<script src="js/controls/TrackballControls.js"></script>
+			import * as THREE from '../build/three.module.js';
 
-		<script src="js/WebGL.js"></script>
-		<script src="js/libs/stats.min.js"></script>
+			import Stats from './jsm/libs/stats.module.js';
 
-		<script>
-
-			if ( WEBGL.isWebGLAvailable() === false ) {
-
-				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
-
-			}
+			import { TrackballControls } from './jsm/controls/TrackballControls.js';
 
 			var camera, scene, renderer, controls;
 			var light1, light2, light3, light4, light5, light6;
@@ -62,6 +55,7 @@
 				texture.repeat.set( 20, 10 );
 				texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 				texture.format = THREE.RGBFormat;
+				texture.encoding = THREE.sRGBEncoding;
 
 				// MATERIALS
 
@@ -140,22 +134,16 @@
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
-
-				renderer.gammaInput = true;
-				renderer.gammaOutput = true;
+				renderer.outputEncoding = THREE.sRGBEncoding;
 
 				// CONTROLS
 
-				controls = new THREE.TrackballControls( camera, renderer.domElement );
+				controls = new TrackballControls( camera, renderer.domElement );
 
 				controls.rotateSpeed = 1.0;
 				controls.zoomSpeed = 1.2;
 				controls.panSpeed = 0.8;
 
-				controls.noZoom = false;
-				controls.noPan = false;
-
-				controls.staticMoving = false;
 				controls.dynamicDampingFactor = 0.15;
 
 				controls.keys = [ 65, 83, 68 ];

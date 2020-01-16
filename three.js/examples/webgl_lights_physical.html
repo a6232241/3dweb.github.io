@@ -15,19 +15,14 @@
 			Reinhard inline tonemapping with real-world light falloff (decay = 2).
 		</div>
 
-		<script src="../build/three.js"></script>
-		<script src="js/libs/stats.min.js"></script>
-		<script src="js/libs/dat.gui.min.js"></script>
-		<script src="js/controls/OrbitControls.js"></script>
-		<script src="js/WebGL.js"></script>
+		<script type="module">
 
-		<script>
+			import * as THREE from '../build/three.module.js';
 
-			if ( WEBGL.isWebGLAvailable() === false ) {
+			import Stats from './jsm/libs/stats.module.js';
+			import { GUI } from './jsm/libs/dat.gui.module.js';
 
-				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
-
-			}
+			import { OrbitControls } from './jsm/controls/OrbitControls.js';
 
 			var camera, scene, renderer,
 				bulbLight, bulbMat, hemiLight, stats;
@@ -115,6 +110,7 @@
 					map.wrapT = THREE.RepeatWrapping;
 					map.anisotropy = 4;
 					map.repeat.set( 10, 24 );
+					map.encoding = THREE.sRGBEncoding;
 					floorMat.map = map;
 					floorMat.needsUpdate = true;
 
@@ -152,6 +148,7 @@
 					map.wrapT = THREE.RepeatWrapping;
 					map.anisotropy = 4;
 					map.repeat.set( 1, 1 );
+					map.encoding = THREE.sRGBEncoding;
 					cubeMat.map = map;
 					cubeMat.needsUpdate = true;
 
@@ -175,6 +172,7 @@
 				textureLoader.load( "textures/planets/earth_atmos_2048.jpg", function ( map ) {
 
 					map.anisotropy = 4;
+					map.encoding = THREE.sRGBEncoding;
 					ballMat.map = map;
 					ballMat.needsUpdate = true;
 
@@ -182,6 +180,7 @@
 				textureLoader.load( "textures/planets/earth_specular_2048.jpg", function ( map ) {
 
 					map.anisotropy = 4;
+					map.encoding = THREE.sRGBEncoding;
 					ballMat.metalnessMap = map;
 					ballMat.needsUpdate = true;
 
@@ -219,8 +218,7 @@
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.physicallyCorrectLights = true;
-				renderer.gammaInput = true;
-				renderer.gammaOutput = true;
+				renderer.outputEncoding = THREE.sRGBEncoding;
 				renderer.shadowMap.enabled = true;
 				renderer.toneMapping = THREE.ReinhardToneMapping;
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -228,12 +226,12 @@
 				container.appendChild( renderer.domElement );
 
 
-				var controls = new THREE.OrbitControls( camera, renderer.domElement );
+				var controls = new OrbitControls( camera, renderer.domElement );
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
 
-				var gui = new dat.GUI();
+				var gui = new GUI();
 
 				gui.add( params, 'hemiIrradiance', Object.keys( hemiLuminousIrradiances ) );
 				gui.add( params, 'bulbPower', Object.keys( bulbLuminousPowers ) );

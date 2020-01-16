@@ -46,8 +46,8 @@ var Water = function ( geometry, options ) {
 	var textureLoader = new TextureLoader();
 
 	var flowMap = options.flowMap || undefined;
-	var normalMap0 = options.normalMap0 || textureLoader.load( '../../../three.js/examples/textures/water/Water_1_M_Normal.jpg' );
-	var normalMap1 = options.normalMap1 || textureLoader.load( '../../../three.js/examples/textures/water/Water_2_M_Normal.jpg' );
+	var normalMap0 = options.normalMap0 || textureLoader.load( 'textures/water/Water_1_M_Normal.jpg' );
+	var normalMap1 = options.normalMap1 || textureLoader.load( 'textures/water/Water_2_M_Normal.jpg' );
 
 	var cycle = 0.15; // a cycle of a flow map phase
 	var halfCycle = cycle * 0.5;
@@ -253,6 +253,7 @@ Water.WaterShader = {
 	vertexShader: [
 
 		'#include <fog_pars_vertex>',
+		'#include <logdepthbuf_pars_vertex>',
 
 		'uniform mat4 textureMatrix;',
 
@@ -271,6 +272,7 @@ Water.WaterShader = {
 		'	vec4 mvPosition =  viewMatrix * worldPosition;', // used in fog_vertex
 		'	gl_Position = projectionMatrix * mvPosition;',
 
+		'	#include <logdepthbuf_vertex>',
 		'	#include <fog_vertex>',
 
 		'}'
@@ -281,6 +283,7 @@ Water.WaterShader = {
 
 		'#include <common>',
 		'#include <fog_pars_fragment>',
+		'#include <logdepthbuf_pars_fragment>',
 
 		'uniform sampler2D tReflectionMap;',
 		'uniform sampler2D tRefractionMap;',
@@ -302,6 +305,8 @@ Water.WaterShader = {
 		'varying vec3 vToEye;',
 
 		'void main() {',
+
+		'	#include <logdepthbuf_fragment>',
 
 		'	float flowMapOffset0 = config.x;',
 		'	float flowMapOffset1 = config.y;',

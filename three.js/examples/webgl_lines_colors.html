@@ -13,19 +13,11 @@
 			<a href="http://en.wikipedia.org/wiki/Hilbert_curve">Hilbert curve</a> thanks to <a href="http://www.openprocessing.org/visuals/?visualID=15599">Thomas Diewald</a>
 		</div>
 
-		<script src="../build/three.js"></script>
+		<script type="module">
 
-		<script src="js/utils/GeometryUtils.js"></script>
+			import * as THREE from '../build/three.module.js';
 
-		<script src="js/WebGL.js"></script>
-
-		<script>
-
-			if ( WEBGL.isWebGLAvailable() === false ) {
-
-				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
-
-			}
+			import { GeometryUtils } from './jsm/utils/GeometryUtils.js';
 
 			var mouseX = 0, mouseY = 0;
 
@@ -51,7 +43,7 @@
 
 				//
 
-				var hilbertPoints = THREE.GeometryUtils.hilbert3D( new THREE.Vector3( 0, 0, 0 ), 200.0, 1, 0, 1, 2, 3, 4, 5, 6, 7 );
+				var hilbertPoints = GeometryUtils.hilbert3D( new THREE.Vector3( 0, 0, 0 ), 200.0, 1, 0, 1, 2, 3, 4, 5, 6, 7 );
 
 				var geometry1 = new THREE.BufferGeometry();
 				var geometry2 = new THREE.BufferGeometry();
@@ -87,13 +79,13 @@
 
 				}
 
-				geometry1.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-				geometry2.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-				geometry3.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+				geometry1.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+				geometry2.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+				geometry3.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
 
-				geometry1.addAttribute( 'color', new THREE.Float32BufferAttribute( colors1, 3 ) );
-				geometry2.addAttribute( 'color', new THREE.Float32BufferAttribute( colors2, 3 ) );
-				geometry3.addAttribute( 'color', new THREE.Float32BufferAttribute( colors3, 3 ) );
+				geometry1.setAttribute( 'color', new THREE.Float32BufferAttribute( colors1, 3 ) );
+				geometry2.setAttribute( 'color', new THREE.Float32BufferAttribute( colors2, 3 ) );
+				geometry3.setAttribute( 'color', new THREE.Float32BufferAttribute( colors3, 3 ) );
 
 				//
 
@@ -123,13 +115,13 @@
 
 				}
 
-				geometry4.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-				geometry5.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-				geometry6.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+				geometry4.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+				geometry5.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+				geometry6.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
 
-				geometry4.addAttribute( 'color', new THREE.Float32BufferAttribute( colors1, 3 ) );
-				geometry5.addAttribute( 'color', new THREE.Float32BufferAttribute( colors2, 3 ) );
-				geometry6.addAttribute( 'color', new THREE.Float32BufferAttribute( colors3, 3 ) );
+				geometry4.setAttribute( 'color', new THREE.Float32BufferAttribute( colors1, 3 ) );
+				geometry5.setAttribute( 'color', new THREE.Float32BufferAttribute( colors2, 3 ) );
+				geometry6.setAttribute( 'color', new THREE.Float32BufferAttribute( colors3, 3 ) );
 
 				// Create lines and add to scene
 

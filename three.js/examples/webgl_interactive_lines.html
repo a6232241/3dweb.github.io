@@ -17,11 +17,11 @@
 	</head>
 	<body>
 
-		<script src="../build/three.js"></script>
+		<script type="module">
 
-		<script src="js/libs/stats.min.js"></script>
+			import * as THREE from '../build/three.module.js';
 
-		<script>
+			import Stats from './jsm/libs/stats.module.js';
 
 			var container, stats;
 			var camera, scene, raycaster, renderer, parentTransform, sphereInter;
@@ -75,7 +75,7 @@
 
 				}
 
-				lineGeometry.addAttribute( 'position', new THREE.Float32BufferAttribute( points, 3 ) );
+				lineGeometry.setAttribute( 'position', new THREE.Float32BufferAttribute( points, 3 ) );
 
 				parentTransform = new THREE.Object3D();
 				parentTransform.position.x = Math.random() * 40 - 20;
