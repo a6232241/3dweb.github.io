@@ -82,8 +82,8 @@ function createEvent(){
 
 function onWindowResize(){
 
-    container_width = container.clientWidth;
-    container_height = container.clientHeight;
+    container_width = window.innerWidth;
+    container_height = window.innerHeight;
 
     camera.aspect = container_width / container_height;
     camera.updateProjectionMatrix();
