@@ -162,7 +162,7 @@ function createModel() {
 }
 
 // 創建model的animations
-function createAnimations(animations, model){
+function createAnimations(animations, model) {
 
     // 動作的動畫載入(約有10個動作)
     let modelAnimations = animations;
@@ -394,9 +394,9 @@ function playOnClick() {
 
 /* 利用案件要求model動作 */
 
-function playOnKeyDown(e){
+function playOnKeyDown(e) {
 
-    switch(e.keyCode){
+    switch (e.keyCode) {
 
         case 49: // 1
             playModifierAnimation(idle, 0.25, possibleAnims[0], 0.25);
@@ -418,20 +418,32 @@ function playOnKeyDown(e){
             playModifierAnimation(idle, 0.25, possibleAnims[4], 0.25);
             break;
 
+        case 54: // 6
+            playModifierAnimation(idle, 0.25, possibleAnims[5], 0.25);
+            break;
+
+        case 55: // 7
+            playModifierAnimation(idle, 0.25, possibleAnims[6], 0.25);
+            break;
+
+        case 56: // 8
+            playModifierAnimation(idle, 0.25, possibleAnims[7], 0.25);
+            break;
+
     }
 
 }
 
 /* 動畫過渡(閒置動作，到新動作時間，新動作，新動作結束時間) */
-function playModifierAnimation(from, fSpeed, to, tSpeed){
+function playModifierAnimation(from, fSpeed, to, tSpeed) {
     to.setLoop(THREE.LoopOnce);
     to.reset();
     to.play();
     // 將當前動作淡出
-    from.crossFadeTo(to,fSpeed, true);
-    setTimeout( function() {
+    from.crossFadeTo(to, fSpeed, true);
+    setTimeout(function () {
         from.enabled = true;
         to.crossFadeTo(from, tSpeed, true);
         currentlyAnimating = false;
-    }, to._clip.duration * 1000 - ((tSpeed + fSpeed) * 1000)); // 當新動作持續時間結束，去除淡入和淡出的時間，才接著執行setTimeout的內部函數
+    }, to._clip.duration * 1000 - (tSpeed + fSpeed) * 1000); // 當新動作持續時間結束，去除淡入和淡出的時間，才接著執行setTimeout的內部函數
 }
