@@ -37,8 +37,8 @@ function init() {
     scene.background = new THREE.Color(0xf1f1f1);
     scene.fog = new THREE.Fog(0xf1f1f1, 60, 100);
 
-    let axes = new THREE.AxesHelper(5);
-    scene.add(axes);
+    // let axes = new THREE.AxesHelper(5);
+    // scene.add(axes);
 
     createCamera();
     createLights();
@@ -170,16 +170,6 @@ function createAnimations(animations, model) {
     // 動畫混合器(類似撥放器，負責管理動畫)
     mixer = new THREE.AnimationMixer(model);
 
-    // 找出idle的動畫
-    let idleAnim = THREE.AnimationClip.findByName(modelAnimations, 'idle');
-    // 將動畫加入混合器中
-
-    // 找到idle中tracks屬性的脊椎和脖子的對應位置、四位數、比例，分別為3、4、5和12、13、14
-    // console.log(idleAnim);
-    // 刪除脊椎和脖子的數組(由於刪除會影響數組，脖子數組向前移動改為9、10、11)，這麼做可以讓模組不管做甚麼動作，都不影響到我們對脊椎和脖子的控制
-    idleAnim.tracks.splice(3, 3);
-    idleAnim.tracks.splice(9, 3);
-
     // 過濾除了idle以外的動作
     let clips = modelAnimations.filter(val => val.name !== 'idle');
     // 找出idle以外的動畫，清除腰部和脖子的bone，並加入mixer
@@ -192,27 +182,15 @@ function createAnimations(animations, model) {
         return clip;
     });
 
-    // 新增model跟蹤滑鼠事件(僅限2d)
-    document.addEventListener('mousemove', (e) => {
-        let mousecoords = getMousePos(e);
-        if (neck && waist) {
-            moveJoint(mousecoords, neck, 50);
-            moveJoint(mousecoords, waist, 30);
-        }
+    // 找出idle的動畫
+    let idleAnim = THREE.AnimationClip.findByName(modelAnimations, 'idle');
+    // 將動畫加入混合器中
 
-        // 新增鼠標和觸控事件
-        window.addEventListener('click', e => raycast(e));
-        window.addEventListener('touchend', e => raycast(e, true));
-
-    });
-
-    // 新增鍵盤按鈕事件
-    window.addEventListener('keydown', (e) => {
-        if (!currentlyAnimating) {
-            currentlyAnimating = true;
-            playOnKeyDown(e);
-        }
-    })
+    // 找到idle中tracks屬性的脊椎和脖子的對應位置、四位數、比例，分別為3、4、5和12、13、14
+    // console.log(idleAnim);
+    // 刪除脊椎和脖子的數組(由於刪除會影響數組，脖子數組向前移動改為9、10、11)，這麼做可以讓模組不管做甚麼動作，都不影響到我們對脊椎和脖子的控制
+    idleAnim.tracks.splice(3, 3);
+    idleAnim.tracks.splice(9, 3);
 
     // 加入動作後回傳為AnimationAction，可以視為整個動作編排
     idle = mixer.clipAction(idleAnim);
@@ -237,6 +215,27 @@ init();
 function createEvent() {
 
     window.addEventListener('resize', onWindowResize, false);
+
+    // 新增model跟蹤滑鼠事件(僅限2d)
+    document.addEventListener('mousemove', (e) => {
+        let mousecoords = getMousePos(e);
+        if (neck && waist) {
+            moveJoint(mousecoords, neck, 50);
+            moveJoint(mousecoords, waist, 30);
+        }
+    });
+
+    // 新增鼠標和觸控事件
+    window.addEventListener('click', e => raycast(e));
+    window.addEventListener('touchend', e => raycast(e, true));
+
+    // 新增鍵盤按鈕事件
+    window.addEventListener('keydown', (e) => {
+        if (!currentlyAnimating) {
+            currentlyAnimating = true;
+            playOnKeyDown(e);
+        }
+    })
 
 }
 
@@ -357,10 +356,10 @@ function raycast(e, touch = false) {
     let mouse = {};
     if (touch) {
         mouse.x = (e.changedTouches[0].clientX / window.innerWidth) * 2 - 1;
-        mouse.y = - (e.changedTouches[0].clientX / window.innerWidth) * 2 + 1;
+        mouse.y = - (e.changedTouches[0].clientY / window.innerHeight) * 2 + 1;
     } else {
         mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = - (e.clientX / window.innerWidth) * 2 + 1;
+        mouse.y = - (e.clientY / window.innerHeight) * 2 + 1;
     }
 
     // 根據鼠標與camera的位置更新射線
@@ -374,11 +373,13 @@ function raycast(e, touch = false) {
 
         // 如果接觸到的object是model
         if (object.name === 'stacy') {
+
             // 如果現在沒有進行動作
             if (!currentlyAnimating) {
                 currentlyAnimating = true;
                 playOnClick();
             }
+            
         }
     }
 

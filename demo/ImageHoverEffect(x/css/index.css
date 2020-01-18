@@ -1,0 +1,21 @@
+.container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+    z-index: 10;
+    display: none;
+}
+
+.tile{
+    width: 35vw;
+    flex: 0 0 auto;
+}
+
+.tile_image{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}

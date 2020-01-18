@@ -1,15 +1,15 @@
-import * as THREE from '../../three.js/build/three.module.js';
+import * as THREE from '../three.js/build/three.module.js';
 
-import Stats from '../../three.js/examples/jsm/libs/stats.module.js';
-// import { GUI } from '../../three.js/examples/jsm/libs/dat.gui.module.js';
-import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+import Stats from '../three.js/examples/jsm/libs/stats.module.js';
+// import { GUI } from '../three.js/examples/jsm/libs/dat.gui.module.js';
+import { OrbitControls } from '../three.js/examples/jsm/controls/OrbitControls.js';
 
 let container = document.querySelector('#scene-container');
 container.width = 800;
 container.height = 500;
 
-let container_width = container_width;
-let container_height = container_height;
+let container_width = container.width;
+let container_height = container.height;
 
 let camera, scene, renderer
 let controls;
@@ -25,8 +25,8 @@ function init() {
     createCamera();
     createLights();
     createRenderer();
-    createEvent();
     createControls();
+    createEvent();
 
     renderer.setAnimationLoop(() => {
         // update();
@@ -70,9 +70,7 @@ function createRenderer() {
 
 }
 
-function createEvent(){
-
-}
+init();
 
 // 渲染更新
 function render() {
@@ -80,8 +78,6 @@ function render() {
     renderer.render(scene, camera);
 
 }
-
-init();
 
 function createControls() {
 
@@ -92,5 +88,9 @@ function createControls() {
     controls.panSpeed = 0.1;
     controls.rotateSpeed = 0.1;
     controls.update();
+
+}
+
+function createEvent(){
 
 }

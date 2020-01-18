@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Blackhole</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../css/global.css">
+</head>
+
+<body>
+    <main>
+        <div class="threejs">
+            <div id="scene-container"></div>
+            <div id="info">
+                <p>Blackhole</p>
+            </div>
+        </div>
+    </main>
+    <script type="x-shader/x-vertex" id="vertexShader">  
+
+        void main()	{
+          gl_Position = vec4( position, 1.0 );
+        }
+
+    </script>
+    <script src="../../three.js/build/three.js"></script>
+    <script src="js/Observer.js"></script>
+    <script src="js/CameraDragControls.js"></script>
+    <script type="module" src="js/index.js"></script>
+</body>
+
+</html>
