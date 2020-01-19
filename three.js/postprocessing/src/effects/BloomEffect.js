@@ -2,10 +2,10 @@ import {
 	LinearFilter,
 	RGBFormat,
 	Uniform,
-	Vector2,
 	WebGLRenderTarget
 } from "three";
 
+import { Resizer } from "../core";
 import { KernelSize, LuminanceMaterial } from "../materials";
 import { BlurPass, ShaderPass } from "../passes";
 import { BlendFunction } from "./blending/BlendFunction.js";
@@ -27,12 +27,23 @@ export class BloomEffect extends Effect {
 	 *
 	 * @param {Object} [options] - The options.
 	 * @param {BlendFunction} [options.blendFunction=BlendFunction.SCREEN] - The blend function of this effect.
-	 * @param {Number} [options.distinction=1.0] - The luminance distinction factor. Raise this value to bring out the brighter elements in the scene.
-	 * @param {Number} [options.resolutionScale=0.5] - The render texture resolution scale, relative to the main frame buffer size.
+	 * @param {Number} [options.luminanceThreshold=0.9] - The luminance threshold. Raise this value to mask out darker elements in the scene. Range is [0, 1].
+	 * @param {Number} [options.luminanceSmoothing=0.025] - Controls the smoothness of the luminance threshold. Range is [0, 1].
+	 * @param {Number} [options.resolutionScale=0.5] - Deprecated. Use height or width instead.
+	 * @param {Number} [options.width=Resizer.AUTO_SIZE] - The render width.
+	 * @param {Number} [options.height=Resizer.AUTO_SIZE] - The render height.
 	 * @param {KernelSize} [options.kernelSize=KernelSize.LARGE] - The blur kernel size.
 	 */
 
-	constructor({ blendFunction = BlendFunction.SCREEN, distinction = 1.0, resolutionScale = 0.5, kernelSize = KernelSize.LARGE } = {}) {
+	constructor({
+		blendFunction = BlendFunction.SCREEN,
+		luminanceThreshold = 0.9,
+		luminanceSmoothing = 0.025,
+		resolutionScale = 0.5,
+		width = Resizer.AUTO_SIZE,
+		height = Resizer.AUTO_SIZE,
+		kernelSize = KernelSize.LARGE
+	} = {}) {
 
 		super("BloomEffect", fragmentShader, {
 
@@ -67,30 +78,23 @@ export class BloomEffect extends Effect {
 		 * A blur pass.
 		 *
 		 * @type {BlurPass}
-		 * @private
 		 */
 
-		this.blurPass = new BlurPass({ resolutionScale, kernelSize });
-
-		/**
-		 * The original resolution.
-		 *
-		 * @type {Vector2}
-		 * @private
-		 */
-
-		this.resolution = new Vector2();
+		this.blurPass = new BlurPass({ resolutionScale, width, height, kernelSize });
+		this.blurPass.resolution.resizable = this;
 
 		/**
 		 * A luminance shader pass.
 		 *
+		 * You may disable this pass to deactivate luminance filtering.
+		 *
 		 * @type {ShaderPass}
-		 * @private
 		 */
 
 		this.luminancePass = new ShaderPass(new LuminanceMaterial(true));
 
-		this.distinction = distinction;
+		this.luminanceMaterial.threshold = luminanceThreshold;
+		this.luminanceMaterial.smoothing = luminanceSmoothing;
 
 	}
 
@@ -110,9 +114,86 @@ export class BloomEffect extends Effect {
 	}
 
 	/**
+	 * The luminance material.
+	 *
+	 * @type {LuminanceMaterial}
+	 */
+
+	get luminanceMaterial() {
+
+		return this.luminancePass.getFullscreenMaterial();
+
+	}
+
+	/**
+	 * The resolution of this effect.
+	 *
+	 * @type {Resizer}
+	 */
+
+	get resolution() {
+
+		return this.blurPass.resolution;
+
+	}
+
+	/**
+	 * The current width of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	get width() {
+
+		return this.resolution.width;
+
+	}
+
+	/**
+	 * Sets the render width.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	set width(value) {
+
+		this.resolution.width = value;
+
+	}
+
+	/**
+	 * The current height of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	get height() {
+
+		return this.resolution.height;
+
+	}
+
+	/**
+	 * Sets the render height.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	set height(value) {
+
+		this.resolution.height = value;
+
+	}
+
+	/**
 	 * Indicates whether dithering is enabled.
 	 *
 	 * @type {Boolean}
+	 * @deprecated Use blurPass.dithering instead.
 	 */
 
 	get dithering() {
@@ -125,6 +206,7 @@ export class BloomEffect extends Effect {
 	 * Enables or disables dithering.
 	 *
 	 * @type {Boolean}
+	 * @deprecated Use blurPass.dithering instead.
 	 */
 
 	set dithering(value) {
@@ -137,6 +219,7 @@ export class BloomEffect extends Effect {
 	 * The blur kernel size.
 	 *
 	 * @type {KernelSize}
+	 * @deprecated Use blurPass.kernelSize instead.
 	 */
 
 	get kernelSize() {
@@ -147,6 +230,7 @@ export class BloomEffect extends Effect {
 
 	/**
 	 * @type {KernelSize}
+	 * @deprecated Use blurPass.kernelSize instead.
 	 */
 
 	set kernelSize(value) {
@@ -156,24 +240,26 @@ export class BloomEffect extends Effect {
 	}
 
 	/**
-	 * The luminance distinction factor.
-	 *
 	 * @type {Number}
+	 * @deprecated Use luminanceMaterial.threshold and luminanceMaterial.smoothing instead.
 	 */
 
 	get distinction() {
 
-		return this.luminancePass.getFullscreenMaterial().uniforms.distinction.value;
+		console.warn(this.name, "The distinction field has been removed, use luminanceMaterial.threshold and luminanceMaterial.smoothing instead.");
+
+		return 1.0;
 
 	}
 
 	/**
 	 * @type {Number}
+	 * @deprecated Use luminanceMaterial.threshold and luminanceMaterial.smoothing instead.
 	 */
 
-	set distinction(value = 1.0) {
+	set distinction(value) {
 
-		this.luminancePass.getFullscreenMaterial().uniforms.distinction.value = value;
+		console.warn(this.name, "The distinction field has been removed, use luminanceMaterial.threshold and luminanceMaterial.smoothing instead.");
 
 	}
 
@@ -181,11 +267,12 @@ export class BloomEffect extends Effect {
 	 * Returns the current resolution scale.
 	 *
 	 * @return {Number} The resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	getResolutionScale() {
 
-		return this.blurPass.getResolutionScale();
+		return this.resolution.scale;
 
 	}
 
@@ -193,12 +280,13 @@ export class BloomEffect extends Effect {
 	 * Sets the resolution scale.
 	 *
 	 * @param {Number} scale - The new resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	setResolutionScale(scale) {
 
-		this.blurPass.setResolutionScale(scale);
-		this.setSize(this.resolution.x, this.resolution.y);
+		this.resolution.scale = scale;
+		this.setSize(this.resolution.base.x, this.resolution.base.y);
 
 	}
 
@@ -214,8 +302,16 @@ export class BloomEffect extends Effect {
 
 		const renderTarget = this.renderTarget;
 
-		this.luminancePass.render(renderer, inputBuffer, renderTarget);
-		this.blurPass.render(renderer, renderTarget, renderTarget);
+		if(this.luminancePass.enabled) {
+
+			this.luminancePass.render(renderer, inputBuffer, renderTarget);
+			this.blurPass.render(renderer, renderTarget, renderTarget);
+
+		} else {
+
+			this.blurPass.render(renderer, inputBuffer, renderTarget);
+
+		}
 
 	}
 
@@ -228,13 +324,8 @@ export class BloomEffect extends Effect {
 
 	setSize(width, height) {
 
-		this.resolution.set(width, height);
 		this.blurPass.setSize(width, height);
-
-		width = this.blurPass.width;
-		height = this.blurPass.height;
-
-		this.renderTarget.setSize(width, height);
+		this.renderTarget.setSize(this.resolution.width, this.resolution.height);
 
 	}
 

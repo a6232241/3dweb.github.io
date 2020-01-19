@@ -1,16 +1,14 @@
 import {
 	AmbientLight,
-	BufferAttribute,
-	BufferGeometry,
 	CubeTextureLoader,
 	CylinderBufferGeometry,
-	FogExp2,
 	Mesh,
+	MeshBasicMaterial,
 	MeshPhongMaterial,
 	PerspectiveCamera,
 	PointLight,
-	Points,
-	PointsMaterial,
+	RepeatWrapping,
+	SphereBufferGeometry,
 	TextureLoader,
 	TorusBufferGeometry,
 	Vector2,
@@ -36,6 +34,8 @@ import {
 	SepiaEffect,
 	ScanlineEffect,
 	SMAAEffect,
+	SMAAImageLoader,
+	TextureEffect,
 	VignetteEffect
 } from "../../../src";
 
@@ -156,8 +156,9 @@ export class PerformanceDemo extends PostProcessingDemo {
 
 		const assets = this.assets;
 		const loadingManager = this.loadingManager;
-		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
 		const textureLoader = new TextureLoader(loadingManager);
+		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
+		const smaaImageLoader = new SMAAImageLoader(loadingManager);
 
 		const path = "textures/skies/space5/";
 		const format = ".jpg";
@@ -172,29 +173,27 @@ export class PerformanceDemo extends PostProcessingDemo {
 			if(assets.size === 0) {
 
 				loadingManager.onError = reject;
-				loadingManager.onProgress = (item, loaded, total) => {
+				loadingManager.onLoad = resolve;
 
-					if(loaded === total) {
+				cubeTextureLoader.load(urls, (t) => {
 
-						resolve();
-
-					}
-
-				};
-
-				cubeTextureLoader.load(urls, function(textureCube) {
-
-					assets.set("sky", textureCube);
+					assets.set("sky", t);
 
 				});
 
-				textureLoader.load("textures/sun.png", function(texture) {
+				textureLoader.load("textures/scratches.jpg", (t) => {
 
-					assets.set("sun-diffuse", texture);
+					t.wrapS = t.wrapT = RepeatWrapping;
+					assets.set("scratches-color", t);
 
 				});
 
-				this.loadSMAAImages();
+				smaaImageLoader.load(([search, area]) => {
+
+					assets.set("smaa-search", search);
+					assets.set("smaa-area", area);
+
+				});
 
 			} else {
 
@@ -225,7 +224,6 @@ export class PerformanceDemo extends PostProcessingDemo {
 
 			renderer = new WebGLRenderer({
 				powerPreference: "high-performance",
-				logarithmicDepthBuffer: true,
 				antialias: false
 			});
 
@@ -234,7 +232,7 @@ export class PerformanceDemo extends PostProcessingDemo {
 
 			return renderer;
 
-		})(composer.renderer);
+		})(composer.getRenderer());
 
 		composer.replaceRenderer(renderer);
 		this.renderer = renderer;
@@ -246,11 +244,6 @@ export class PerformanceDemo extends PostProcessingDemo {
 		camera.lookAt(scene.position);
 		this.camera = camera;
 
-		// Fog.
-
-		scene.fog = new FogExp2(0x000000, 0.0025);
-		renderer.setClearColor(scene.fog.color);
-
 		// Sky.
 
 		scene.background = assets.get("sky");
@@ -258,7 +251,7 @@ export class PerformanceDemo extends PostProcessingDemo {
 		// Lights.
 
 		const ambientLight = new AmbientLight(0x666666);
-		const pointLight = new PointLight(0xffbbaa, 4, 10);
+		const pointLight = new PointLight(0xffbbaa, 5.5, 12);
 
 		scene.add(ambientLight);
 		scene.add(pointLight);
@@ -295,23 +288,16 @@ export class PerformanceDemo extends PostProcessingDemo {
 
 		// Sun.
 
-		const sunMaterial = new PointsMaterial({
-			map: assets.get("sun-diffuse"),
-			size: 5,
-			sizeAttenuation: true,
+		const sunMaterial = new MeshBasicMaterial({
 			color: 0xffddaa,
-			alphaTest: 0,
 			transparent: true,
 			fog: false
 		});
 
-		const sunGeometry = new BufferGeometry();
-		sunGeometry.addAttribute("position", new BufferAttribute(new Float32Array(3), 3));
-		const sun = new Points(sunGeometry, sunMaterial);
+		const sunGeometry = new SphereBufferGeometry(0.65, 32, 32);
+		const sun = new Mesh(sunGeometry, sunMaterial);
 		sun.frustumCulled = false;
-
 		this.sun = sun;
-		scene.add(sun);
 
 		// Passes.
 
@@ -322,15 +308,17 @@ export class PerformanceDemo extends PostProcessingDemo {
 
 		const bloomEffect = new BloomEffect({
 			blendFunction: BlendFunction.SCREEN,
-			resolutionScale: 1.0,
-			distinction: 2.0
+			kernelSize: KernelSize.MEDIUM,
+			luminanceThreshold: 0.825,
+			luminanceSmoothing: 0.075,
+			height: 480
 		});
 
 		const godRaysEffect = new GodRaysEffect(camera, sun, {
-			resolutionScale: 1.0,
 			kernelSize: KernelSize.SMALL,
+			height: 720,
 			density: 0.96,
-			decay: 0.93,
+			decay: 0.92,
 			weight: 0.3,
 			exposure: 0.55,
 			samples: 60,
@@ -352,6 +340,11 @@ export class PerformanceDemo extends PostProcessingDemo {
 			density: 1.04
 		});
 
+		const textureEffect = new TextureEffect({
+			blendFunction: BlendFunction.REFLECT,
+			texture: assets.get("scratches-color")
+		});
+
 		const colorAverageEffect = new ColorAverageEffect(BlendFunction.COLOR_DODGE);
 		const colorDepthEffect = new ColorDepthEffect({ bits: 16 });
 		const sepiaEffect = new SepiaEffect({ blendFunction: BlendFunction.NORMAL });
@@ -365,12 +358,13 @@ export class PerformanceDemo extends PostProcessingDemo {
 
 		godRaysEffect.dithering = true;
 
-		bloomEffect.blendMode.opacity.value = 2.0;
+		bloomEffect.blendMode.opacity.value = 2.3;
 		colorAverageEffect.blendMode.opacity.value = 0.01;
 		sepiaEffect.blendMode.opacity.value = 0.01;
 		dotScreenEffect.blendMode.opacity.value = 0.01;
 		gridEffect.blendMode.opacity.value = 0.01;
 		scanlineEffect.blendMode.opacity.value = 0.01;
+		textureEffect.blendMode.opacity.value = 0.8;
 		noiseEffect.blendMode.opacity.value = 0.25;
 
 		const effects = [
@@ -386,6 +380,7 @@ export class PerformanceDemo extends PostProcessingDemo {
 			gammaCorrectionEffect,
 			hueSaturationEffect,
 			sepiaEffect,
+			textureEffect,
 			noiseEffect,
 			vignetteEffect
 		];
@@ -438,6 +433,7 @@ export class PerformanceDemo extends PostProcessingDemo {
 		}
 
 		this.sun.position.set(0, 2.5, Math.sin(this.acc1 * 0.4) * 8);
+		this.sun.updateWorldMatrix(true, false);
 		this.light.position.copy(this.sun.position);
 
 		super.render(delta);
@@ -454,27 +450,19 @@ export class PerformanceDemo extends PostProcessingDemo {
 
 		const params = {
 			"merge effects": true,
-			"firefox": function() {
-
-				window.open("https://www.google.com/search?q=firefox+layout.frame_rate", "_blank");
-
-			},
-			"chrome": function() {
-
-				window.open("https://www.google.com/search?q=chrome+--disable-gpu-vsync", "_blank");
-
-			}
+			"firefox": () => window.open("https://www.google.com/search?q=firefox+layout.frame_rate", "_blank"),
+			"chrome": () => window.open("https://www.google.com/search?q=chrome+--disable-gpu-vsync", "_blank")
 		};
 
 		menu.add(params, "merge effects").onChange(() => {
 
 			this.effectPass.enabled = params["merge effects"];
 
-			this.passes.forEach((pass) => {
+			for(const pass of this.passes) {
 
 				pass.enabled = !params["merge effects"];
 
-			});
+			}
 
 		});
 

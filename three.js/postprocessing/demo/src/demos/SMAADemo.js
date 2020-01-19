@@ -3,7 +3,6 @@ import {
 	BoxBufferGeometry,
 	CubeTextureLoader,
 	DirectionalLight,
-	FogExp2,
 	Mesh,
 	MeshBasicMaterial,
 	MeshPhongMaterial,
@@ -22,6 +21,7 @@ import {
 	BlendFunction,
 	EffectPass,
 	SMAAEffect,
+	SMAAImageLoader,
 	SMAAPreset,
 	TextureEffect
 } from "../../../src";
@@ -142,12 +142,13 @@ export class SMAADemo extends PostProcessingDemo {
 
 	load() {
 
-		const maxAnisotropy = this.composer.renderer.capabilities.getMaxAnisotropy();
+		const maxAnisotropy = this.composer.getRenderer().capabilities.getMaxAnisotropy();
 
 		const assets = this.assets;
 		const loadingManager = this.loadingManager;
 		const textureLoader = new TextureLoader(loadingManager);
 		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
+		const smaaImageLoader = new SMAAImageLoader(loadingManager);
 
 		const path = "textures/skies/sunset/";
 		const format = ".png";
@@ -162,31 +163,28 @@ export class SMAADemo extends PostProcessingDemo {
 			if(assets.size === 0) {
 
 				loadingManager.onError = reject;
-				loadingManager.onProgress = (item, loaded, total) => {
+				loadingManager.onLoad = resolve;
 
-					if(loaded === total) {
+				cubeTextureLoader.load(urls, (t) => {
 
-						resolve();
-
-					}
-
-				};
-
-				cubeTextureLoader.load(urls, function(textureCube) {
-
-					assets.set("sky", textureCube);
+					assets.set("sky", t);
 
 				});
 
-				textureLoader.load("textures/crate.jpg", function(texture) {
+				textureLoader.load("textures/crate.jpg", (t) => {
 
-					texture.wrapS = texture.wrapT = RepeatWrapping;
-					texture.anisotropy = Math.min(4, maxAnisotropy);
-					assets.set("crate-color", texture);
+					t.wrapS = t.wrapT = RepeatWrapping;
+					t.anisotropy = Math.min(4, maxAnisotropy);
+					assets.set("crate-color", t);
 
 				});
 
-				this.loadSMAAImages();
+				smaaImageLoader.load(([search, area]) => {
+
+					assets.set("smaa-search", search);
+					assets.set("smaa-area", area);
+
+				});
 
 			} else {
 
@@ -207,26 +205,20 @@ export class SMAADemo extends PostProcessingDemo {
 		const scene = this.scene;
 		const assets = this.assets;
 		const composer = this.composer;
-		const renderer = composer.renderer;
+		const renderer = composer.getRenderer();
 
 		// Camera.
 
-		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
+		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 2000);
 		camera.position.set(-3, 0, -3);
 		camera.lookAt(scene.position);
 		this.camera = camera;
-
-		// Fog.
-
-		scene.fog = new FogExp2(0x000000, 0.0025);
-		renderer.setClearColor(scene.fog.color);
 
 		// Create a second renderer with AA.
 
 		const rendererAA = ((size, clearColor, pixelRatio) => {
 
 			const renderer = new WebGLRenderer({
-				logarithmicDepthBuffer: true,
 				antialias: true
 			});
 
@@ -242,7 +234,7 @@ export class SMAADemo extends PostProcessingDemo {
 			renderer.getPixelRatio()
 		);
 
-		this.originalRenderer = composer.renderer;
+		this.originalRenderer = composer.getRenderer();
 		this.rendererAA = rendererAA;
 
 		// Controls.
@@ -266,7 +258,7 @@ export class SMAADemo extends PostProcessingDemo {
 		// Lights.
 
 		const ambientLight = new AmbientLight(0x666666);
-		const directionalLight = new DirectionalLight(0xffbbaa);
+		const directionalLight = new DirectionalLight(0xff8866, 1);
 
 		directionalLight.position.set(1440, 200, 2000);
 		directionalLight.target.position.copy(scene.position);
@@ -304,7 +296,7 @@ export class SMAADemo extends PostProcessingDemo {
 		mesh = new Mesh(
 			new BoxBufferGeometry(0.25, 8.25, 0.25),
 			new MeshPhongMaterial({
-				color: 0x0d0d0d
+				color: 0x000000
 			})
 		);
 
@@ -444,9 +436,9 @@ export class SMAADemo extends PostProcessingDemo {
 
 		function swapRenderers(browser) {
 
-			const size = composer.renderer.getSize(new Vector2());
+			const size = composer.getRenderer().getSize(new Vector2());
 
-			if(browser && composer.renderer !== renderer2) {
+			if(browser && composer.getRenderer() !== renderer2) {
 
 				renderer2.setSize(size.width, size.height);
 				composer.replaceRenderer(renderer2);

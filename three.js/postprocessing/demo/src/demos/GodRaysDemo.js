@@ -1,19 +1,17 @@
 import {
 	AmbientLight,
-	BufferAttribute,
-	BufferGeometry,
 	CubeTextureLoader,
 	DirectionalLight,
 	Group,
+	Mesh,
+	MeshBasicMaterial,
 	PerspectiveCamera,
-	Points,
-	PointsMaterial,
-	TextureLoader,
+	SphereBufferGeometry,
 	Vector3
 } from "three";
 
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DeltaControls } from "delta-controls";
-import GLTFLoader from "three-gltf-loader";
 import { PostProcessingDemo } from "./PostProcessingDemo.js";
 
 import {
@@ -21,7 +19,8 @@ import {
 	EffectPass,
 	GodRaysEffect,
 	KernelSize,
-	SMAAEffect
+	SMAAEffect,
+	SMAAImageLoader
 } from "../../../src";
 
 /**
@@ -88,9 +87,9 @@ export class GodRaysDemo extends PostProcessingDemo {
 
 		const assets = this.assets;
 		const loadingManager = this.loadingManager;
-		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
-		const textureLoader = new TextureLoader(loadingManager);
 		const modelLoader = new GLTFLoader(loadingManager);
+		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
+		const smaaImageLoader = new SMAAImageLoader(loadingManager);
 
 		const path = "textures/skies/starry/";
 		const format = ".png";
@@ -105,23 +104,15 @@ export class GodRaysDemo extends PostProcessingDemo {
 			if(assets.size === 0) {
 
 				loadingManager.onError = reject;
-				loadingManager.onProgress = (item, loaded, total) => {
+				loadingManager.onLoad = resolve;
 
-					if(loaded === total) {
+				cubeTextureLoader.load(urls, (t) => {
 
-						resolve();
-
-					}
-
-				};
-
-				cubeTextureLoader.load(urls, function(textureCube) {
-
-					assets.set("sky", textureCube);
+					assets.set("sky", t);
 
 				});
 
-				modelLoader.load("models/tree/scene.gltf", function(gltf) {
+				modelLoader.load("models/tree/scene.gltf", (gltf) => {
 
 					gltf.scene.scale.multiplyScalar(2.5);
 					gltf.scene.position.set(0, -2.3, 0);
@@ -131,13 +122,12 @@ export class GodRaysDemo extends PostProcessingDemo {
 
 				});
 
-				textureLoader.load("textures/sun.png", function(texture) {
+				smaaImageLoader.load(([search, area]) => {
 
-					assets.set("sun-diffuse", texture);
+					assets.set("smaa-search", search);
+					assets.set("smaa-area", area);
 
 				});
-
-				this.loadSMAAImages();
 
 			} else {
 
@@ -158,11 +148,11 @@ export class GodRaysDemo extends PostProcessingDemo {
 		const scene = this.scene;
 		const assets = this.assets;
 		const composer = this.composer;
-		const renderer = composer.renderer;
+		const renderer = composer.getRenderer();
 
 		// Camera.
 
-		const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+		const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
 		camera.position.set(-6, -1, -6);
 		this.camera = camera;
 
@@ -199,39 +189,37 @@ export class GodRaysDemo extends PostProcessingDemo {
 
 		// Sun.
 
-		const sunMaterial = new PointsMaterial({
-			map: assets.get("sun-diffuse"),
-			size: 100,
-			sizeAttenuation: true,
+		const sunMaterial = new MeshBasicMaterial({
 			color: 0xffddaa,
-			alphaTest: 0,
 			transparent: true,
 			fog: false
 		});
 
-		const sunGeometry = new BufferGeometry();
-		sunGeometry.addAttribute("position", new BufferAttribute(new Float32Array(3), 3));
-		const sun = new Points(sunGeometry, sunMaterial);
+		const sunGeometry = new SphereBufferGeometry(16, 32, 32);
+		const sun = new Mesh(sunGeometry, sunMaterial);
 		sun.frustumCulled = false;
 
 		const group = new Group();
 		group.position.copy(this.light.position);
 		group.add(sun);
+
+		// The sun mesh is not added to the scene to hide hard geometry edges.
+		// scene.add(group);
+		sun.matrixAutoUpdate = false;
 		this.sun = sun;
-		scene.add(group);
 
 		// Passes.
 
 		const smaaEffect = new SMAAEffect(assets.get("smaa-search"), assets.get("smaa-area"));
-		smaaEffect.setEdgeDetectionThreshold(0.065);
+		smaaEffect.colorEdgesMaterial.setEdgeDetectionThreshold(0.065);
 
 		const godRaysEffect = new GodRaysEffect(camera, sun, {
-			resolutionScale: 0.75,
+			height: 720,
 			kernelSize: KernelSize.SMALL,
 			density: 0.96,
-			decay: 0.93,
+			decay: 0.92,
 			weight: 0.3,
-			exposure: 0.55,
+			exposure: 0.54,
 			samples: 60,
 			clampMax: 1.0
 		});
@@ -266,8 +254,8 @@ export class GodRaysDemo extends PostProcessingDemo {
 		const blendMode = effect.blendMode;
 
 		const params = {
-			"resolution": effect.getResolutionScale(),
-			"blurriness": effect.kernelSize + 1,
+			"resolution": effect.height,
+			"blurriness": effect.blurPass.kernelSize + 1,
 			"density": uniforms.density.value,
 			"decay": uniforms.decay.value,
 			"weight": uniforms.weight.value,
@@ -279,9 +267,9 @@ export class GodRaysDemo extends PostProcessingDemo {
 			"blend mode": blendMode.blendFunction
 		};
 
-		menu.add(params, "resolution").min(0.01).max(1.0).step(0.01).onChange(() => {
+		menu.add(params, "resolution", [240, 360, 480, 720, 1080]).onChange(() => {
 
-			effect.setResolutionScale(params.resolution);
+			effect.resolution.height = Number.parseInt(params.resolution);
 
 		});
 
@@ -290,7 +278,7 @@ export class GodRaysDemo extends PostProcessingDemo {
 		menu.add(params, "blurriness").min(KernelSize.VERY_SMALL).max(KernelSize.HUGE + 1).step(1).onChange(() => {
 
 			effect.blur = (params.blurriness > 0);
-			effect.kernelSize = params.blurriness - 1;
+			effect.blurPass.kernelSize = params.blurriness - 1;
 
 		});
 

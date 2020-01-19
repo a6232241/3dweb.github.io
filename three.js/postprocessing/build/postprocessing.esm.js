@@ -1,9 +1,10 @@
 /**
- * postprocessing v6.5.0 build Sat Jun 01 2019
+ * postprocessing v6.10.0 build Fri Jan 17 2020
  * https://github.com/vanruesc/postprocessing
- * Copyright 2019 Raoul van Rüschen, Zlib
+ * Copyright 2020 Raoul van Rüschen
+ * @license Zlib
  */
-import { ShaderMaterial, Uniform, Vector2, PerspectiveCamera, Scene, OrthographicCamera, Mesh, BufferGeometry, BufferAttribute, WebGLRenderTarget, LinearFilter, RGBFormat, Color, MeshDepthMaterial, RGBADepthPacking, MeshNormalMaterial, DepthTexture, DepthStencilFormat, UnsignedInt248Type, RGBAFormat, RepeatWrapping, NearestFilter, DataTexture, FloatType, Vector3, Matrix4, Vector4, Texture, LinearMipMapLinearFilter, Box2 } from 'three';
+import { ShaderMaterial, Uniform, Vector2 as Vector2$1, PerspectiveCamera, Scene, OrthographicCamera, Mesh, BufferGeometry, BufferAttribute, WebGLRenderTarget, LinearFilter, RGBFormat, Color, MeshDepthMaterial, RGBADepthPacking, MeshNormalMaterial, DepthTexture, DepthStencilFormat, UnsignedInt248Type, RGBAFormat, RepeatWrapping, NearestFilter, DataTexture, Vector3, Matrix4, Vector4, MeshBasicMaterial, Texture, LinearMipmapLinearFilter, LinearMipMapLinearFilter, LoadingManager } from 'three';
 
 /**
  * The Disposable contract.
@@ -110,7 +111,7 @@ class ColorEdgesMaterial extends ShaderMaterial {
 	 * @param {Vector2} [texelSize] - The absolute screen texel size.
 	 */
 
-	constructor(texelSize = new Vector2()) {
+	constructor(texelSize = new Vector2$1()) {
 
 		super({
 
@@ -188,7 +189,7 @@ class ColorEdgesMaterial extends ShaderMaterial {
 
 var fragmentShader$2 = "#include <common>\n#include <dithering_pars_fragment>\nuniform sampler2D inputBuffer;varying vec2 vUv0;varying vec2 vUv1;varying vec2 vUv2;varying vec2 vUv3;void main(){vec4 sum=texture2D(inputBuffer,vUv0);sum+=texture2D(inputBuffer,vUv1);sum+=texture2D(inputBuffer,vUv2);sum+=texture2D(inputBuffer,vUv3);gl_FragColor=sum*0.25;\n#include <dithering_fragment>\n}";
 
-var vertexShader$2 = "uniform vec2 texelSize;uniform vec2 halfTexelSize;uniform float kernel;/*Packing multiple texture coordinates into one varying and using a swizzle toextract them in the fragment shader still causes a dependent texture read.*/varying vec2 vUv0;varying vec2 vUv1;varying vec2 vUv2;varying vec2 vUv3;void main(){vec2 uv=position.xy*0.5+0.5;vec2 dUv=(texelSize*vec2(kernel))+halfTexelSize;vUv0=vec2(uv.x-dUv.x,uv.y+dUv.y);vUv1=vec2(uv.x+dUv.x,uv.y+dUv.y);vUv2=vec2(uv.x+dUv.x,uv.y-dUv.y);vUv3=vec2(uv.x-dUv.x,uv.y-dUv.y);gl_Position=vec4(position.xy,1.0,1.0);}";
+var vertexShader$2 = "uniform vec2 texelSize;uniform vec2 halfTexelSize;uniform float kernel;uniform float scale;/*Packing multiple texture coordinates into one varying and using a swizzle toextract them in the fragment shader still causes a dependent texture read.*/varying vec2 vUv0;varying vec2 vUv1;varying vec2 vUv2;varying vec2 vUv3;void main(){vec2 uv=position.xy*0.5+0.5;vec2 dUv=(texelSize*vec2(kernel)+halfTexelSize)*scale;vUv0=vec2(uv.x-dUv.x,uv.y+dUv.y);vUv1=vec2(uv.x+dUv.x,uv.y+dUv.y);vUv2=vec2(uv.x+dUv.x,uv.y-dUv.y);vUv3=vec2(uv.x-dUv.x,uv.y-dUv.y);gl_Position=vec4(position.xy,1.0,1.0);}";
 
 /**
  * An optimised convolution shader material.
@@ -212,7 +213,7 @@ class ConvolutionMaterial extends ShaderMaterial {
 	 * @param {Vector2} [texelSize] - The absolute screen texel size.
 	 */
 
-	constructor(texelSize = new Vector2()) {
+	constructor(texelSize = new Vector2$1()) {
 
 		super({
 
@@ -221,9 +222,10 @@ class ConvolutionMaterial extends ShaderMaterial {
 			uniforms: {
 
 				inputBuffer: new Uniform(null),
-				texelSize: new Uniform(new Vector2()),
-				halfTexelSize: new Uniform(new Vector2()),
-				kernel: new Uniform(0.0)
+				texelSize: new Uniform(new Vector2$1()),
+				halfTexelSize: new Uniform(new Vector2$1()),
+				kernel: new Uniform(0.0),
+				scale: new Uniform(1.0)
 
 			},
 
@@ -426,7 +428,7 @@ class DepthComparisonMaterial extends ShaderMaterial {
 
 }
 
-var fragmentShader$5 = "uniform sampler2D depthBuffer0;uniform sampler2D depthBuffer1;uniform sampler2D inputBuffer;varying vec2 vUv;void main(){float d0=texture2D(depthBuffer0,vUv).r;float d1=texture2D(depthBuffer1,vUv).r;if(d0<d1){discard;}gl_FragColor=texture2D(inputBuffer,vUv);}";
+var fragmentShader$5 = "#include <common>\n#include <packing>\nuniform sampler2D depthBuffer0;uniform sampler2D depthBuffer1;uniform sampler2D inputBuffer;varying vec2 vUv;void main(){\n#if DEPTH_PACKING_0 == 3201\nfloat d0=unpackRGBAToDepth(texture2D(depthBuffer0,vUv));\n#else\nfloat d0=texture2D(depthBuffer0,vUv).r;\n#endif\n#if DEPTH_PACKING_1 == 3201\nfloat d1=unpackRGBAToDepth(texture2D(depthBuffer1,vUv));\n#else\nfloat d1=texture2D(depthBuffer1,vUv).r;\n#endif\nif(d0<d1){discard;}gl_FragColor=texture2D(inputBuffer,vUv);}";
 
 /**
  * A depth mask shader material.
@@ -445,6 +447,13 @@ class DepthMaskMaterial extends ShaderMaterial {
 		super({
 
 			type: "DepthMaskMaterial",
+
+			defines: {
+
+				DEPTH_PACKING_0: "0",
+				DEPTH_PACKING_1: "0"
+
+			},
 
 			uniforms: {
 
@@ -466,7 +475,7 @@ class DepthMaskMaterial extends ShaderMaterial {
 
 }
 
-var fragmentTemplate = "#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\nuniform sampler2D inputBuffer;uniform sampler2D depthBuffer;uniform vec2 resolution;uniform vec2 texelSize;uniform float cameraNear;uniform float cameraFar;uniform float aspect;uniform float time;varying vec2 vUv;float readDepth(const in vec2 uv){\n#if DEPTH_PACKING == 3201\nreturn unpackRGBAToDepth(texture2D(depthBuffer,uv));\n#else\nreturn texture2D(depthBuffer,uv).r;\n#endif\n}FRAGMENT_HEADvoid main(){FRAGMENT_MAIN_UVvec4 color0=texture2D(inputBuffer,UV);vec4 color1=vec4(0.0);FRAGMENT_MAIN_IMAGEgl_FragColor=color0;\n#include <dithering_fragment>\n}";
+var fragmentTemplate = "#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\nuniform sampler2D inputBuffer;uniform sampler2D depthBuffer;uniform vec2 resolution;uniform vec2 texelSize;uniform float cameraNear;uniform float cameraFar;uniform float aspect;uniform float time;varying vec2 vUv;float readDepth(const in vec2 uv){\n#if DEPTH_PACKING == 3201\nreturn unpackRGBAToDepth(texture2D(depthBuffer,uv));\n#else\nreturn texture2D(depthBuffer,uv).r;\n#endif\n}float getViewZ(const in float depth){\n#ifdef PERSPECTIVE_CAMERA\nreturn perspectiveDepthToViewZ(depth,cameraNear,cameraFar);\n#else\nreturn orthographicDepthToViewZ(depth,cameraNear,cameraFar);\n#endif\n}FRAGMENT_HEADvoid main(){FRAGMENT_MAIN_UVvec4 color0=texture2D(inputBuffer,UV);vec4 color1=vec4(0.0);FRAGMENT_MAIN_IMAGEgl_FragColor=color0;\n#include <dithering_fragment>\n}";
 
 var vertexTemplate = "uniform vec2 resolution;uniform vec2 texelSize;uniform float cameraNear;uniform float cameraFar;uniform float aspect;uniform float time;varying vec2 vUv;VERTEX_HEADvoid main(){vUv=position.xy*0.5+0.5;VERTEX_MAIN_SUPPORTgl_Position=vec4(position.xy,1.0,1.0);}";
 
@@ -483,14 +492,14 @@ class EffectMaterial extends ShaderMaterial {
 	/**
 	 * Constructs a new effect material.
 	 *
-	 * @param {Map<String, String>} shaderParts - A collection of shader snippets.
-	 * @param {Map<String, String>} defines - A collection of preprocessor macro definitions.
-	 * @param {Map<String, Uniform>} uniforms - A collection of uniforms.
+	 * @param {Map<String, String>} [shaderParts=null] - A collection of shader snippets. See {@link Section}.
+	 * @param {Map<String, String>} [defines=null] - A collection of preprocessor macro definitions.
+	 * @param {Map<String, Uniform>} [uniforms=null] - A collection of uniforms.
 	 * @param {Camera} [camera=null] - A camera.
 	 * @param {Boolean} [dithering=false] - Whether dithering should be enabled.
 	 */
 
-	constructor(shaderParts, defines, uniforms, camera = null, dithering = false) {
+	constructor(shaderParts = null, defines = null, uniforms = null, camera = null, dithering = false) {
 
 		super({
 
@@ -507,8 +516,8 @@ class EffectMaterial extends ShaderMaterial {
 				inputBuffer: new Uniform(null),
 				depthBuffer: new Uniform(null),
 
-				resolution: new Uniform(new Vector2()),
-				texelSize: new Uniform(new Vector2()),
+				resolution: new Uniform(new Vector2$1()),
+				texelSize: new Uniform(new Vector2$1()),
 
 				cameraNear: new Uniform(0.3),
 				cameraFar: new Uniform(1000.0),
@@ -517,36 +526,27 @@ class EffectMaterial extends ShaderMaterial {
 
 			},
 
-			fragmentShader: fragmentTemplate.replace(Section.FRAGMENT_HEAD, shaderParts.get(Section.FRAGMENT_HEAD))
-				.replace(Section.FRAGMENT_MAIN_UV, shaderParts.get(Section.FRAGMENT_MAIN_UV))
-				.replace(Section.FRAGMENT_MAIN_IMAGE, shaderParts.get(Section.FRAGMENT_MAIN_IMAGE)),
-
-			vertexShader: vertexTemplate.replace(Section.VERTEX_HEAD, shaderParts.get(Section.VERTEX_HEAD))
-				.replace(Section.VERTEX_MAIN_SUPPORT, shaderParts.get(Section.VERTEX_MAIN_SUPPORT)),
-
-			dithering: dithering,
 			depthWrite: false,
-			depthTest: false
+			depthTest: false,
+			dithering
 
 		});
 
+		if(shaderParts !== null) {
+
+			this.setShaderParts(shaderParts);
+
+		}
+
 		if(defines !== null) {
 
-			for(const entry of defines.entries()) {
-
-				this.defines[entry[0]] = entry[1];
-
-			}
+			this.setDefines(defines);
 
 		}
 
 		if(uniforms !== null) {
 
-			for(const entry of uniforms.entries()) {
-
-				this.uniforms[entry[0]] = entry[1];
-
-			}
+			this.setUniforms(uniforms);
 
 		}
 
@@ -584,20 +584,66 @@ class EffectMaterial extends ShaderMaterial {
 	}
 
 	/**
-	 * Sets the resolution.
+	 * Sets the shader parts.
 	 *
-	 * @param {Number} width - The width.
-	 * @param {Number} height - The height.
+	 * @param {Map<String, String>} shaderParts - A collection of shader snippets. See {@link Section}.
+	 * @return {EffectMaterial} This material.
 	 */
 
-	setSize(width, height) {
+	setShaderParts(shaderParts) {
 
-		width = Math.max(width, 1.0);
-		height = Math.max(height, 1.0);
+		this.fragmentShader = fragmentTemplate.replace(Section.FRAGMENT_HEAD, shaderParts.get(Section.FRAGMENT_HEAD))
+			.replace(Section.FRAGMENT_MAIN_UV, shaderParts.get(Section.FRAGMENT_MAIN_UV))
+			.replace(Section.FRAGMENT_MAIN_IMAGE, shaderParts.get(Section.FRAGMENT_MAIN_IMAGE));
 
-		this.uniforms.resolution.value.set(width, height);
-		this.uniforms.texelSize.value.set(1.0 / width, 1.0 / height);
-		this.uniforms.aspect.value = width / height;
+		this.vertexShader = vertexTemplate.replace(Section.VERTEX_HEAD, shaderParts.get(Section.VERTEX_HEAD))
+			.replace(Section.VERTEX_MAIN_SUPPORT, shaderParts.get(Section.VERTEX_MAIN_SUPPORT));
+
+		this.needsUpdate = true;
+
+		return this;
+
+	}
+
+	/**
+	 * Sets the shader macros.
+	 *
+	 * @param {Map<String, String>} defines - A collection of preprocessor macro definitions.
+	 * @return {EffectMaterial} This material.
+	 */
+
+	setDefines(defines) {
+
+		for(const entry of defines.entries()) {
+
+			this.defines[entry[0]] = entry[1];
+
+		}
+
+		this.needsUpdate = true;
+
+		return this;
+
+	}
+
+	/**
+	 * Sets the shader uniforms.
+	 *
+	 * @param {Map<String, Uniform>} uniforms - A collection of uniforms.
+	 * @return {EffectMaterial} This material.
+	 */
+
+	setUniforms(uniforms) {
+
+		for(const entry of uniforms.entries()) {
+
+			this.uniforms[entry[0]] = entry[1];
+
+		}
+
+		this.needsUpdate = true;
+
+		return this;
 
 	}
 
@@ -624,14 +670,34 @@ class EffectMaterial extends ShaderMaterial {
 
 			}
 
+			this.needsUpdate = true;
+
 		}
+
+	}
+
+	/**
+	 * Sets the resolution.
+	 *
+	 * @param {Number} width - The width.
+	 * @param {Number} height - The height.
+	 */
+
+	setSize(width, height) {
+
+		width = Math.max(width, 1.0);
+		height = Math.max(height, 1.0);
+
+		this.uniforms.resolution.value.set(width, height);
+		this.uniforms.texelSize.value.set(1.0 / width, 1.0 / height);
+		this.uniforms.aspect.value = width / height;
 
 	}
 
 }
 
 /**
- * An enumeration of shader code placeholders.
+ * An enumeration of shader code placeholders used by the {@link EffectPass}.
  *
  * @type {Object}
  * @property {String} FRAGMENT_HEAD - A placeholder for function and variable declarations inside the fragment shader.
@@ -743,7 +809,7 @@ class GodRaysMaterial extends ShaderMaterial {
 
 }
 
-var fragmentShader$7 = "#include <common>\nuniform sampler2D inputBuffer;uniform float distinction;uniform vec2 range;varying vec2 vUv;void main(){vec4 texel=texture2D(inputBuffer,vUv);float l=linearToRelativeLuminance(texel.rgb);\n#ifdef RANGE\nfloat low=step(range.x,l);float high=step(l,range.y);l*=low*high;\n#endif\nl=pow(abs(l),distinction);\n#ifdef COLOR\ngl_FragColor=vec4(texel.rgb*l,texel.a);\n#else\ngl_FragColor=vec4(l,l,l,texel.a);\n#endif\n}";
+var fragmentShader$7 = "#include <common>\nuniform sampler2D inputBuffer;\n#ifdef RANGE\nuniform vec2 range;\n#elif defined(THRESHOLD)\nuniform float threshold;uniform float smoothing;\n#endif\nvarying vec2 vUv;void main(){vec4 texel=texture2D(inputBuffer,vUv);float l=linearToRelativeLuminance(texel.rgb);\n#ifdef RANGE\nfloat low=step(range.x,l);float high=step(l,range.y);l*=low*high;\n#elif defined(THRESHOLD)\nl=smoothstep(threshold,threshold+smoothing,l);\n#endif\n#ifdef COLOR\ngl_FragColor=vec4(texel.rgb*l,l);\n#else\ngl_FragColor=vec4(l);\n#endif\n}";
 
 /**
  * A luminance shader material.
@@ -753,7 +819,7 @@ var fragmentShader$7 = "#include <common>\nuniform sampler2D inputBuffer;uniform
  * colours that are scaled with their respective luminance value. Additionally,
  * a range may be provided to mask out undesired texels.
  *
- * The alpha channel will remain unaffected in all cases.
+ * The alpha channel always contains the luminance value.
  *
  * On luminance coefficients:
  *  http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html#RTFToC9
@@ -776,7 +842,7 @@ class LuminanceMaterial extends ShaderMaterial {
 
 	constructor(colorOutput = false, luminanceRange = null) {
 
-		const maskLuminance = (luminanceRange !== null);
+		const useRange = (luminanceRange !== null);
 
 		super({
 
@@ -785,8 +851,9 @@ class LuminanceMaterial extends ShaderMaterial {
 			uniforms: {
 
 				inputBuffer: new Uniform(null),
-				distinction: new Uniform(1.0),
-				range: new Uniform(maskLuminance ? luminanceRange : new Vector2())
+				threshold: new Uniform(0.0),
+				smoothing: new Uniform(1.0),
+				range: new Uniform(useRange ? luminanceRange : new Vector2$1())
 
 			},
 
@@ -799,7 +866,82 @@ class LuminanceMaterial extends ShaderMaterial {
 		});
 
 		this.colorOutput = colorOutput;
-		this.luminanceRange = maskLuminance;
+		this.useThreshold = true;
+		this.useRange = useRange;
+
+	}
+
+	/**
+	 * The luminance threshold.
+	 *
+	 * @type {Number}
+	 */
+
+	get threshold() {
+
+		return this.uniforms.threshold.value;
+
+	}
+
+	/**
+	 * Sets the luminance threshold.
+	 *
+	 * @type {Number}
+	 */
+
+	set threshold(value) {
+
+		this.uniforms.threshold.value = value;
+
+	}
+
+	/**
+	 * The luminance threshold smoothing.
+	 *
+	 * @type {Number}
+	 */
+
+	get smoothing() {
+
+		return this.uniforms.smoothing.value;
+
+	}
+
+	/**
+	 * Sets the luminance threshold smoothing.
+	 *
+	 * @type {Number}
+	 */
+
+	set smoothing(value) {
+
+		this.uniforms.smoothing.value = value;
+
+	}
+
+	/**
+	 * Indicates whether the luminance threshold is enabled.
+	 *
+	 * @type {Boolean}
+	 */
+
+	get useThreshold() {
+
+		return (this.defines.THRESHOLD !== undefined);
+
+	}
+
+	/**
+	 * Enables or disables the luminance threshold.
+	 *
+	 * @type {Boolean}
+	 */
+
+	set useThreshold(value) {
+
+		value ? (this.defines.THRESHOLD = "1") : (delete this.defines.THRESHOLD);
+
+		this.needsUpdate = true;
 
 	}
 
@@ -850,6 +992,35 @@ class LuminanceMaterial extends ShaderMaterial {
 	 * @type {Boolean}
 	 */
 
+	get useRange() {
+
+		return (this.defines.RANGE !== undefined);
+
+	}
+
+	/**
+	 * Enables or disables luminance masking.
+	 *
+	 * If enabled, the threshold will be ignored.
+	 *
+	 * @type {Boolean}
+	 */
+
+	set useRange(value) {
+
+		value ? (this.defines.RANGE = "1") : (delete this.defines.RANGE);
+
+		this.needsUpdate = true;
+
+	}
+
+	/**
+	 * Indicates whether luminance masking is enabled.
+	 *
+	 * @type {Boolean}
+	 * @deprecated Use useRange instead.
+	 */
+
 	get luminanceRange() {
 
 		return (this.defines.RANGE !== undefined);
@@ -860,6 +1031,7 @@ class LuminanceMaterial extends ShaderMaterial {
 	 * Enables or disables luminance masking.
 	 *
 	 * @type {Boolean}
+	 * @deprecated Use useRange instead.
 	 */
 
 	set luminanceRange(value) {
@@ -903,7 +1075,7 @@ class OutlineEdgesMaterial extends ShaderMaterial {
 	 * @param {Vector2} [texelSize] - The absolute screen texel size.
 	 */
 
-	constructor(texelSize = new Vector2()) {
+	constructor(texelSize = new Vector2$1()) {
 
 		super({
 
@@ -912,7 +1084,7 @@ class OutlineEdgesMaterial extends ShaderMaterial {
 			uniforms: {
 
 				maskTexture: new Uniform(null),
-				texelSize: new Uniform(new Vector2())
+				texelSize: new Uniform(new Vector2$1())
 
 			},
 
@@ -962,7 +1134,7 @@ class SMAAWeightsMaterial extends ShaderMaterial {
 	 * @param {Vector2} [resolution] - The resolution.
 	 */
 
-	constructor(texelSize = new Vector2(), resolution = new Vector2()) {
+	constructor(texelSize = new Vector2$1(), resolution = new Vector2$1()) {
 
 		super({
 
@@ -1122,6 +1294,190 @@ class SMAAWeightsMaterial extends ShaderMaterial {
 }
 
 /**
+ * An auto sizing constant.
+ *
+ * @type {Number}
+ * @private
+ */
+
+const AUTO_SIZE = -1;
+
+/**
+ * A resizer.
+ */
+
+class Resizer {
+
+	/**
+	 * Constructs a new resizer.
+	 *
+	 * @param {Resizable} resizeable - A resizable object.
+	 * @param {Number} [width=Resizer.AUTO_SIZE] - The width.
+	 * @param {Number} [height=Resizer.AUTO_SIZE] - The height.
+	 */
+
+	constructor(resizable, width = AUTO_SIZE, height = AUTO_SIZE) {
+
+		/**
+		 * A resizable object.
+		 *
+		 * @type {Resizable}
+		 */
+
+		this.resizable = resizable;
+
+		/**
+		 * The base size.
+		 *
+		 * This size will be passed to the resizable object every time the width or
+		 * height is changed.
+		 *
+		 * @type {Vector2}
+		 */
+
+		this.base = new Vector2$1(1, 1);
+
+		/**
+		 * The target size.
+		 *
+		 * @type {Vector2}
+		 * @private
+		 */
+
+		this.target = new Vector2$1(width, height);
+
+		/**
+		 * A scale.
+		 *
+		 * If both the width and the height are set to {@link Resizer.AUTO_SIZE},
+		 * they will be scaled uniformly using this scalar.
+		 *
+		 * @type {Number}
+		 * @deprecated Added for internal use only.
+		 */
+
+		this.scale = 1.0;
+
+	}
+
+	/**
+	 * The calculated width.
+	 *
+	 * If both the width and the height are set to {@link Resizer.AUTO_SIZE}, the
+	 * base width will be returned.
+	 *
+	 * @type {Number}
+	 */
+
+	get width() {
+
+		const base = this.base;
+		const target = this.target;
+
+		let result;
+
+		if(target.x !== AUTO_SIZE) {
+
+			result = target.x;
+
+		} else if(target.y !== AUTO_SIZE) {
+
+			result = Math.round(target.y * (base.x / base.y));
+
+		} else {
+
+			result = Math.round(base.x * this.scale);
+
+		}
+
+		return result;
+
+	}
+
+	/**
+	 * Sets the target width.
+	 *
+	 * Use {@link Resizer.AUTO_SIZE} to automatically calculate the width based
+	 * on the height and the original aspect ratio.
+	 *
+	 * @type {Number}
+	 */
+
+	set width(value) {
+
+		this.target.x = value;
+		this.resizable.setSize(this.base.x, this.base.y);
+
+	}
+
+	/**
+	 * The calculated height.
+	 *
+	 * If both the width and the height are set to {@link Resizer.AUTO_SIZE}, the
+	 * base height will be returned.
+	 *
+	 * @type {Number}
+	 */
+
+	get height() {
+
+		const base = this.base;
+		const target = this.target;
+
+		let result;
+
+		if(target.y !== AUTO_SIZE) {
+
+			result = target.y;
+
+		} else if(target.x !== AUTO_SIZE) {
+
+			result = Math.round(target.x / (base.x / base.y));
+
+		} else {
+
+			result = Math.round(base.y * this.scale);
+
+		}
+
+		return result;
+
+	}
+
+	/**
+	 * Sets the target height.
+	 *
+	 * Use {@link Resizer.AUTO_SIZE} to automatically calculate the height based
+	 * on the width and the original aspect ratio.
+	 *
+	 * @type {Number}
+	 */
+
+	set height(value) {
+
+		this.target.y = value;
+		this.resizable.setSize(this.base.x, this.base.y);
+
+	}
+
+	/**
+	 * An auto sizing constant.
+	 *
+	 * Can be used to automatically calculate the width or height based on the
+	 * original aspect ratio.
+	 *
+	 * @type {Number}
+	 */
+
+	static get AUTO_SIZE() {
+
+		return AUTO_SIZE;
+
+	}
+
+}
+
+/**
  * Shared fullscreen geometry.
  *
  * @type {BufferGeometry}
@@ -1147,8 +1503,19 @@ function getFullscreenTriangle() {
 		const vertices = new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]);
 		const uvs = new Float32Array([0, 0, 2, 0, 0, 2]);
 		geometry = new BufferGeometry();
-		geometry.addAttribute("position", new BufferAttribute(vertices, 3));
-		geometry.addAttribute("uv", new BufferAttribute(uvs, 2));
+
+		// Added for backward compatibility (setAttribute was added in three r110).
+		if(geometry.setAttribute !== undefined) {
+
+			geometry.setAttribute("position", new BufferAttribute(vertices, 3));
+			geometry.setAttribute("uv", new BufferAttribute(uvs, 2));
+
+		} else {
+
+			geometry.addAttribute("position", new BufferAttribute(vertices, 3));
+			geometry.addAttribute("uv", new BufferAttribute(uvs, 2));
+
+		}
 
 	}
 
@@ -1232,8 +1599,6 @@ class Pass {
 		this.needsSwap = true;
 
 		/**
-		 * Only relevant for subclassing.
-		 *
 		 * Indicates whether the {@link EffectComposer} should prepare a depth
 		 * texture for this pass.
 		 *
@@ -1432,8 +1797,6 @@ class Pass {
 
 /**
  * An efficient, incremental blur pass.
- *
- * Note: This pass allows the input and output buffer to be the same.
  */
 
 class BlurPass extends Pass {
@@ -1442,11 +1805,18 @@ class BlurPass extends Pass {
 	 * Constructs a new blur pass.
 	 *
 	 * @param {Object} [options] - The options.
-	 * @param {Number} [options.resolutionScale=0.5] - The render texture resolution scale, relative to the main frame buffer size.
+	 * @param {Number} [options.resolutionScale=0.5] - Deprecated. Adjust the height or width instead for consistent results.
+	 * @param {Number} [options.width=Resizer.AUTO_SIZE] - The blur render width.
+	 * @param {Number} [options.height=Resizer.AUTO_SIZE] - The blur render height.
 	 * @param {KernelSize} [options.kernelSize=KernelSize.LARGE] - The blur kernel size.
 	 */
 
-	constructor({ resolutionScale = 0.5, kernelSize = KernelSize.LARGE } = {}) {
+	constructor({
+		resolutionScale = 0.5,
+		width = Resizer.AUTO_SIZE,
+		height = Resizer.AUTO_SIZE,
+		kernelSize = KernelSize.LARGE
+	} = {}) {
 
 		super("BlurPass");
 
@@ -1457,14 +1827,14 @@ class BlurPass extends Pass {
 		 * @private
 		 */
 
-		this.renderTargetX = new WebGLRenderTarget(1, 1, {
+		this.renderTargetA = new WebGLRenderTarget(1, 1, {
 			minFilter: LinearFilter,
 			magFilter: LinearFilter,
 			stencilBuffer: false,
 			depthBuffer: false
 		});
 
-		this.renderTargetX.texture.name = "Blur.TargetX";
+		this.renderTargetA.texture.name = "Blur.TargetA";
 
 		/**
 		 * A second render target.
@@ -1473,26 +1843,23 @@ class BlurPass extends Pass {
 		 * @private
 		 */
 
-		this.renderTargetY = this.renderTargetX.clone();
-		this.renderTargetY.texture.name = "Blur.TargetY";
+		this.renderTargetB = this.renderTargetA.clone();
+		this.renderTargetB.texture.name = "Blur.TargetB";
 
 		/**
-		 * The original resolution.
+		 * The desired render resolution.
 		 *
-		 * @type {Vector2}
-		 * @private
+		 * It's recommended to set the height or the width to an absolute value for
+		 * consistent results across different devices and resolutions.
+		 *
+		 * Use {@link Resizer.AUTO_SIZE} for the width or height to automatically
+		 * calculate it based on its counterpart and the original aspect ratio.
+		 *
+		 * @type {Resizer}
 		 */
 
-		this.resolution = new Vector2();
-
-		/**
-		 * The current resolution scale.
-		 *
-		 * @type {Number}
-		 * @private
-		 */
-
-		this.resolutionScale = resolutionScale;
+		this.resolution = new Resizer(this, width, height);
+		this.resolution.scale = resolutionScale;
 
 		/**
 		 * A convolution shader material.
@@ -1526,26 +1893,86 @@ class BlurPass extends Pass {
 	}
 
 	/**
-	 * The absolute width of the internal render targets.
+	 * The current width of the internal render targets.
 	 *
 	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
 	 */
 
 	get width() {
 
-		return this.renderTargetX.width;
+		return this.resolution.width;
 
 	}
 
 	/**
-	 * The absolute height of the internal render targets.
+	 * Sets the render width.
 	 *
 	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	set width(value) {
+
+		this.resolution.width = value;
+
+	}
+
+	/**
+	 * The current height of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
 	 */
 
 	get height() {
 
-		return this.renderTargetX.height;
+		return this.resolution.height;
+
+	}
+
+	/**
+	 * Sets the render height.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	set height(value) {
+
+		this.resolution.height = value;
+
+	}
+
+	/**
+	 * The current blur scale.
+	 *
+	 * @type {Number}
+	 */
+
+	get scale() {
+
+		return this.convolutionMaterial.uniforms.scale.value;
+
+	}
+
+	/**
+	 * Sets the blur scale.
+	 *
+	 * This value influences the overall blur strength and should not be greater
+	 * than 1. For larger blurs please increase the {@link kernelSize}!
+	 *
+	 * Note that the blur strength is closely tied to the resolution. For a smooth
+	 * transition from no blur to full blur, set the width or the height to a high
+	 * enough value.
+	 *
+	 * @type {Number}
+	 */
+
+	set scale(value) {
+
+		this.convolutionMaterial.uniforms.scale.value = value;
+		this.ditheredConvolutionMaterial.uniforms.scale.value = value;
 
 	}
 
@@ -1564,6 +1991,9 @@ class BlurPass extends Pass {
 	/**
 	 * Sets the kernel size.
 	 *
+	 * Larger kernels require more processing power but scale well with larger
+	 * render resolutions.
+	 *
 	 * @type {KernelSize}
 	 */
 
@@ -1578,11 +2008,12 @@ class BlurPass extends Pass {
 	 * Returns the current resolution scale.
 	 *
 	 * @return {Number} The resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	getResolutionScale() {
 
-		return this.resolutionScale;
+		return this.resolution.scale;
 
 	}
 
@@ -1590,12 +2021,13 @@ class BlurPass extends Pass {
 	 * Sets the resolution scale.
 	 *
 	 * @param {Number} scale - The new resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	setResolutionScale(scale) {
 
-		this.resolutionScale = scale;
-		this.setSize(this.resolution.x, this.resolution.y);
+		this.resolution.scale = scale;
+		this.setSize(this.resolution.base.x, this.resolution.base.y);
 
 	}
 
@@ -1615,8 +2047,8 @@ class BlurPass extends Pass {
 		const scene = this.scene;
 		const camera = this.camera;
 
-		const renderTargetX = this.renderTargetX;
-		const renderTargetY = this.renderTargetY;
+		const renderTargetA = this.renderTargetA;
+		const renderTargetB = this.renderTargetB;
 
 		let material = this.convolutionMaterial;
 		let uniforms = material.uniforms;
@@ -1632,7 +2064,7 @@ class BlurPass extends Pass {
 		for(i = 0, l = kernel.length - 1; i < l; ++i) {
 
 			// Alternate between targets.
-			destRT = ((i % 2) === 0) ? renderTargetX : renderTargetY;
+			destRT = ((i & 1) === 0) ? renderTargetA : renderTargetB;
 
 			uniforms.kernel.value = kernel[i];
 			uniforms.inputBuffer.value = lastRT.texture;
@@ -1667,13 +2099,14 @@ class BlurPass extends Pass {
 
 	setSize(width, height) {
 
-		this.resolution.set(width, height);
+		const resolution = this.resolution;
+		resolution.base.set(width, height);
 
-		width = Math.max(1, Math.floor(width * this.resolutionScale));
-		height = Math.max(1, Math.floor(height * this.resolutionScale));
+		width = resolution.width;
+		height = resolution.height;
 
-		this.renderTargetX.setSize(width, height);
-		this.renderTargetY.setSize(width, height);
+		this.renderTargetA.setSize(width, height);
+		this.renderTargetB.setSize(width, height);
 
 		this.convolutionMaterial.setTexelSize(1.0 / width, 1.0 / height);
 		this.ditheredConvolutionMaterial.setTexelSize(1.0 / width, 1.0 / height);
@@ -1691,10 +2124,23 @@ class BlurPass extends Pass {
 
 		if(!alpha) {
 
-			this.renderTargetX.texture.format = RGBFormat;
-			this.renderTargetY.texture.format = RGBFormat;
+			this.renderTargetA.texture.format = RGBFormat;
+			this.renderTargetB.texture.format = RGBFormat;
 
 		}
+
+	}
+
+	/**
+	 * An auto sizing flag.
+	 *
+	 * @type {Number}
+	 * @deprecated Use {@link Resizer.AUTO_SIZE} instead.
+	 */
+
+	static get AUTO_SIZE() {
+
+		return Resizer.AUTO_SIZE;
 
 	}
 
@@ -1730,7 +2176,10 @@ class ClearMaskPass extends Pass {
 
 	render(renderer, inputBuffer, outputBuffer, deltaTime, stencilTest) {
 
-		renderer.state.buffers.stencil.setTest(false);
+		const stencil = renderer.state.buffers.stencil;
+
+		stencil.setLocked(false);
+		stencil.setTest(false);
 
 	}
 
@@ -1872,7 +2321,7 @@ class RenderPass extends Pass {
 	 *
 	 * @param {Scene} scene - The scene to render.
 	 * @param {Camera} camera - The camera to use to render the scene.
-	 * @param {Object} [overrideMaterial=null] - An override material for the scene.
+	 * @param {Material} [overrideMaterial=null] - An override material for the scene.
 	 */
 
 	constructor(scene, camera, overrideMaterial = null) {
@@ -2024,11 +2473,18 @@ class DepthPass extends Pass {
 	 * @param {Scene} scene - The scene to render.
 	 * @param {Camera} camera - The camera to use to render the scene.
 	 * @param {Object} [options] - The options.
-	 * @param {Number} [options.resolutionScale=1.0] - The render texture resolution scale, relative to the main frame buffer size.
+	 * @param {Number} [options.resolutionScale=1.0] - Deprecated. Adjust the height or width instead for consistent results.
+	 * @param {Number} [options.width=Resizer.AUTO_SIZE] - The render width.
+	 * @param {Number} [options.height=Resizer.AUTO_SIZE] - The render height.
 	 * @param {WebGLRenderTarget} [options.renderTarget] - A custom render target.
 	 */
 
-	constructor(scene, camera, { resolutionScale = 1.0, renderTarget } = {}) {
+	constructor(scene, camera, {
+		resolutionScale = 1.0,
+		width = Resizer.AUTO_SIZE,
+		height = Resizer.AUTO_SIZE,
+		renderTarget
+	} = {}) {
 
 		super("DepthPass");
 
@@ -2072,22 +2528,16 @@ class DepthPass extends Pass {
 		}
 
 		/**
-		 * The current resolution scale.
+		 * The desired render resolution.
 		 *
-		 * @type {Number}
-		 * @private
+		 * Use {@link Resizer.AUTO_SIZE} for the width or height to automatically
+		 * calculate it based on its counterpart and the original aspect ratio.
+		 *
+		 * @type {Resizer}
 		 */
 
-		this.resolutionScale = resolutionScale;
-
-		/**
-		 * The original resolution.
-		 *
-		 * @type {Vector2}
-		 * @private
-		 */
-
-		this.resolution = new Vector2();
+		this.resolution = new Resizer(this, width, height);
+		this.resolution.scale = resolutionScale;
 
 	}
 
@@ -2095,6 +2545,7 @@ class DepthPass extends Pass {
 	 * Returns the current resolution scale.
 	 *
 	 * @return {Number} The resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	getResolutionScale() {
@@ -2107,12 +2558,13 @@ class DepthPass extends Pass {
 	 * Sets the resolution scale.
 	 *
 	 * @param {Number} scale - The new resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	setResolutionScale(scale) {
 
 		this.resolutionScale = scale;
-		this.setSize(this.resolution.x, this.resolution.y);
+		this.setSize(this.originalSize.x, this.originalSize.y);
 
 	}
 
@@ -2142,12 +2594,13 @@ class DepthPass extends Pass {
 
 	setSize(width, height) {
 
-		this.resolution.set(width, height);
+		const resolution = this.resolution;
+		resolution.base.set(width, height);
 
-		this.renderTarget.setSize(
-			Math.max(1, Math.floor(width * this.resolutionScale)),
-			Math.max(1, Math.floor(height * this.resolutionScale))
-		);
+		width = resolution.width;
+		height = resolution.height;
+
+		this.renderTarget.setSize(width, height);
 
 	}
 
@@ -2202,41 +2655,41 @@ const BlendFunction = {
 
 };
 
-var addBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return min(x+y,1.0)*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var addBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return min(x+y,1.0)*opacity+x*(1.0-opacity);}";
 
 var alphaBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return y*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){float a=min(y.a,opacity);return vec4(blend(x.rgb,y.rgb,a),max(x.a,a));}";
 
-var averageBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return(x+y)*0.5*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var averageBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return(x+y)*0.5*opacity+x*(1.0-opacity);}";
 
-var colorBurnBlendFunction = "float blend(const in float x,const in float y){return(y==0.0)? y : max(1.0-(1.0-x)/y,0.0);}vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){vec3 z=vec3(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b));return z*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var colorBurnBlendFunction = "float blend(const in float x,const in float y){return(y==0.0)? y : max(1.0-(1.0-x)/y,0.0);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){vec4 z=vec4(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b),blend(x.a,y.a));return z*opacity+x*(1.0-opacity);}";
 
-var colorDodgeBlendFunction = "float blend(const in float x,const in float y){return(y==1.0)? y : min(x/(1.0-y),1.0);}vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){vec3 z=vec3(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b));return z*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var colorDodgeBlendFunction = "float blend(const in float x,const in float y){return(y==1.0)? y : min(x/(1.0-y),1.0);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){vec4 z=vec4(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b),blend(x.a,y.a));return z*opacity+x*(1.0-opacity);}";
 
-var darkenBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return min(x,y)*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var darkenBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return min(x,y)*opacity+x*(1.0-opacity);}";
 
-var differenceBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return abs(x-y)*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var differenceBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return abs(x-y)*opacity+x*(1.0-opacity);}";
 
-var exclusionBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return(x+y-2.0*x*y)*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var exclusionBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return(x+y-2.0*x*y)*opacity+x*(1.0-opacity);}";
 
-var lightenBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return max(x,y)*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var lightenBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return max(x,y)*opacity+x*(1.0-opacity);}";
 
-var multiplyBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return x*y*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var multiplyBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return x*y*opacity+x*(1.0-opacity);}";
 
-var divideBlendFunction = "float blend(const in float x,const in float y){return(y>0.0)? min(x/y,1.0): 1.0;}vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){vec3 z=vec3(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b));return z*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var divideBlendFunction = "float blend(const in float x,const in float y){return(y>0.0)? min(x/y,1.0): 1.0;}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){vec4 z=vec4(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b),blend(x.a,y.a));return z*opacity+x*(1.0-opacity);}";
 
-var negationBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return(1.0-abs(1.0-x-y))*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var negationBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return(1.0-abs(1.0-x-y))*opacity+x*(1.0-opacity);}";
 
-var normalBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return y*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var normalBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return y*opacity+x*(1.0-opacity);}";
 
-var overlayBlendFunction = "float blend(const in float x,const in float y){return(x<0.5)?(2.0*x*y):(1.0-2.0*(1.0-x)*(1.0-y));}vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){vec3 z=vec3(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b));return z*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var overlayBlendFunction = "float blend(const in float x,const in float y){return(x<0.5)?(2.0*x*y):(1.0-2.0*(1.0-x)*(1.0-y));}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){vec4 z=vec4(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b),blend(x.a,y.a));return z*opacity+x*(1.0-opacity);}";
 
-var reflectBlendFunction = "float blend(const in float x,const in float y){return(y==1.0)? y : min(x*x/(1.0-y),1.0);}vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){vec3 z=vec3(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b));return z*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var reflectBlendFunction = "float blend(const in float x,const in float y){return(y==1.0)? y : min(x*x/(1.0-y),1.0);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){vec4 z=vec4(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b),blend(x.a,y.a));return z*opacity+x*(1.0-opacity);}";
 
-var screenBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return(1.0-(1.0-x)*(1.0-y))*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var screenBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return(1.0-(1.0-x)*(1.0-y))*opacity+x*(1.0-opacity);}";
 
-var softLightBlendFunction = "float blend(const in float x,const in float y){return(y<0.5)?(2.0*x*y+x*x*(1.0-2.0*y)):(sqrt(x)*(2.0*y-1.0)+2.0*x*(1.0-y));}vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){vec3 z=vec3(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b));return z*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var softLightBlendFunction = "float blend(const in float x,const in float y){return(y<0.5)?(2.0*x*y+x*x*(1.0-2.0*y)):(sqrt(x)*(2.0*y-1.0)+2.0*x*(1.0-y));}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){vec4 z=vec4(blend(x.r,y.r),blend(x.g,y.g),blend(x.b,y.b),blend(x.a,y.a));return z*opacity+x*(1.0-opacity);}";
 
-var subtractBlendFunction = "vec3 blend(const in vec3 x,const in vec3 y,const in float opacity){return max(x+y-1.0,0.0)*opacity+x*(1.0-opacity);}vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return vec4(blend(x.rgb,y.rgb,opacity),y.a);}";
+var subtractBlendFunction = "vec4 blend(const in vec4 x,const in vec4 y,const in float opacity){return max(x+y-1.0,0.0)*opacity+x*(1.0-opacity);}";
 
 /**
  * A blend function shader code catalogue.
@@ -2785,14 +3238,7 @@ class EffectPass extends Pass {
 
 		super("EffectPass");
 
-		/**
-		 * The main camera.
-		 *
-		 * @type {Camera}
-		 * @private
-		 */
-
-		this.mainCamera = camera;
+		this.setFullscreenMaterial(new EffectMaterial(null, null, null, camera));
 
 		/**
 		 * The effects, sorted by attribute priority, DESC.
@@ -2813,15 +3259,6 @@ class EffectPass extends Pass {
 		 */
 
 		this.skipRendering = false;
-
-		/**
-		 * Indicates whether dithering is enabled.
-		 *
-		 * @type {Boolean}
-		 * @private
-		 */
-
-		this.quantize = false;
 
 		/**
 		 * The amount of shader uniforms that this pass uses.
@@ -2861,7 +3298,18 @@ class EffectPass extends Pass {
 
 		this.maxTime = 1e3;
 
-		this.setFullscreenMaterial(this.createMaterial());
+	}
+
+	/**
+	 * The current render size.
+	 *
+	 * @type {Vector2}
+	 * @private
+	 */
+
+	get size() {
+
+		return this.getFullscreenMaterial().uniforms.resolution.value;
 
 	}
 
@@ -2875,7 +3323,7 @@ class EffectPass extends Pass {
 
 	get dithering() {
 
-		return this.quantize;
+		return this.getFullscreenMaterial().dithering;
 
 	}
 
@@ -2889,31 +3337,24 @@ class EffectPass extends Pass {
 
 	set dithering(value) {
 
-		if(this.quantize !== value) {
+		const material = this.getFullscreenMaterial();
 
-			const material = this.getFullscreenMaterial();
+		if(material.dithering !== value) {
 
-			if(material !== null) {
-
-				material.dithering = value;
-				material.needsUpdate = true;
-
-			}
-
-			this.quantize = value;
+			material.dithering = value;
+			material.needsUpdate = true;
 
 		}
 
 	}
 
 	/**
-	 * Creates a compound shader material.
+	 * Updates the compound shader material.
 	 *
 	 * @private
-	 * @return {Material} The new material.
 	 */
 
-	createMaterial() {
+	updateMaterial() {
 
 		const blendRegExp = /\bblend\b/g;
 
@@ -2990,7 +3431,8 @@ class EffectPass extends Pass {
 
 			}
 
-			this.needsDepthTexture = true;
+			// Only request a depth texture if none has been provided yet.
+			this.needsDepthTexture = (this.getDepthTexture() === null);
 
 		}
 
@@ -3016,7 +3458,9 @@ class EffectPass extends Pass {
 		this.skipRendering = (id === 0);
 		this.needsSwap = !this.skipRendering;
 
-		const material = new EffectMaterial(shaderParts, defines, uniforms, this.mainCamera, this.dithering);
+		const material = this.getFullscreenMaterial();
+		material.setShaderParts(shaderParts).setDefines(defines).setUniforms(uniforms);
+		material.extensions = {};
 
 		if(extensions.size > 0) {
 
@@ -3029,40 +3473,17 @@ class EffectPass extends Pass {
 
 		}
 
-		return material;
-
 	}
 
 	/**
-	 * Destroys the current fullscreen shader material and builds a new one.
+	 * Updates the shader material.
 	 *
-	 * Warning: This method performs a relatively expensive shader recompilation.
+	 * Warning: This method triggers a relatively expensive shader recompilation.
 	 */
 
 	recompile() {
 
-		let material = this.getFullscreenMaterial();
-		let width = 0, height = 0;
-		let depthTexture = null;
-		let depthPacking = 0;
-
-		if(material !== null) {
-
-			const resolution = material.uniforms.resolution.value;
-			width = resolution.x; height = resolution.y;
-			depthTexture = material.uniforms.depthBuffer.value;
-			depthPacking = material.depthPacking;
-			material.dispose();
-
-			this.uniforms = 0;
-			this.varyings = 0;
-
-		}
-
-		material = this.createMaterial();
-		material.setSize(width, height);
-		this.setFullscreenMaterial(material);
-		this.setDepthTexture(depthTexture, depthPacking);
+		this.updateMaterial();
 
 	}
 
@@ -3074,9 +3495,7 @@ class EffectPass extends Pass {
 
 	getDepthTexture() {
 
-		const material = this.getFullscreenMaterial();
-
-		return (material !== null) ? material.uniforms.depthBuffer.value : null;
+		return this.getFullscreenMaterial().uniforms.depthBuffer.value;
 
 	}
 
@@ -3090,7 +3509,6 @@ class EffectPass extends Pass {
 	setDepthTexture(depthTexture, depthPacking = 0) {
 
 		const material = this.getFullscreenMaterial();
-
 		material.uniforms.depthBuffer.value = depthTexture;
 		material.depthPacking = depthPacking;
 		material.needsUpdate = true;
@@ -3163,8 +3581,18 @@ class EffectPass extends Pass {
 
 	initialize(renderer, alpha) {
 
-		const capabilities = renderer.capabilities;
+		// Initialize effects before building the final shader.
+		for(const effect of this.effects) {
 
+			effect.initialize(renderer, alpha);
+
+		}
+
+		// Initialize the fullscreen material.
+		this.updateMaterial();
+
+		// Compare required resources with capabilities.
+		const capabilities = renderer.capabilities;
 		let max = Math.min(capabilities.maxFragmentUniforms, capabilities.maxVertexUniforms);
 
 		if(this.uniforms > max) {
@@ -3178,12 +3606,6 @@ class EffectPass extends Pass {
 		if(this.varyings > max) {
 
 			console.warn("The current rendering context doesn't support more than " + max + " varyings, but " + this.varyings + " were defined");
-
-		}
-
-		for(const effect of this.effects) {
-
-			effect.initialize(renderer, alpha);
 
 		}
 
@@ -3286,8 +3708,8 @@ class MaskPass extends Pass {
 
 	render(renderer, inputBuffer, outputBuffer, deltaTime, stencilTest) {
 
-		const context = renderer.context;
-		const state = renderer.state;
+		const context = renderer.getContext();
+		const buffers = renderer.state.buffers;
 
 		const scene = this.scene;
 		const camera = this.camera;
@@ -3297,18 +3719,19 @@ class MaskPass extends Pass {
 		const clearValue = 1 - writeValue;
 
 		// Don't update color or depth.
-		state.buffers.color.setMask(false);
-		state.buffers.depth.setMask(false);
+		buffers.color.setMask(false);
+		buffers.depth.setMask(false);
 
 		// Lock the buffers.
-		state.buffers.color.setLocked(true);
-		state.buffers.depth.setLocked(true);
+		buffers.color.setLocked(true);
+		buffers.depth.setLocked(true);
 
 		// Configure the stencil.
-		state.buffers.stencil.setTest(true);
-		state.buffers.stencil.setOp(context.REPLACE, context.REPLACE, context.REPLACE);
-		state.buffers.stencil.setFunc(context.ALWAYS, writeValue, 0xffffffff);
-		state.buffers.stencil.setClear(clearValue);
+		buffers.stencil.setTest(true);
+		buffers.stencil.setOp(context.REPLACE, context.REPLACE, context.REPLACE);
+		buffers.stencil.setFunc(context.ALWAYS, writeValue, 0xffffffff);
+		buffers.stencil.setClear(clearValue);
+		buffers.stencil.setLocked(true);
 
 		// Clear the stencil.
 		if(this.clear) {
@@ -3342,12 +3765,14 @@ class MaskPass extends Pass {
 		}
 
 		// Unlock the buffers.
-		state.buffers.color.setLocked(false);
-		state.buffers.depth.setLocked(false);
+		buffers.color.setLocked(false);
+		buffers.depth.setLocked(false);
 
 		// Only render where the stencil is set to 1.
-		state.buffers.stencil.setFunc(context.EQUAL, 1, 0xffffffff);
-		state.buffers.stencil.setOp(context.KEEP, context.KEEP, context.KEEP);
+		buffers.stencil.setLocked(false);
+		buffers.stencil.setFunc(context.EQUAL, 1, 0xffffffff);
+		buffers.stencil.setOp(context.KEEP, context.KEEP, context.KEEP);
+		buffers.stencil.setLocked(true);
 
 	}
 
@@ -3365,11 +3790,18 @@ class NormalPass extends Pass {
 	 * @param {Scene} scene - The scene to render.
 	 * @param {Camera} camera - The camera to use to render the scene.
 	 * @param {Object} [options] - The options.
-	 * @param {Number} [options.resolutionScale=1.0] - The render texture resolution scale, relative to the main frame buffer size.
+	 * @param {Number} [options.resolutionScale=1.0] - Deprecated. Adjust the height or width instead for consistent results.
+	 * @param {Number} [options.width=Resizer.AUTO_SIZE] - The render width.
+	 * @param {Number} [options.height=Resizer.AUTO_SIZE] - The render height.
 	 * @param {WebGLRenderTarget} [options.renderTarget] - A custom render target.
 	 */
 
-	constructor(scene, camera, { resolutionScale = 1.0, renderTarget } = {}) {
+	constructor(scene, camera, {
+		resolutionScale = 1.0,
+		width = Resizer.AUTO_SIZE,
+		height = Resizer.AUTO_SIZE,
+		renderTarget
+	} = {}) {
 
 		super("NormalPass");
 
@@ -3384,6 +3816,7 @@ class NormalPass extends Pass {
 
 		this.renderPass = new RenderPass(scene, camera, new MeshNormalMaterial({
 			morphTargets: true,
+			morphNormals: true,
 			skinning: true
 		}));
 
@@ -3413,22 +3846,16 @@ class NormalPass extends Pass {
 		}
 
 		/**
-		 * The current resolution scale.
+		 * The desired render resolution.
 		 *
-		 * @type {Number}
-		 * @private
+		 * Use {@link Resizer.AUTO_SIZE} for the width or height to automatically
+		 * calculate it based on its counterpart and the original aspect ratio.
+		 *
+		 * @type {Resizer}
 		 */
 
-		this.resolutionScale = resolutionScale;
-
-		/**
-		 * The original resolution.
-		 *
-		 * @type {Vector2}
-		 * @private
-		 */
-
-		this.resolution = new Vector2();
+		this.resolution = new Resizer(this, width, height);
+		this.resolution.scale = resolutionScale;
 
 	}
 
@@ -3436,6 +3863,7 @@ class NormalPass extends Pass {
 	 * Returns the current resolution scale.
 	 *
 	 * @return {Number} The resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	getResolutionScale() {
@@ -3448,12 +3876,13 @@ class NormalPass extends Pass {
 	 * Sets the resolution scale.
 	 *
 	 * @param {Number} scale - The new resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	setResolutionScale(scale) {
 
 		this.resolutionScale = scale;
-		this.setSize(this.resolution.x, this.resolution.y);
+		this.setSize(this.originalSize.x, this.originalSize.y);
 
 	}
 
@@ -3483,12 +3912,13 @@ class NormalPass extends Pass {
 
 	setSize(width, height) {
 
-		this.resolution.set(width, height);
+		const resolution = this.resolution;
+		resolution.base.set(width, height);
 
-		this.renderTarget.setSize(
-			Math.max(1, Math.floor(width * this.resolutionScale)),
-			Math.max(1, Math.floor(height * this.resolutionScale))
-		);
+		width = resolution.width;
+		height = resolution.height;
+
+		this.renderTarget.setSize(width, height);
 
 	}
 
@@ -3707,9 +4137,6 @@ class EffectComposer {
 		/**
 		 * The renderer.
 		 *
-		 * You may replace the renderer at any time by using
-		 * {@link EffectComposer#replaceRenderer}.
-		 *
 		 * @type {WebGLRenderer}
 		 * @private
 		 */
@@ -3777,6 +4204,9 @@ class EffectComposer {
 	/**
 	 * Returns the WebGL renderer.
 	 *
+	 * You may replace the renderer at any time by using
+	 * {@link EffectComposer#replaceRenderer}.
+	 *
 	 * @return {WebGLRenderer} The renderer.
 	 */
 
@@ -3787,24 +4217,28 @@ class EffectComposer {
 	}
 
 	/**
-	 * Replaces the current renderer with the given one. The DOM element of the
-	 * current renderer will automatically be removed from its parent node and the
-	 * DOM element of the new renderer will take its place.
+	 * Replaces the current renderer with the given one.
 	 *
-	 * The auto clear mechanism of the provided renderer will be disabled.
+	 * The auto clear mechanism of the provided renderer will be disabled. If the
+	 * new render size differs from the previous one, all passes will be updated.
+	 *
+	 * By default, the DOM element of the current renderer will automatically be
+	 * removed from its parent node and the DOM element of the new renderer will
+	 * take its place.
 	 *
 	 * @param {WebGLRenderer} renderer - The new renderer.
+	 * @param {Boolean} updateDOM - Indicates whether the old canvas should be replaced by the new one in the DOM.
 	 * @return {WebGLRenderer} The old renderer.
 	 */
 
-	replaceRenderer(renderer) {
+	replaceRenderer(renderer, updateDOM = true) {
 
 		const oldRenderer = this.renderer;
 
 		if(oldRenderer !== null && oldRenderer !== renderer) {
 
-			const oldSize = oldRenderer.getSize(new Vector2());
-			const newSize = renderer.getSize(new Vector2());
+			const oldSize = oldRenderer.getSize(new Vector2$1());
+			const newSize = renderer.getSize(new Vector2$1());
 			const parent = oldRenderer.domElement.parentNode;
 
 			this.renderer = renderer;
@@ -3816,7 +4250,7 @@ class EffectComposer {
 
 			}
 
-			if(parent !== null) {
+			if(updateDOM && parent !== null) {
 
 				parent.removeChild(oldRenderer.domElement);
 				parent.appendChild(renderer.domElement);
@@ -3869,8 +4303,8 @@ class EffectComposer {
 
 	createBuffer(depthBuffer, stencilBuffer) {
 
-		const drawingBufferSize = this.renderer.getDrawingBufferSize(new Vector2());
-		const alpha = this.renderer.context.getContextAttributes().alpha;
+		const drawingBufferSize = this.renderer.getDrawingBufferSize(new Vector2$1());
+		const alpha = this.renderer.getContext().getContextAttributes().alpha;
 
 		const renderTarget = new WebGLRenderTarget(drawingBufferSize.width, drawingBufferSize.height, {
 			minFilter: LinearFilter,
@@ -3898,10 +4332,10 @@ class EffectComposer {
 
 		const passes = this.passes;
 		const renderer = this.renderer;
-		const drawingBufferSize = renderer.getDrawingBufferSize(new Vector2());
+		const drawingBufferSize = renderer.getDrawingBufferSize(new Vector2$1());
 
 		pass.setSize(drawingBufferSize.width, drawingBufferSize.height);
-		pass.initialize(renderer, renderer.context.getContextAttributes().alpha);
+		pass.initialize(renderer, renderer.getContext().getContextAttributes().alpha);
 
 		if(index !== undefined) {
 
@@ -3986,7 +4420,7 @@ class EffectComposer {
 		let outputBuffer = this.outputBuffer;
 
 		let stencilTest = false;
-		let context, state, buffer;
+		let context, stencil, buffer;
 
 		for(const pass of this.passes) {
 
@@ -3999,14 +4433,13 @@ class EffectComposer {
 					if(stencilTest) {
 
 						copyPass.renderToScreen = pass.renderToScreen;
-
-						context = renderer.context;
-						state = renderer.state;
+						context = renderer.getContext();
+						stencil = renderer.state.buffers.stencil;
 
 						// Preserve the unaffected pixels.
-						state.buffers.stencil.setFunc(context.NOTEQUAL, 1, 0xffffffff);
+						stencil.setFunc(context.NOTEQUAL, 1, 0xffffffff);
 						copyPass.render(renderer, inputBuffer, outputBuffer, deltaTime, stencilTest);
-						state.buffers.stencil.setFunc(context.EQUAL, 1, 0xffffffff);
+						stencil.setFunc(context.EQUAL, 1, 0xffffffff);
 
 					}
 
@@ -4043,24 +4476,25 @@ class EffectComposer {
 	 *
 	 * @param {Number} [width] - The width.
 	 * @param {Number} [height] - The height.
+	 * @param {Boolean} [updateStyle] - Determines whether the style of the canvas should be updated.
 	 */
 
-	setSize(width, height) {
+	setSize(width, height, updateStyle) {
 
 		const renderer = this.renderer;
 
 		if(width === undefined || height === undefined) {
 
-			const size = renderer.getSize(new Vector2());
+			const size = renderer.getSize(new Vector2$1());
 			width = size.width; height = size.height;
 
 		}
 
 		// Update the logical render size.
-		renderer.setSize(width, height);
+		renderer.setSize(width, height, updateStyle);
 
 		// The drawing buffer size takes the device pixel ratio into account.
-		const drawingBufferSize = renderer.getDrawingBufferSize(new Vector2());
+		const drawingBufferSize = renderer.getDrawingBufferSize(new Vector2$1());
 
 		this.inputBuffer.setSize(drawingBufferSize.width, drawingBufferSize.height);
 		this.outputBuffer.setSize(drawingBufferSize.width, drawingBufferSize.height);
@@ -4158,6 +4592,199 @@ class Resizable {
 
 }
 
+/**
+ * An object selection.
+ */
+
+class Selection extends Set {
+
+	/**
+	 * Constructs a new selection.
+	 *
+	 * @param {Iterable<Object3D>} [iterable] - A collection of objects that should be added to this selection.
+	 * @param {Number} [layer=10] - A dedicated render layer for selected objects.
+	 */
+
+	constructor(iterable, layer = 10) {
+
+		super();
+
+		/**
+		 * The current render layer for selected objects.
+		 *
+		 * @type {Number}
+		 * @private
+		 */
+
+		this.currentLayer = layer;
+
+		if(iterable !== undefined) {
+
+			this.set(iterable);
+
+		}
+
+	}
+
+	/**
+	 * A dedicated render layer for selected objects.
+	 *
+	 * This layer is set to 10 by default. If this collides with your own custom
+	 * layers, please change it to a free layer before rendering!
+	 *
+	 * @type {Number}
+	 */
+
+	get layer() {
+
+		return this.currentLayer;
+
+	}
+
+	/**
+	 * Sets the render layer of selected objects.
+	 *
+	 * The current selection will be updated accordingly.
+	 *
+	 * @type {Number}
+	 */
+
+	set layer(value) {
+
+		const currentLayer = this.currentLayer;
+
+		for(const object of this) {
+
+			object.layers.disable(currentLayer);
+			object.layers.enable(value);
+
+		}
+
+		this.currentLayer = value;
+
+	}
+
+	/**
+	 * Clears this selection.
+	 *
+	 * @return {Selection} This selection.
+	 */
+
+	clear() {
+
+		const layer = this.layer;
+
+		for(const object of this) {
+
+			object.layers.disable(layer);
+
+		}
+
+		return super.clear();
+
+	}
+
+	/**
+	 * Clears this selection and adds the given objects.
+	 *
+	 * @param {Iterable<Object3D>} objects - The objects that should be selected. This array will be copied.
+	 * @return {Selection} This selection.
+	 */
+
+	set(objects) {
+
+		this.clear();
+
+		for(const object of objects) {
+
+			this.add(object);
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	 * An alias for {@link has}.
+	 *
+	 * @param {Object3D} object - An object.
+	 * @return {Number} Returns 0 if the given object is currently selected, or -1 otherwise.
+	 * @deprecated Added for backward compatibility. Use has instead.
+	 */
+
+	indexOf(object) {
+
+		return this.has(object) ? 0 : -1;
+
+	}
+
+	/**
+	 * Adds an object to this selection.
+	 *
+	 * @param {Object3D} object - The object that should be selected.
+	 * @return {Selection} This selection.
+	 */
+
+	add(object) {
+
+		object.layers.enable(this.layer);
+		super.add(object);
+
+		return this;
+
+	}
+
+	/**
+	 * Removes an object from this selection.
+	 *
+	 * @param {Object3D} object - The object that should be deselected.
+	 * @return {Boolean} Returns true if an object has successfully been removed from this selection; otherwise false.
+	 */
+
+	delete(object) {
+
+		if(this.has(object)) {
+
+			object.layers.disable(this.layer);
+
+		}
+
+		return super.delete(object);
+
+	}
+
+	/**
+	 * Sets the visibility of all selected objects.
+	 *
+	 * This method enables or disables render layer 0 of all selected objects.
+	 *
+	 * @param {Boolean} visible - Whether the selected objects should be visible.
+	 * @return {Selection} This selection.
+	 */
+
+	setVisible(visible) {
+
+		for(const object of this) {
+
+			if(visible) {
+
+				object.layers.enable(0);
+
+			} else {
+
+				object.layers.disable(0);
+
+			}
+
+		}
+
+		return this;
+
+	}
+
+}
+
 var fragmentShader$a = "uniform sampler2D texture;\n#ifdef ASPECT_CORRECTION\nvarying vec2 vUv2;\n#endif\nvoid mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){\n#ifdef ASPECT_CORRECTION\noutputColor=texture2D(texture,vUv2);\n#else\noutputColor=texture2D(texture,uv);\n#endif\n}";
 
 /**
@@ -4174,12 +4801,23 @@ class BloomEffect extends Effect {
 	 *
 	 * @param {Object} [options] - The options.
 	 * @param {BlendFunction} [options.blendFunction=BlendFunction.SCREEN] - The blend function of this effect.
-	 * @param {Number} [options.distinction=1.0] - The luminance distinction factor. Raise this value to bring out the brighter elements in the scene.
-	 * @param {Number} [options.resolutionScale=0.5] - The render texture resolution scale, relative to the main frame buffer size.
+	 * @param {Number} [options.luminanceThreshold=0.9] - The luminance threshold. Raise this value to mask out darker elements in the scene. Range is [0, 1].
+	 * @param {Number} [options.luminanceSmoothing=0.025] - Controls the smoothness of the luminance threshold. Range is [0, 1].
+	 * @param {Number} [options.resolutionScale=0.5] - Deprecated. Use height or width instead.
+	 * @param {Number} [options.width=Resizer.AUTO_SIZE] - The render width.
+	 * @param {Number} [options.height=Resizer.AUTO_SIZE] - The render height.
 	 * @param {KernelSize} [options.kernelSize=KernelSize.LARGE] - The blur kernel size.
 	 */
 
-	constructor({ blendFunction = BlendFunction.SCREEN, distinction = 1.0, resolutionScale = 0.5, kernelSize = KernelSize.LARGE } = {}) {
+	constructor({
+		blendFunction = BlendFunction.SCREEN,
+		luminanceThreshold = 0.9,
+		luminanceSmoothing = 0.025,
+		resolutionScale = 0.5,
+		width = Resizer.AUTO_SIZE,
+		height = Resizer.AUTO_SIZE,
+		kernelSize = KernelSize.LARGE
+	} = {}) {
 
 		super("BloomEffect", fragmentShader$a, {
 
@@ -4214,30 +4852,23 @@ class BloomEffect extends Effect {
 		 * A blur pass.
 		 *
 		 * @type {BlurPass}
-		 * @private
 		 */
 
-		this.blurPass = new BlurPass({ resolutionScale, kernelSize });
-
-		/**
-		 * The original resolution.
-		 *
-		 * @type {Vector2}
-		 * @private
-		 */
-
-		this.resolution = new Vector2();
+		this.blurPass = new BlurPass({ resolutionScale, width, height, kernelSize });
+		this.blurPass.resolution.resizable = this;
 
 		/**
 		 * A luminance shader pass.
 		 *
+		 * You may disable this pass to deactivate luminance filtering.
+		 *
 		 * @type {ShaderPass}
-		 * @private
 		 */
 
 		this.luminancePass = new ShaderPass(new LuminanceMaterial(true));
 
-		this.distinction = distinction;
+		this.luminanceMaterial.threshold = luminanceThreshold;
+		this.luminanceMaterial.smoothing = luminanceSmoothing;
 
 	}
 
@@ -4257,9 +4888,86 @@ class BloomEffect extends Effect {
 	}
 
 	/**
+	 * The luminance material.
+	 *
+	 * @type {LuminanceMaterial}
+	 */
+
+	get luminanceMaterial() {
+
+		return this.luminancePass.getFullscreenMaterial();
+
+	}
+
+	/**
+	 * The resolution of this effect.
+	 *
+	 * @type {Resizer}
+	 */
+
+	get resolution() {
+
+		return this.blurPass.resolution;
+
+	}
+
+	/**
+	 * The current width of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	get width() {
+
+		return this.resolution.width;
+
+	}
+
+	/**
+	 * Sets the render width.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	set width(value) {
+
+		this.resolution.width = value;
+
+	}
+
+	/**
+	 * The current height of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	get height() {
+
+		return this.resolution.height;
+
+	}
+
+	/**
+	 * Sets the render height.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	set height(value) {
+
+		this.resolution.height = value;
+
+	}
+
+	/**
 	 * Indicates whether dithering is enabled.
 	 *
 	 * @type {Boolean}
+	 * @deprecated Use blurPass.dithering instead.
 	 */
 
 	get dithering() {
@@ -4272,6 +4980,7 @@ class BloomEffect extends Effect {
 	 * Enables or disables dithering.
 	 *
 	 * @type {Boolean}
+	 * @deprecated Use blurPass.dithering instead.
 	 */
 
 	set dithering(value) {
@@ -4284,6 +4993,7 @@ class BloomEffect extends Effect {
 	 * The blur kernel size.
 	 *
 	 * @type {KernelSize}
+	 * @deprecated Use blurPass.kernelSize instead.
 	 */
 
 	get kernelSize() {
@@ -4294,6 +5004,7 @@ class BloomEffect extends Effect {
 
 	/**
 	 * @type {KernelSize}
+	 * @deprecated Use blurPass.kernelSize instead.
 	 */
 
 	set kernelSize(value) {
@@ -4303,24 +5014,26 @@ class BloomEffect extends Effect {
 	}
 
 	/**
-	 * The luminance distinction factor.
-	 *
 	 * @type {Number}
+	 * @deprecated Use luminanceMaterial.threshold and luminanceMaterial.smoothing instead.
 	 */
 
 	get distinction() {
 
-		return this.luminancePass.getFullscreenMaterial().uniforms.distinction.value;
+		console.warn(this.name, "The distinction field has been removed, use luminanceMaterial.threshold and luminanceMaterial.smoothing instead.");
+
+		return 1.0;
 
 	}
 
 	/**
 	 * @type {Number}
+	 * @deprecated Use luminanceMaterial.threshold and luminanceMaterial.smoothing instead.
 	 */
 
-	set distinction(value = 1.0) {
+	set distinction(value) {
 
-		this.luminancePass.getFullscreenMaterial().uniforms.distinction.value = value;
+		console.warn(this.name, "The distinction field has been removed, use luminanceMaterial.threshold and luminanceMaterial.smoothing instead.");
 
 	}
 
@@ -4328,11 +5041,12 @@ class BloomEffect extends Effect {
 	 * Returns the current resolution scale.
 	 *
 	 * @return {Number} The resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	getResolutionScale() {
 
-		return this.blurPass.getResolutionScale();
+		return this.resolution.scale;
 
 	}
 
@@ -4340,12 +5054,13 @@ class BloomEffect extends Effect {
 	 * Sets the resolution scale.
 	 *
 	 * @param {Number} scale - The new resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	setResolutionScale(scale) {
 
-		this.blurPass.setResolutionScale(scale);
-		this.setSize(this.resolution.x, this.resolution.y);
+		this.resolution.scale = scale;
+		this.setSize(this.resolution.base.x, this.resolution.base.y);
 
 	}
 
@@ -4361,8 +5076,16 @@ class BloomEffect extends Effect {
 
 		const renderTarget = this.renderTarget;
 
-		this.luminancePass.render(renderer, inputBuffer, renderTarget);
-		this.blurPass.render(renderer, renderTarget, renderTarget);
+		if(this.luminancePass.enabled) {
+
+			this.luminancePass.render(renderer, inputBuffer, renderTarget);
+			this.blurPass.render(renderer, renderTarget, renderTarget);
+
+		} else {
+
+			this.blurPass.render(renderer, inputBuffer, renderTarget);
+
+		}
 
 	}
 
@@ -4375,13 +5098,8 @@ class BloomEffect extends Effect {
 
 	setSize(width, height) {
 
-		this.resolution.set(width, height);
 		this.blurPass.setSize(width, height);
-
-		width = this.blurPass.width;
-		height = this.blurPass.height;
-
-		this.renderTarget.setSize(width, height);
+		this.renderTarget.setSize(this.resolution.width, this.resolution.height);
 
 	}
 
@@ -4581,7 +5299,7 @@ class ColorDepthEffect extends Effect {
 
 }
 
-var fragmentShader$f = "varying vec2 vUvR;varying vec2 vUvB;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){vec4 color=inputColor;color.r=texture2D(inputBuffer,vUvR).r;color.b=texture2D(inputBuffer,vUvB).b;outputColor=color;}";
+var fragmentShader$f = "varying vec2 vUvR;varying vec2 vUvB;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){vec4 color=inputColor;\n#ifdef ALPHA\nvec2 ra=texture2D(inputBuffer,vUvR).ra;vec2 ba=texture2D(inputBuffer,vUvB).ba;color.r=ra.x;color.b=ba.x;color.a=max(max(ra.y,ba.y),inputColor.a);\n#else\ncolor.r=texture2D(inputBuffer,vUvR).r;color.b=texture2D(inputBuffer,vUvB).b;\n#endif\noutputColor=color;}";
 
 var vertexShader$6 = "uniform vec2 offset;varying vec2 vUvR;varying vec2 vUvB;void mainSupport(const in vec2 uv){vUvR=uv+offset;vUvB=uv-offset;}";
 
@@ -4599,7 +5317,7 @@ class ChromaticAberrationEffect extends Effect {
 	 * @param {Vector2} [options.offset] - The color offset.
 	 */
 
-	constructor({ blendFunction = BlendFunction.NORMAL, offset = new Vector2(0.001, 0.0005) } = {}) {
+	constructor({ blendFunction = BlendFunction.NORMAL, offset = new Vector2$1(0.001, 0.0005) } = {}) {
 
 		super("ChromaticAberrationEffect", fragmentShader$f, {
 
@@ -4634,6 +5352,27 @@ class ChromaticAberrationEffect extends Effect {
 	set offset(value) {
 
 		this.uniforms.get("offset").value = value;
+
+	}
+
+	/**
+	 * Performs initialization tasks.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {Boolean} alpha - Whether the renderer uses the alpha channel or not.
+	 */
+
+	initialize(renderer, alpha) {
+
+		if(alpha) {
+
+			this.defines.set("ALPHA", "1");
+
+		} else {
+
+			this.defines.delete("ALPHA");
+
+		}
 
 	}
 
@@ -4722,7 +5461,7 @@ class DotScreenEffect extends Effect {
 			blendFunction,
 
 			uniforms: new Map([
-				["angle", new Uniform(new Vector2())],
+				["angle", new Uniform(new Vector2$1())],
 				["scale", new Uniform(scale)]
 			])
 
@@ -4778,7 +5517,7 @@ class GammaCorrectionEffect extends Effect {
 
 }
 
-var fragmentShader$j = "uniform sampler2D perturbationMap;uniform bool active;uniform float columns;uniform float random;uniform vec2 seed;uniform vec2 distortion;void mainUv(inout vec2 uv){if(active){vec4 normal=texture2D(perturbationMap,uv*random*random);if(uv.y<distortion.x+columns&&uv.y>distortion.x-columns*random){float sx=clamp(ceil(seed.x),0.0,1.0);uv.y=sx*(1.0-(uv.y+distortion.y))+(1.0-sx)*distortion.y;}if(uv.x<distortion.y+columns&&uv.x>distortion.y-columns*random){float sy=clamp(ceil(seed.y),0.0,1.0);uv.x=sy*distortion.x+(1.0-sy)*(1.0-(uv.x+distortion.x));}uv.x+=normal.x*seed.x*(random*0.2);uv.y+=normal.y*seed.y*(random*0.2);}}";
+var fragmentShader$j = "uniform sampler2D perturbationMap;uniform bool active;uniform float columns;uniform float random;uniform vec2 seed;uniform vec2 distortion;void mainUv(inout vec2 uv){if(active){if(uv.y<distortion.x+columns&&uv.y>distortion.x-columns*random){float sx=clamp(ceil(seed.x),0.0,1.0);uv.y=sx*(1.0-(uv.y+distortion.y))+(1.0-sx)*distortion.y;}if(uv.x<distortion.y+columns&&uv.x>distortion.y-columns*random){float sy=clamp(ceil(seed.y),0.0,1.0);uv.x=sy*distortion.x+(1.0-sy)*(1.0-(uv.x+distortion.x));}vec2 normal=texture2D(perturbationMap,uv*random*random).rg;uv+=normal*seed*(random*0.2);}}";
 
 /**
  * A label for generated data textures.
@@ -4787,7 +5526,7 @@ var fragmentShader$j = "uniform sampler2D perturbationMap;uniform bool active;un
  * @private
  */
 
-const generatedTexture = "Glitch.Generated";
+const tag = "Glitch.Generated";
 
 /**
  * Returns a random float in the specified range.
@@ -4834,9 +5573,9 @@ class GlitchEffect extends Effect {
 	constructor({
 		blendFunction = BlendFunction.NORMAL,
 		chromaticAberrationOffset = null,
-		delay = new Vector2(1.5, 3.5),
-		duration = new Vector2(0.6, 1.0),
-		strength = new Vector2(0.3, 1.0),
+		delay = new Vector2$1(1.5, 3.5),
+		duration = new Vector2$1(0.6, 1.0),
+		strength = new Vector2$1(0.3, 1.0),
 		columns = 0.05,
 		ratio = 0.85,
 		perturbationMap = null,
@@ -4852,8 +5591,8 @@ class GlitchEffect extends Effect {
 				["columns", new Uniform(columns)],
 				["active", new Uniform(false)],
 				["random", new Uniform(0.02)],
-				["seed", new Uniform(new Vector2())],
-				["distortion", new Uniform(new Vector2())]
+				["seed", new Uniform(new Vector2$1())],
+				["distortion", new Uniform(new Vector2$1())]
 			])
 
 		});
@@ -4896,7 +5635,7 @@ class GlitchEffect extends Effect {
 		 * @private
 		 */
 
-		this.breakPoint = new Vector2(
+		this.breakPoint = new Vector2$1(
 			randomFloat(this.delay.x, this.delay.y),
 			randomFloat(this.duration.x, this.duration.y)
 		);
@@ -4998,7 +5737,7 @@ class GlitchEffect extends Effect {
 
 	setPerturbationMap(perturbationMap) {
 
-		if(this.perturbationMap !== null && this.perturbationMap.name === generatedTexture) {
+		if(this.perturbationMap !== null && this.perturbationMap.name === tag) {
 
 			this.perturbationMap.dispose();
 
@@ -5022,22 +5761,22 @@ class GlitchEffect extends Effect {
 	generatePerturbationMap(size = 64) {
 
 		const pixels = size * size;
-		const data = new Float32Array(pixels * 3);
+		const data = new Uint8Array(pixels * 3);
 
-		let i, x;
+		let i, l, x;
 
-		for(i = 0; i < pixels; ++i) {
+		for(i = 0, l = data.length; i < l; i += 3) {
 
-			x = Math.random();
+			x = Math.random() * 255;
 
-			data[i * 3] = x;
-			data[i * 3 + 1] = x;
-			data[i * 3 + 2] = x;
+			data[i] = x;
+			data[i + 1] = x;
+			data[i + 2] = x;
 
 		}
 
-		const map = new DataTexture(data, size, size, RGBFormat, FloatType);
-		map.name = generatedTexture;
+		const map = new DataTexture(data, size, size, RGBFormat);
+		map.name = tag;
 		map.needsUpdate = true;
 
 		return map;
@@ -5189,7 +5928,9 @@ class GodRaysEffect extends Effect {
 	 * @param {Number} [options.weight=0.4] - A light ray weight factor.
 	 * @param {Number} [options.exposure=0.6] - A constant attenuation coefficient.
 	 * @param {Number} [options.clampMax=1.0] - An upper bound for the saturation of the overall effect.
-	 * @param {Number} [options.resolutionScale=0.5] - The render texture resolution scale, relative to the screen render size.
+	 * @param {Number} [options.resolutionScale=0.5] - Deprecated. Use height or width instead.
+	 * @param {Number} [options.width=Resizer.AUTO_SIZE] - The render width.
+	 * @param {Number} [options.height=Resizer.AUTO_SIZE] - The render height.
 	 * @param {KernelSize} [options.kernelSize=KernelSize.SMALL] - The blur kernel size. Has no effect if blur is disabled.
 	 * @param {Number} [options.blur=true] - Whether the god rays should be blurred to reduce artifacts.
 	 */
@@ -5203,6 +5944,8 @@ class GodRaysEffect extends Effect {
 		exposure = 0.6,
 		clampMax = 1.0,
 		resolutionScale = 0.5,
+		width = Resizer.AUTO_SIZE,
+		height = Resizer.AUTO_SIZE,
 		kernelSize = KernelSize.SMALL,
 		blur = true
 	} = {}) {
@@ -5254,16 +5997,7 @@ class GodRaysEffect extends Effect {
 		 * @private
 		 */
 
-		this.screenPosition = new Vector2();
-
-		/**
-		 * The original resolution.
-		 *
-		 * @type {Vector2}
-		 * @private
-		 */
-
-		this.resolution = new Vector2();
+		this.screenPosition = new Vector2$1();
 
 		/**
 		 * A render target.
@@ -5272,14 +6006,14 @@ class GodRaysEffect extends Effect {
 		 * @private
 		 */
 
-		this.renderTargetX = new WebGLRenderTarget(1, 1, {
+		this.renderTargetA = new WebGLRenderTarget(1, 1, {
 			minFilter: LinearFilter,
 			magFilter: LinearFilter,
 			stencilBuffer: false,
 			depthBuffer: false
 		});
 
-		this.renderTargetX.texture.name = "GodRays.TargetX";
+		this.renderTargetA.texture.name = "GodRays.TargetX";
 
 		/**
 		 * A render target.
@@ -5288,9 +6022,9 @@ class GodRaysEffect extends Effect {
 		 * @private
 		 */
 
-		this.renderTargetY = this.renderTargetX.clone();
-		this.renderTargetY.texture.name = "GodRays.TargetY";
-		this.uniforms.get("texture").value = this.renderTargetY.texture;
+		this.renderTargetB = this.renderTargetA.clone();
+		this.renderTargetB.texture.name = "GodRays.TargetY";
+		this.uniforms.get("texture").value = this.renderTargetB.texture;
 
 		/**
 		 * A render target for the light scene.
@@ -5299,7 +6033,7 @@ class GodRaysEffect extends Effect {
 		 * @private
 		 */
 
-		this.renderTargetLight = this.renderTargetX.clone();
+		this.renderTargetLight = this.renderTargetA.clone();
 		this.renderTargetLight.texture.name = "GodRays.Light";
 		this.renderTargetLight.depthBuffer = true;
 		this.renderTargetLight.depthTexture = new DepthTexture();
@@ -5324,13 +6058,15 @@ class GodRaysEffect extends Effect {
 		this.clearPass = new ClearPass(true, false, false);
 
 		/**
-		 * A blur pass.
+		 * A blur pass that reduces aliasing artifacts and makes the light softer.
+		 *
+		 * Disable this pass to improve performance.
 		 *
 		 * @type {BlurPass}
-		 * @private
 		 */
 
-		this.blurPass = new BlurPass({ resolutionScale, kernelSize });
+		this.blurPass = new BlurPass({ resolutionScale, width, height, kernelSize });
+		this.blurPass.resolution.resizable = this;
 
 		/**
 		 * A depth mask pass.
@@ -5339,7 +6075,14 @@ class GodRaysEffect extends Effect {
 		 * @private
 		 */
 
-		this.depthMaskPass = new ShaderPass(new DepthMaskMaterial());
+		this.depthMaskPass = new ShaderPass(((depthTexture) => {
+
+			const material = new DepthMaskMaterial();
+			material.uniforms.depthBuffer1.value = depthTexture;
+
+			return material;
+
+		})(this.renderTargetLight.depthTexture));
 
 		/**
 		 * A god rays blur pass.
@@ -5377,7 +6120,7 @@ class GodRaysEffect extends Effect {
 
 	get texture() {
 
-		return this.renderTargetY.texture;
+		return this.renderTargetB.texture;
 
 	}
 
@@ -5390,6 +6133,70 @@ class GodRaysEffect extends Effect {
 	get godRaysMaterial() {
 
 		return this.godRaysPass.getFullscreenMaterial();
+
+	}
+
+	/**
+	 * The resolution of this effect.
+	 *
+	 * @type {Resizer}
+	 */
+
+	get resolution() {
+
+		return this.blurPass.resolution;
+
+	}
+
+	/**
+	 * The current width of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	get width() {
+
+		return this.resolution.width;
+
+	}
+
+	/**
+	 * Sets the render width.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	set width(value) {
+
+		this.resolution.width = value;
+
+	}
+
+	/**
+	 * The current height of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	get height() {
+
+		return this.resolution.height;
+
+	}
+
+	/**
+	 * Sets the render height.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	set height(value) {
+
+		this.resolution.height = value;
 
 	}
 
@@ -5446,6 +6253,7 @@ class GodRaysEffect extends Effect {
 	 * The blur kernel size.
 	 *
 	 * @type {KernelSize}
+	 * @deprecated Use blurPass.kernelSize instead.
 	 */
 
 	get kernelSize() {
@@ -5458,6 +6266,7 @@ class GodRaysEffect extends Effect {
 	 * Sets the blur kernel size.
 	 *
 	 * @type {KernelSize}
+	 * @deprecated Use blurPass.kernelSize instead.
 	 */
 
 	set kernelSize(value) {
@@ -5470,11 +6279,12 @@ class GodRaysEffect extends Effect {
 	 * Returns the current resolution scale.
 	 *
 	 * @return {Number} The resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	getResolutionScale() {
 
-		return this.blurPass.getResolutionScale();
+		return this.resolution.scale;
 
 	}
 
@@ -5482,12 +6292,13 @@ class GodRaysEffect extends Effect {
 	 * Sets the resolution scale.
 	 *
 	 * @param {Number} scale - The new resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	setResolutionScale(scale) {
 
-		this.blurPass.setResolutionScale(scale);
-		this.setSize(this.resolution.x, this.resolution.y);
+		this.resolution.scale = scale;
+		this.setSize(this.resolution.base.x, this.resolution.base.y);
 
 	}
 
@@ -5527,7 +6338,7 @@ class GodRaysEffect extends Effect {
 		const material = this.depthMaskPass.getFullscreenMaterial();
 
 		material.uniforms.depthBuffer0.value = depthTexture;
-		material.uniforms.depthBuffer1.value = this.renderTargetLight.depthTexture;
+		material.defines.DEPTH_PACKING_0 = depthPacking.toFixed(0);
 
 	}
 
@@ -5545,7 +6356,7 @@ class GodRaysEffect extends Effect {
 		const parent = lightSource.parent;
 		const matrixAutoUpdate = lightSource.matrixAutoUpdate;
 
-		const renderTargetX = this.renderTargetX;
+		const renderTargetA = this.renderTargetA;
 		const renderTargetLight = this.renderTargetLight;
 
 		if(!matrixAutoUpdate) {
@@ -5566,8 +6377,8 @@ class GodRaysEffect extends Effect {
 		// Render the light source and mask it based on depth.
 		this.lightScene.add(lightSource);
 		this.renderPassLight.render(renderer, renderTargetLight);
-		this.clearPass.render(renderer, renderTargetX);
-		this.depthMaskPass.render(renderer, renderTargetLight, renderTargetX);
+		this.clearPass.render(renderer, renderTargetA);
+		this.depthMaskPass.render(renderer, renderTargetLight, renderTargetA);
 
 		// Restore the original values.
 		lightSource.material.depthWrite = false;
@@ -5589,18 +6400,18 @@ class GodRaysEffect extends Effect {
 		v.setFromMatrixPosition(lightSource.matrixWorld).project(this.camera);
 		this.screenPosition.set(
 			Math.max(0.0, Math.min(1.0, (v.x + 1.0) * 0.5)),
-			Math.max(0.0, Math.min(1.0, (v.y + 1.0) * 0.5)),
+			Math.max(0.0, Math.min(1.0, (v.y + 1.0) * 0.5))
 		);
 
 		if(this.blur) {
 
 			// Blur the masked scene to reduce artifacts.
-			this.blurPass.render(renderer, renderTargetX, renderTargetX);
+			this.blurPass.render(renderer, renderTargetA, renderTargetA);
 
 		}
 
 		// Blur the masked scene along radial lines towards the light source.
-		this.godRaysPass.render(renderer, renderTargetX, this.renderTargetY);
+		this.godRaysPass.render(renderer, renderTargetA, this.renderTargetB);
 
 	}
 
@@ -5613,18 +6424,16 @@ class GodRaysEffect extends Effect {
 
 	setSize(width, height) {
 
-		this.resolution.set(width, height);
-
-		this.renderPassLight.setSize(width, height);
 		this.blurPass.setSize(width, height);
+		this.renderPassLight.setSize(width, height);
 		this.depthMaskPass.setSize(width, height);
 		this.godRaysPass.setSize(width, height);
 
-		width = this.blurPass.width;
-		height = this.blurPass.height;
+		width = this.resolution.width;
+		height = this.resolution.height;
 
-		this.renderTargetX.setSize(width, height);
-		this.renderTargetY.setSize(width, height);
+		this.renderTargetA.setSize(width, height);
+		this.renderTargetB.setSize(width, height);
 		this.renderTargetLight.setSize(width, height);
 
 	}
@@ -5638,15 +6447,15 @@ class GodRaysEffect extends Effect {
 
 	initialize(renderer, alpha) {
 
-		this.renderPassLight.initialize(renderer, alpha);
 		this.blurPass.initialize(renderer, alpha);
+		this.renderPassLight.initialize(renderer, alpha);
 		this.depthMaskPass.initialize(renderer, alpha);
 		this.godRaysPass.initialize(renderer, alpha);
 
 		if(!alpha) {
 
-			this.renderTargetX.texture.format = RGBFormat;
-			this.renderTargetY.texture.format = RGBFormat;
+			this.renderTargetA.texture.format = RGBFormat;
+			this.renderTargetB.texture.format = RGBFormat;
 			this.renderTargetLight.texture.format = RGBFormat;
 
 		}
@@ -5679,7 +6488,7 @@ class GridEffect extends Effect {
 			blendFunction,
 
 			uniforms: new Map([
-				["scale", new Uniform(new Vector2())],
+				["scale", new Uniform(new Vector2$1())],
 				["lineWidth", new Uniform(lineWidth)]
 			])
 
@@ -5692,7 +6501,7 @@ class GridEffect extends Effect {
 		 * @private
 		 */
 
-		this.resolution = new Vector2();
+		this.resolution = new Vector2$1();
 
 		/**
 		 * The grid scale, relative to the screen height.
@@ -5915,7 +6724,9 @@ class OutlineEffect extends Effect {
 	 * @param {Number} [options.pulseSpeed=0.0] - The pulse speed. A value of zero disables the pulse effect.
 	 * @param {Number} [options.visibleEdgeColor=0xffffff] - The color of visible edges.
 	 * @param {Number} [options.hiddenEdgeColor=0x22090a] - The color of hidden edges.
-	 * @param {Number} [options.resolutionScale=0.5] - The render texture resolution scale, relative to the main frame buffer size.
+	 * @param {Number} [options.resolutionScale=0.5] - Deprecated. Use height or width instead.
+	 * @param {Number} [options.width=Resizer.AUTO_SIZE] - The render width.
+	 * @param {Number} [options.height=Resizer.AUTO_SIZE] - The render height.
 	 * @param {KernelSize} [options.kernelSize=KernelSize.VERY_SMALL] - The blur kernel size.
 	 * @param {Boolean} [options.blur=false] - Whether the outline should be blurred.
 	 * @param {Boolean} [options.xRay=true] - Whether occluded parts of selected objects should be visible.
@@ -5929,6 +6740,8 @@ class OutlineEffect extends Effect {
 		visibleEdgeColor = 0xffffff,
 		hiddenEdgeColor = 0x22090a,
 		resolutionScale = 0.5,
+		width = Resizer.AUTO_SIZE,
+		height = Resizer.AUTO_SIZE,
 		kernelSize = KernelSize.VERY_SMALL,
 		blur = false,
 		xRay = true
@@ -6049,7 +6862,7 @@ class OutlineEffect extends Effect {
 		 * @private
 		 */
 
-		this.depthPass = new DepthPass(scene, camera, { resolutionScale });
+		this.depthPass = new DepthPass(scene, camera);
 
 		/**
 		 * A depth comparison mask pass.
@@ -6068,20 +6881,11 @@ class OutlineEffect extends Effect {
 		 * A blur pass.
 		 *
 		 * @type {BlurPass}
-		 * @private
 		 */
 
-		this.blurPass = new BlurPass({ resolutionScale, kernelSize });
+		this.blurPass = new BlurPass({ resolutionScale, width, height, kernelSize });
+		this.blurPass.resolution.resizable = this;
 		this.blur = blur;
-
-		/**
-		 * The original resolution.
-		 *
-		 * @type {Vector2}
-		 * @private
-		 */
-
-		this.resolution = new Vector2();
 
 		/**
 		 * An outline edge detection pass.
@@ -6094,15 +6898,6 @@ class OutlineEffect extends Effect {
 		this.outlineEdgesPass.getFullscreenMaterial().uniforms.maskTexture.value = this.renderTargetMask.texture;
 
 		/**
-		 * A list of objects to outline.
-		 *
-		 * @type {Object3D[]}
-		 * @private
-		 */
-
-		this.selection = [];
-
-		/**
 		 * The current animation time.
 		 *
 		 * @type {Number}
@@ -6112,6 +6907,14 @@ class OutlineEffect extends Effect {
 		this.time = 0.0;
 
 		/**
+		 * A selection of objects that will be outlined.
+		 *
+		 * @type {Selection}
+		 */
+
+		this.selection = new Selection();
+
+		/**
 		 * The pulse speed. A value of zero disables the pulse effect.
 		 *
 		 * @type {Number}
@@ -6119,25 +6922,91 @@ class OutlineEffect extends Effect {
 
 		this.pulseSpeed = pulseSpeed;
 
-		/**
-		 * A dedicated render layer for selected objects.
-		 *
-		 * This layer is set to 10 by default. If this collides with your own custom
-		 * layers, please change it to a free layer before rendering!
-		 *
-		 * @type {Number}
-		 */
+	}
 
-		this.selectionLayer = 10;
+	/**
+	 * The resolution of this effect.
+	 *
+	 * @type {Resizer}
+	 */
 
-		/**
-		 * A clear flag.
-		 *
-		 * @type {Boolean}
-		 * @private
-		 */
+	get resolution() {
 
-		this.clear = false;
+		return this.blurPass.resolution;
+
+	}
+
+	/**
+	 * The current width of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	get width() {
+
+		return this.resolution.width;
+
+	}
+
+	/**
+	 * Sets the render width.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.width instead.
+	 */
+
+	set width(value) {
+
+		this.resolution.width = value;
+
+	}
+
+	/**
+	 * The current height of the internal render targets.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	get height() {
+
+		return this.resolution.height;
+
+	}
+
+	/**
+	 * Sets the render height.
+	 *
+	 * @type {Number}
+	 * @deprecated Use resolution.height instead.
+	 */
+
+	set height(value) {
+
+		this.resolution.height = value;
+
+	}
+
+	/**
+	 * @type {Number}
+	 * @deprecated Use selection.layer instead.
+	 */
+
+	get selectionLayer() {
+
+		return this.selection.layer;
+
+	}
+
+	/**
+	 * @type {Number}
+	 * @deprecated Use selection.layer instead.
+	 */
+
+	set selectionLayer(value) {
+
+		this.selection.layer = value;
 
 	}
 
@@ -6145,6 +7014,7 @@ class OutlineEffect extends Effect {
 	 * Indicates whether dithering is enabled.
 	 *
 	 * @type {Boolean}
+	 * @deprecated Use blurPass.dithering instead.
 	 */
 
 	get dithering() {
@@ -6157,6 +7027,7 @@ class OutlineEffect extends Effect {
 	 * Enables or disables dithering.
 	 *
 	 * @type {Boolean}
+	 * @deprecated Use blurPass.dithering instead.
 	 */
 
 	set dithering(value) {
@@ -6169,6 +7040,7 @@ class OutlineEffect extends Effect {
 	 * The blur kernel size.
 	 *
 	 * @type {KernelSize}
+	 * @deprecated Use blurPass.kernelSize instead.
 	 */
 
 	get kernelSize() {
@@ -6181,6 +7053,7 @@ class OutlineEffect extends Effect {
 	 * Sets the kernel size.
 	 *
 	 * @type {KernelSize}
+	 * @deprecated Use blurPass.kernelSize instead.
 	 */
 
 	set kernelSize(value) {
@@ -6276,11 +7149,12 @@ class OutlineEffect extends Effect {
 	 * Returns the current resolution scale.
 	 *
 	 * @return {Number} The resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	getResolutionScale() {
 
-		return this.blurPass.getResolutionScale();
+		return this.resolution.scale;
 
 	}
 
@@ -6288,13 +7162,13 @@ class OutlineEffect extends Effect {
 	 * Sets the resolution scale.
 	 *
 	 * @param {Number} scale - The new resolution scale.
+	 * @deprecated Adjust the fixed resolution width or height instead.
 	 */
 
 	setResolutionScale(scale) {
 
-		this.blurPass.setResolutionScale(scale);
-		this.depthPass.setResolutionScale(scale);
-		this.setSize(this.resolution.x, this.resolution.y);
+		this.resolution.scale = scale;
+		this.setSize(this.resolution.base.x, this.resolution.base.y);
 
 	}
 
@@ -6303,24 +7177,12 @@ class OutlineEffect extends Effect {
 	 *
 	 * @param {Object3D[]} objects - The objects that should be outlined. This array will be copied.
 	 * @return {OutlinePass} This pass.
+	 * @deprecated Use selection.set instead.
 	 */
 
 	setSelection(objects) {
 
-		const selection = objects.slice(0);
-		const selectionLayer = this.selectionLayer;
-
-		let i, l;
-
-		this.clearSelection();
-
-		for(i = 0, l = selection.length; i < l; ++i) {
-
-			selection[i].layers.enable(selectionLayer);
-
-		}
-
-		this.selection = selection;
+		this.selection.set(objects);
 
 		return this;
 
@@ -6330,24 +7192,12 @@ class OutlineEffect extends Effect {
 	 * Clears the list of selected objects.
 	 *
 	 * @return {OutlinePass} This pass.
+	 * @deprecated Use selection.clear instead.
 	 */
 
 	clearSelection() {
 
-		const selection = this.selection;
-		const selectionLayer = this.selectionLayer;
-
-		let i, l;
-
-		for(i = 0, l = selection.length; i < l; ++i) {
-
-			selection[i].layers.disable(selectionLayer);
-
-		}
-
-		this.selection = [];
-		this.time = 0.0;
-		this.clear = true;
+		this.selection.clear();
 
 		return this;
 
@@ -6358,12 +7208,12 @@ class OutlineEffect extends Effect {
 	 *
 	 * @param {Object3D} object - The object that should be outlined.
 	 * @return {OutlinePass} This pass.
+	 * @deprecated Use selection.add instead.
 	 */
 
 	selectObject(object) {
 
-		object.layers.enable(this.selectionLayer);
-		this.selection.push(object);
+		this.selection.add(object);
 
 		return this;
 
@@ -6374,57 +7224,14 @@ class OutlineEffect extends Effect {
 	 *
 	 * @param {Object3D} object - The object that should no longer be outlined.
 	 * @return {OutlinePass} This pass.
+	 * @deprecated Use selection.delete instead.
 	 */
 
 	deselectObject(object) {
 
-		const selection = this.selection;
-		const index = selection.indexOf(object);
-
-		if(index >= 0) {
-
-			selection[index].layers.disable(this.selectionLayer);
-			selection.splice(index, 1);
-
-			if(selection.length === 0) {
-
-				this.time = 0.0;
-				this.clear = true;
-
-			}
-
-		}
+		this.selection.delete(object);
 
 		return this;
-
-	}
-
-	/**
-	 * Sets the visibility of all selected objects.
-	 *
-	 * @private
-	 * @param {Boolean} visible - Whether the selected objects should be visible.
-	 */
-
-	setSelectionVisible(visible) {
-
-		const selection = this.selection;
-
-		let i, l;
-
-		for(i = 0, l = selection.length; i < l; ++i) {
-
-			if(visible) {
-
-				selection[i].layers.enable(0);
-
-			} else {
-
-				selection[i].layers.disable(0);
-
-			}
-
-		}
 
 	}
 
@@ -6440,12 +7247,13 @@ class OutlineEffect extends Effect {
 
 		const scene = this.scene;
 		const camera = this.camera;
+		const selection = this.selection;
 		const pulse = this.uniforms.get("pulse");
 
 		const background = scene.background;
 		const mask = camera.layers.mask;
 
-		if(this.selection.length > 0) {
+		if(selection.size > 0) {
 
 			scene.background = null;
 			pulse.value = 1.0;
@@ -6453,17 +7261,18 @@ class OutlineEffect extends Effect {
 			if(this.pulseSpeed > 0.0) {
 
 				pulse.value = 0.625 + Math.cos(this.time * this.pulseSpeed * 10.0) * 0.375;
-				this.time += deltaTime;
 
 			}
 
+			this.time += deltaTime;
+
 			// Render a custom depth texture and ignore selected objects.
-			this.setSelectionVisible(false);
+			selection.setVisible(false);
 			this.depthPass.render(renderer);
-			this.setSelectionVisible(true);
+			selection.setVisible(true);
 
 			// Compare the depth of the selected objects with the depth texture.
-			camera.layers.mask = 1 << this.selectionLayer;
+			camera.layers.set(selection.layer);
 			this.maskPass.render(renderer, this.renderTargetMask);
 
 			// Restore the camera layer mask and the scene background.
@@ -6479,10 +7288,10 @@ class OutlineEffect extends Effect {
 
 			}
 
-		} else if(this.clear) {
+		} else if(this.time > 0.0) {
 
 			this.clearPass.render(renderer, this.renderTargetMask);
-			this.clear = false;
+			this.time = 0.0;
 
 		}
 
@@ -6497,19 +7306,15 @@ class OutlineEffect extends Effect {
 
 	setSize(width, height) {
 
-		this.resolution.set(width, height);
+		this.blurPass.setSize(width, height);
 		this.renderTargetMask.setSize(width, height);
 
-		this.blurPass.setSize(width, height);
-		this.maskPass.setSize(width, height);
+		width = this.resolution.width;
+		height = this.resolution.height;
+
 		this.depthPass.setSize(width, height);
-
-		width = this.blurPass.width;
-		height = this.blurPass.height;
-
 		this.renderTargetEdges.setSize(width, height);
 		this.renderTargetBlurredEdges.setSize(width, height);
-
 		this.outlineEdgesPass.getFullscreenMaterial().setTexelSize(1.0 / width, 1.0 / height);
 
 	}
@@ -6523,9 +7328,9 @@ class OutlineEffect extends Effect {
 
 	initialize(renderer, alpha) {
 
+		this.blurPass.initialize(renderer, alpha);
 		this.depthPass.initialize(renderer, alpha);
 		this.maskPass.initialize(renderer, alpha);
-		this.blurPass.initialize(renderer, alpha);
 
 	}
 
@@ -6553,7 +7358,7 @@ class PixelationEffect extends Effect {
 
 			uniforms: new Map([
 				["active", new Uniform(false)],
-				["d", new Uniform(new Vector2())]
+				["d", new Uniform(new Vector2$1())]
 			])
 
 		});
@@ -6565,7 +7370,7 @@ class PixelationEffect extends Effect {
 		 * @private
 		 */
 
-		this.resolution = new Vector2();
+		this.resolution = new Vector2$1();
 
 		/**
 		 * The pixel granularity.
@@ -6633,7 +7438,7 @@ class PixelationEffect extends Effect {
 
 }
 
-var fragmentShader$p = "uniform float focus;uniform float focalLength;uniform float maxBlur;uniform float luminanceThreshold;uniform float luminanceGain;uniform float bias;uniform float fringe;\n#ifdef MANUAL_DOF\nuniform vec4 dof;\n#endif\n#ifdef PENTAGON\nfloat pentagon(const in vec2 coords){const vec4 HS0=vec4(1.0,0.0,0.0,1.0);const vec4 HS1=vec4(0.309016994,0.951056516,0.0,1.0);const vec4 HS2=vec4(-0.809016994,0.587785252,0.0,1.0);const vec4 HS3=vec4(-0.809016994,-0.587785252,0.0,1.0);const vec4 HS4=vec4(0.309016994,-0.951056516,0.0,1.0);const vec4 HS5=vec4(0.0,0.0,1.0,1.0);const vec4 ONE=vec4(1.0);const float P_FEATHER=0.4;const float N_FEATHER=-P_FEATHER;float inOrOut=-4.0;vec4 P=vec4(coords,vec2(RINGS_FLOAT-1.3));vec4 dist=vec4(dot(P,HS0),dot(P,HS1),dot(P,HS2),dot(P,HS3));dist=smoothstep(N_FEATHER,P_FEATHER,dist);inOrOut+=dot(dist,ONE);dist.x=dot(P,HS4);dist.y=HS5.w-abs(P.z);dist=smoothstep(N_FEATHER,P_FEATHER,dist);inOrOut+=dist.x;return clamp(inOrOut,0.0,1.0);}\n#endif\nvec3 processTexel(const in vec2 coords,const in float blur){vec2 scale=texelSize*fringe*blur;vec3 c=vec3(texture2D(inputBuffer,coords+vec2(0.0,1.0)*scale).r,texture2D(inputBuffer,coords+vec2(-0.866,-0.5)*scale).g,texture2D(inputBuffer,coords+vec2(0.866,-0.5)*scale).b);float luminance=linearToRelativeLuminance(c);float threshold=max((luminance-luminanceThreshold)*luminanceGain,0.0);return c+mix(vec3(0.0),c,threshold*blur);}float gather(const in float i,const in float j,const in float ringSamples,const in vec2 uv,const in vec2 blurFactor,const in float blur,inout vec3 color){float step=PI2/ringSamples;vec2 wh=vec2(cos(j*step)*i,sin(j*step)*i);\n#ifdef PENTAGON\nfloat p=pentagon(wh);\n#else\nfloat p=1.0;\n#endif\ncolor+=processTexel(wh*blurFactor+uv,blur)*mix(1.0,i/RINGS_FLOAT,bias)*p;return mix(1.0,i/RINGS_FLOAT,bias)*p;}void mainImage(const in vec4 inputColor,const in vec2 uv,const in float depth,out vec4 outputColor){float linearDepth=(-cameraFar*cameraNear/(depth*(cameraFar-cameraNear)-cameraFar));\n#ifdef MANUAL_DOF\nfloat focalPlane=linearDepth-focus;float farDoF=(focalPlane-dof.z)/dof.w;float nearDoF=(-focalPlane-dof.x)/dof.y;float blur=(focalPlane>0.0)? farDoF : nearDoF;\n#else\nconst float CIRCLE_OF_CONFUSION=0.03;float focalPlaneMM=focus*1000.0;float depthMM=linearDepth*1000.0;float focalPlane=(depthMM*focalLength)/(depthMM-focalLength);float farDoF=(focalPlaneMM*focalLength)/(focalPlaneMM-focalLength);float nearDoF=(focalPlaneMM-focalLength)/(focalPlaneMM*focus*CIRCLE_OF_CONFUSION);float blur=abs(focalPlane-farDoF)*nearDoF;\n#endif\nconst int MAX_RING_SAMPLES=RINGS_INT*SAMPLES_INT;blur=clamp(blur,0.0,1.0);vec3 color=inputColor.rgb;if(blur>=0.05){vec2 blurFactor=blur*maxBlur*texelSize;float s=1.0;int ringSamples;for(int i=1;i<=RINGS_INT;i++){ringSamples=i*SAMPLES_INT;for(int j=0;j<MAX_RING_SAMPLES;j++){if(j>=ringSamples){break;}s+=gather(float(i),float(j),float(ringSamples),uv,blurFactor,blur,color);}}color/=s;}\n#ifdef SHOW_FOCUS\nfloat edge=0.002*linearDepth;float m=clamp(smoothstep(0.0,edge,blur),0.0,1.0);float e=clamp(smoothstep(1.0-edge,1.0,blur),0.0,1.0);color=mix(color,vec3(1.0,0.5,0.0),(1.0-m)*0.6);color=mix(color,vec3(0.0,0.5,1.0),((1.0-e)-(1.0-m))*0.2);\n#endif\noutputColor=vec4(color,inputColor.a);}";
+var fragmentShader$p = "uniform float focus;uniform float focalLength;uniform float fStop;uniform float maxBlur;uniform float luminanceThreshold;uniform float luminanceGain;uniform float bias;uniform float fringe;\n#ifdef MANUAL_DOF\nuniform vec4 dof;\n#endif\n#ifdef PENTAGON\nfloat pentagon(const in vec2 coords){const vec4 HS0=vec4(1.0,0.0,0.0,1.0);const vec4 HS1=vec4(0.309016994,0.951056516,0.0,1.0);const vec4 HS2=vec4(-0.809016994,0.587785252,0.0,1.0);const vec4 HS3=vec4(-0.809016994,-0.587785252,0.0,1.0);const vec4 HS4=vec4(0.309016994,-0.951056516,0.0,1.0);const vec4 HS5=vec4(0.0,0.0,1.0,1.0);const vec4 ONE=vec4(1.0);const float P_FEATHER=0.4;const float N_FEATHER=-P_FEATHER;float inOrOut=-4.0;vec4 P=vec4(coords,vec2(RINGS_FLOAT-1.3));vec4 dist=vec4(dot(P,HS0),dot(P,HS1),dot(P,HS2),dot(P,HS3));dist=smoothstep(N_FEATHER,P_FEATHER,dist);inOrOut+=dot(dist,ONE);dist.x=dot(P,HS4);dist.y=HS5.w-abs(P.z);dist=smoothstep(N_FEATHER,P_FEATHER,dist);inOrOut+=dist.x;return clamp(inOrOut,0.0,1.0);}\n#endif\nvec3 processTexel(const in vec2 coords,const in float blur){vec2 scale=texelSize*fringe*blur;vec3 c=vec3(texture2D(inputBuffer,coords+vec2(0.0,1.0)*scale).r,texture2D(inputBuffer,coords+vec2(-0.866,-0.5)*scale).g,texture2D(inputBuffer,coords+vec2(0.866,-0.5)*scale).b);float luminance=linearToRelativeLuminance(c);float threshold=max((luminance-luminanceThreshold)*luminanceGain,0.0);return c+mix(vec3(0.0),c,threshold*blur);}float gather(const in float i,const in float j,const in float ringSamples,const in vec2 uv,const in vec2 blurFactor,const in float blur,inout vec3 color){float step=PI2/ringSamples;vec2 wh=vec2(cos(j*step)*i,sin(j*step)*i);\n#ifdef PENTAGON\nfloat p=pentagon(wh);\n#else\nfloat p=1.0;\n#endif\ncolor+=processTexel(wh*blurFactor+uv,blur)*mix(1.0,i/RINGS_FLOAT,bias)*p;return mix(1.0,i/RINGS_FLOAT,bias)*p;}void mainImage(const in vec4 inputColor,const in vec2 uv,const in float depth,out vec4 outputColor){float linearDepth=(-cameraFar*cameraNear/(depth*(cameraFar-cameraNear)-cameraFar));\n#ifdef MANUAL_DOF\nfloat focalPlane=linearDepth-focus;float farDoF=(focalPlane-dof.z)/dof.w;float nearDoF=(-focalPlane-dof.x)/dof.y;float blur=(focalPlane>0.0)? farDoF : nearDoF;\n#else\nconst float CIRCLE_OF_CONFUSION=0.03;float focalPlaneMM=focus*1000.0;float depthMM=linearDepth*1000.0;float focalPlane=(depthMM*focalLength)/(depthMM-focalLength);float farDoF=(focalPlaneMM*focalLength)/(focalPlaneMM-focalLength);float nearDoF=(focalPlaneMM-focalLength)/(focalPlaneMM*fStop*CIRCLE_OF_CONFUSION);float blur=abs(focalPlane-farDoF)*nearDoF;\n#endif\nconst int MAX_RING_SAMPLES=RINGS_INT*SAMPLES_INT;blur=clamp(blur,0.0,1.0);vec3 color=inputColor.rgb;if(blur>=0.05){vec2 blurFactor=blur*maxBlur*texelSize;float s=1.0;int ringSamples;for(int i=1;i<=RINGS_INT;i++){ringSamples=i*SAMPLES_INT;for(int j=0;j<MAX_RING_SAMPLES;j++){if(j>=ringSamples){break;}s+=gather(float(i),float(j),float(ringSamples),uv,blurFactor,blur,color);}}color/=s;}\n#ifdef SHOW_FOCUS\nfloat edge=0.002*linearDepth;float m=clamp(smoothstep(0.0,edge,blur),0.0,1.0);float e=clamp(smoothstep(1.0-edge,1.0,blur),0.0,1.0);color=mix(color,vec3(1.0,0.5,0.0),(1.0-m)*0.6);color=mix(color,vec3(0.0,0.5,1.0),((1.0-e)-(1.0-m))*0.2);\n#endif\noutputColor=vec4(color,inputColor.a);}";
 
 /**
  * Depth of Field shader v2.4.
@@ -6653,6 +7458,7 @@ class RealisticBokehEffect extends Effect {
 	 * @param {BlendFunction} [options.blendFunction=BlendFunction.NORMAL] - The blend function of this effect.
 	 * @param {Number} [options.focus=1.0] - The focus distance in world units.
 	 * @param {Number} [options.focalLength=24.0] - The focal length of the main camera.
+	 * @param {Number} [options.fStop=0.9] - The ratio of the lens focal length to the diameter of the entrance pupil (aperture).
 	 * @param {Number} [options.luminanceThreshold=0.5] - A luminance threshold.
 	 * @param {Number} [options.luminanceGain=2.0] - A luminance gain factor.
 	 * @param {Number} [options.bias=0.5] - A blur bias.
@@ -6669,6 +7475,7 @@ class RealisticBokehEffect extends Effect {
 		blendFunction = BlendFunction.NORMAL,
 		focus = 1.0,
 		focalLength = 24.0,
+		fStop = 0.9,
 		luminanceThreshold = 0.5,
 		luminanceGain = 2.0,
 		bias = 0.5,
@@ -6689,6 +7496,7 @@ class RealisticBokehEffect extends Effect {
 			uniforms: new Map([
 				["focus", new Uniform(focus)],
 				["focalLength", new Uniform(focalLength)],
+				["fStop", new Uniform(fStop)],
 				["luminanceThreshold", new Uniform(luminanceThreshold)],
 				["luminanceGain", new Uniform(luminanceGain)],
 				["bias", new Uniform(bias)],
@@ -6891,7 +7699,7 @@ class ScanlineEffect extends Effect {
 		 * @private
 		 */
 
-		this.resolution = new Vector2();
+		this.resolution = new Vector2$1();
 
 		/**
 		 * The amount of scanlines, relative to the screen height.
@@ -7012,7 +7820,7 @@ class ShockWaveEffect extends Effect {
 
 			uniforms: new Map([
 				["active", new Uniform(false)],
-				["center", new Uniform(new Vector2(0.5, 0.5))],
+				["center", new Uniform(new Vector2$1(0.5, 0.5))],
 				["cameraDistance", new Uniform(1.0)],
 				["size", new Uniform(1.0)],
 				["radius", new Uniform(-waveSize)],
@@ -7144,6 +7952,259 @@ class ShockWaveEffect extends Effect {
 
 }
 
+/**
+ * A selective bloom effect.
+ *
+ * This effect applies bloom only to selected objects. For this, all objects in
+ * the scene need to be rendered again: non-selected objects are rendered solid
+ * black to properly occlude selected objects and the scene background.
+ *
+ * Attention: If you don't need to limit bloom to a subset of objects, consider
+ * using the {@link BloomEffect} instead for better performance.
+ */
+
+class SelectiveBloomEffect extends BloomEffect {
+
+	/**
+	 * Constructs a new selective bloom effect.
+	 *
+	 * @param {Scene} scene - The main scene.
+	 * @param {Camera} camera - The main camera.
+	 * @param {Object} [options] - The options. See {@link BloomEffect} for details.
+	 */
+
+	constructor(scene, camera, options) {
+
+		super(options);
+
+		/**
+		 * The main scene.
+		 *
+		 * @type {Scene}
+		 * @private
+		 */
+
+		this.scene = scene;
+
+		/**
+		 * The main camera.
+		 *
+		 * @type {Camera}
+		 * @private
+		 */
+
+		this.camera = camera;
+
+		/**
+		 * A clear pass.
+		 *
+		 * @type {ClearPass}
+		 * @private
+		 */
+
+		this.clearPass = new ClearPass(true, true, false);
+		this.clearPass.overrideClearColor = new Color(0x000000);
+
+		/**
+		 * A render pass.
+		 *
+		 * @type {RenderPass}
+		 * @private
+		 */
+
+		this.renderPass = new RenderPass(scene, camera);
+		this.renderPass.clear = false;
+
+		/**
+		 * A render pass that renders all objects solid black.
+		 *
+		 * @type {RenderPass}
+		 * @private
+		 */
+
+		this.blackoutPass = new RenderPass(scene, camera, new MeshBasicMaterial({ color: 0x000000 }));
+		this.blackoutPass.clear = false;
+
+		/**
+		 * A render pass that only renders the background of the main scene.
+		 *
+		 * @type {RenderPass}
+		 * @private
+		 */
+
+		this.backgroundPass = (() => {
+
+			const backgroundScene = new Scene();
+			const pass = new RenderPass(backgroundScene, camera);
+
+			backgroundScene.background = scene.background;
+			pass.clear = false;
+
+			return pass;
+
+		})();
+
+		/**
+		 * A render target.
+		 *
+		 * @type {WebGLRenderTarget}
+		 * @private
+		 */
+
+		this.renderTargetSelection = new WebGLRenderTarget(1, 1, {
+			minFilter: LinearFilter,
+			magFilter: LinearFilter,
+			stencilBuffer: false,
+			depthBuffer: true
+		});
+
+		this.renderTargetSelection.texture.name = "Bloom.Selection";
+		this.renderTargetSelection.texture.generateMipmaps = false;
+
+		/**
+		 * A selection of objects.
+		 *
+		 * @type {Selection}
+		 */
+
+		this.selection = new Selection();
+
+		/**
+		 * Indicates whether the selection should be considered inverted.
+		 *
+		 * @type {Boolean}
+		 */
+
+		this.inverted = false;
+
+	}
+
+	/**
+	 * Indicates whether the scene background should be ignored.
+	 *
+	 * @type {Boolean}
+	 */
+
+	get ignoreBackground() {
+
+		return !this.backgroundPass.enabled;
+
+	}
+
+	/**
+	 * Enables or disables background rendering.
+	 *
+	 * @type {Boolean}
+	 */
+
+	set ignoreBackground(value) {
+
+		this.backgroundPass.enabled = !value;
+
+	}
+
+	/**
+	 * Updates this effect.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {WebGLRenderTarget} inputBuffer - A frame buffer that contains the result of the previous pass.
+	 * @param {Number} [deltaTime] - The time between the last frame and the current one in seconds.
+	 */
+
+	update(renderer, inputBuffer, deltaTime) {
+
+		const scene = this.scene;
+		const camera = this.camera;
+		const selection = this.selection;
+		const renderTarget = this.renderTargetSelection;
+
+		const background = scene.background;
+		const mask = camera.layers.mask;
+
+		this.clearPass.render(renderer, renderTarget);
+
+		if(!this.ignoreBackground) {
+
+			this.backgroundPass.render(renderer, renderTarget);
+
+		}
+
+		scene.background = null;
+
+		if(this.inverted) {
+
+			camera.layers.set(selection.layer);
+			this.blackoutPass.render(renderer, renderTarget);
+			camera.layers.mask = mask;
+
+			selection.setVisible(false);
+			this.renderPass.render(renderer, renderTarget);
+			selection.setVisible(true);
+
+		} else {
+
+			selection.setVisible(false);
+			this.blackoutPass.render(renderer, renderTarget);
+			selection.setVisible(true);
+
+			camera.layers.set(selection.layer);
+			this.renderPass.render(renderer, renderTarget);
+			camera.layers.mask = mask;
+
+		}
+
+		scene.background = background;
+		super.update(renderer, renderTarget, deltaTime);
+
+	}
+
+	/**
+	 * Updates the size of internal render targets.
+	 *
+	 * @param {Number} width - The width.
+	 * @param {Number} height - The height.
+	 */
+
+	setSize(width, height) {
+
+		super.setSize(width, height);
+
+		this.backgroundPass.setSize(width, height);
+		this.blackoutPass.setSize(width, height);
+		this.renderPass.setSize(width, height);
+
+		this.renderTargetSelection.setSize(
+			this.resolution.width,
+			this.resolution.height
+		);
+
+	}
+
+	/**
+	 * Performs initialization tasks.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {Boolean} alpha - Whether the renderer uses the alpha channel or not.
+	 */
+
+	initialize(renderer, alpha) {
+
+		super.initialize(renderer, alpha);
+
+		this.backgroundPass.initialize(renderer, alpha);
+		this.blackoutPass.initialize(renderer, alpha);
+		this.renderPass.initialize(renderer, alpha);
+
+		if(!alpha) {
+
+			this.renderTargetSelection.texture.format = RGBFormat;
+
+		}
+
+	}
+
+}
+
 var fragmentShader$s = "uniform float intensity;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){vec3 color=vec3(dot(inputColor.rgb,vec3(1.0-0.607*intensity,0.769*intensity,0.189*intensity)),dot(inputColor.rgb,vec3(0.349*intensity,1.0-0.314*intensity,0.168*intensity)),dot(inputColor.rgb,vec3(0.272*intensity,0.534*intensity,1.0-0.869*intensity)));outputColor=vec4(color,inputColor.a);}";
 
 /**
@@ -7197,8 +8258,8 @@ class SMAAEffect extends Effect {
 	/**
 	 * Constructs a new SMAA effect.
 	 *
-	 * @param {Image} searchImage - The SMAA search image. Preload this image using the {@link searchImageDataURL}.
-	 * @param {Image} areaImage - The SMAA area image. Preload this image using the {@link areaImageDataURL}.
+	 * @param {Image} searchImage - The SMAA search image. Preload this image using the {@link SMAAImageLoader}.
+	 * @param {Image} areaImage - The SMAA area image. Preload this image using the {@link SMAAImageLoader}.
 	 * @param {SMAAPreset} [preset=SMAAPreset.HIGH] - An SMAA quality preset.
 	 */
 
@@ -7455,6 +8516,7 @@ class SMAAEffect extends Effect {
 	 * the area image to create an {@link SMAAEffect}.
 	 *
 	 * @type {String}
+	 * @deprecated Use SMAAImageLoader instead.
 	 * @example
 	 * const searchImage = new Image();
 	 * searchImage.addEventListener("load", progress);
@@ -7474,6 +8536,7 @@ class SMAAEffect extends Effect {
 	 * the search image to create an {@link SMAAEffect}.
 	 *
 	 * @type {String}
+	 * @deprecated Use SMAAImageLoader instead.
 	 * @example
 	 * const areaImage = new Image();
 	 * areaImage.addEventListener("load", progress);
@@ -7507,7 +8570,7 @@ const SMAAPreset = {
 
 };
 
-var fragmentShader$u = "uniform sampler2D normalBuffer;uniform mat4 cameraProjectionMatrix;uniform mat4 cameraInverseProjectionMatrix;uniform vec2 radiusStep;uniform vec2 distanceCutoff;uniform vec2 proximityCutoff;uniform float seed;uniform float luminanceInfluence;uniform float scale;uniform float bias;float getViewZ(const in float depth){\n#ifdef PERSPECTIVE_CAMERA\nreturn perspectiveDepthToViewZ(depth,cameraNear,cameraFar);\n#else\nreturn orthographicDepthToViewZ(depth,cameraNear,cameraFar);\n#endif\n}vec3 getViewPosition(const in vec2 screenPosition,const in float depth,const in float viewZ){float clipW=cameraProjectionMatrix[2][3]*viewZ+cameraProjectionMatrix[3][3];vec4 clipPosition=vec4((vec3(screenPosition,depth)-0.5)*2.0,1.0);clipPosition*=clipW;return(cameraInverseProjectionMatrix*clipPosition).xyz;}float getOcclusion(const in vec3 p,const in vec3 n,const in vec3 sampleViewPosition){vec3 viewDelta=sampleViewPosition-p;float d=length(viewDelta)*scale;return max(0.0,dot(n,viewDelta)/d-bias)/(1.0+pow2(d));}float getAmbientOcclusion(const in vec3 p,const in vec3 n,const in float depth,const in vec2 uv){vec2 radius=radiusStep;float angle=rand(uv+seed)*PI2;float occlusionSum=0.0;for(int i=0;i<SAMPLES_INT;++i){vec2 coord=uv+vec2(cos(angle),sin(angle))*radius;radius+=radiusStep;angle+=ANGLE_STEP;float sampleDepth=readDepth(coord);float proximity=abs(depth-sampleDepth);if(sampleDepth<distanceCutoff.y&&proximity<proximityCutoff.y){float falloff=1.0-smoothstep(proximityCutoff.x,proximityCutoff.y,proximity);vec3 sampleViewPosition=getViewPosition(coord,sampleDepth,getViewZ(sampleDepth));occlusionSum+=getOcclusion(p,n,sampleViewPosition)*falloff;}}return occlusionSum/SAMPLES_FLOAT;}void mainImage(const in vec4 inputColor,const in vec2 uv,const in float depth,out vec4 outputColor){float ao=1.0;if(depth<distanceCutoff.y){vec3 viewPosition=getViewPosition(uv,depth,getViewZ(depth));vec3 viewNormal=unpackRGBToNormal(texture2D(normalBuffer,uv).xyz);ao-=getAmbientOcclusion(viewPosition,viewNormal,depth,uv);float l=linearToRelativeLuminance(inputColor.rgb);ao=mix(ao,1.0,max(l*luminanceInfluence,smoothstep(distanceCutoff.x,distanceCutoff.y,depth)));}outputColor=vec4(vec3(ao),inputColor.a);}";
+var fragmentShader$u = "uniform sampler2D normalBuffer;uniform mat4 cameraProjectionMatrix;uniform mat4 cameraInverseProjectionMatrix;uniform vec2 radiusStep;uniform vec2 distanceCutoff;uniform vec2 proximityCutoff;uniform float seed;uniform float luminanceInfluence;uniform float scale;uniform float bias;vec3 getViewPosition(const in vec2 screenPosition,const in float depth,const in float viewZ){float clipW=cameraProjectionMatrix[2][3]*viewZ+cameraProjectionMatrix[3][3];vec4 clipPosition=vec4((vec3(screenPosition,depth)-0.5)*2.0,1.0);clipPosition*=clipW;return(cameraInverseProjectionMatrix*clipPosition).xyz;}float getOcclusion(const in vec3 p,const in vec3 n,const in vec3 sampleViewPosition){vec3 viewDelta=sampleViewPosition-p;float d=length(viewDelta)*scale;return max(0.0,dot(n,viewDelta)/d-bias)/(1.0+pow2(d));}float getAmbientOcclusion(const in vec3 p,const in vec3 n,const in float depth,const in vec2 uv){vec2 radius=radiusStep;float angle=rand(uv+seed)*PI2;float occlusionSum=0.0;for(int i=0;i<SAMPLES_INT;++i){vec2 coord=uv+vec2(cos(angle),sin(angle))*radius;radius+=radiusStep;angle+=ANGLE_STEP;float sampleDepth=readDepth(coord);float viewZ=getViewZ(sampleDepth);\n#ifdef PERSPECTIVE_CAMERA\nfloat linearSampleDepth=viewZToOrthographicDepth(viewZ,cameraNear,cameraFar);\n#else\nfloat linearSampleDepth=sampleDepth;\n#endif\nfloat proximity=abs(depth-linearSampleDepth);if(linearSampleDepth<distanceCutoff.y&&proximity<proximityCutoff.y){float falloff=1.0-smoothstep(proximityCutoff.x,proximityCutoff.y,proximity);vec3 sampleViewPosition=getViewPosition(coord,sampleDepth,viewZ);occlusionSum+=getOcclusion(p,n,sampleViewPosition)*falloff;}}return occlusionSum/SAMPLES_FLOAT;}void mainImage(const in vec4 inputColor,const in vec2 uv,const in float depth,out vec4 outputColor){float ao=1.0;float viewZ=getViewZ(depth);\n#ifdef PERSPECTIVE_CAMERA\nfloat linearDepth=viewZToOrthographicDepth(viewZ,cameraNear,cameraFar);\n#else\nfloat linearDepth=depth;\n#endif\nif(linearDepth<distanceCutoff.y){vec3 viewPosition=getViewPosition(uv,depth,viewZ);vec3 viewNormal=unpackRGBToNormal(texture2D(normalBuffer,uv).xyz);ao-=getAmbientOcclusion(viewPosition,viewNormal,linearDepth,uv);float l=linearToRelativeLuminance(inputColor.rgb);float d=smoothstep(distanceCutoff.x,distanceCutoff.y,linearDepth);float f=max(l*luminanceInfluence,d);ao=mix(ao,1.0,f);}outputColor=vec4(vec3(ao),inputColor.a);}";
 
 /**
  * A Screen Space Ambient Occlusion (SSAO) effect.
@@ -7530,28 +8593,28 @@ class SSAOEffect extends Effect {
 	 * @param {BlendFunction} [options.blendFunction=BlendFunction.MULTIPLY] - The blend function of this effect.
 	 * @param {Number} [options.samples=11] - The amount of samples per pixel. Should not be a multiple of the ring count.
 	 * @param {Number} [options.rings=4] - The amount of rings in the occlusion sampling pattern.
-	 * @param {Number} [options.distanceThreshold=0.65] - A global distance threshold at which the occlusion effect starts to fade out. Range [0.0, 1.0].
-	 * @param {Number} [options.distanceFalloff=0.1] - The distance falloff. Influences the smoothness of the overall occlusion cutoff. Range [0.0, 1.0].
-	 * @param {Number} [options.rangeThreshold=0.0015] - A local occlusion range threshold at which the occlusion starts to fade out. Range [0.0, 1.0].
-	 * @param {Number} [options.rangeFalloff=0.01] - The occlusion range falloff. Influences the smoothness of the proximity cutoff. Range [0.0, 1.0].
+	 * @param {Number} [options.distanceThreshold=0.97] - A global distance threshold at which the occlusion effect starts to fade out. Range [0.0, 1.0].
+	 * @param {Number} [options.distanceFalloff=0.03] - The distance falloff. Influences the smoothness of the overall occlusion cutoff. Range [0.0, 1.0].
+	 * @param {Number} [options.rangeThreshold=0.0005] - A local occlusion range threshold at which the occlusion starts to fade out. Range [0.0, 1.0].
+	 * @param {Number} [options.rangeFalloff=0.001] - The occlusion range falloff. Influences the smoothness of the proximity cutoff. Range [0.0, 1.0].
 	 * @param {Number} [options.luminanceInfluence=0.7] - Determines how much the luminance of the scene influences the ambient occlusion.
 	 * @param {Number} [options.radius=18.25] - The occlusion sampling radius.
 	 * @param {Number} [options.scale=1.0] - The scale of the ambient occlusion.
-	 * @param {Number} [options.bias=0.5] - An occlusion bias.
+	 * @param {Number} [options.bias=0.0] - An occlusion bias.
 	 */
 
 	constructor(camera, normalBuffer, {
 		blendFunction = BlendFunction.MULTIPLY,
 		samples = 11,
 		rings = 4,
-		distanceThreshold = 0.65,
-		distanceFalloff = 0.1,
-		rangeThreshold = 0.0015,
-		rangeFalloff = 0.01,
+		distanceThreshold = 0.97,
+		distanceFalloff = 0.03,
+		rangeThreshold = 0.0005,
+		rangeFalloff = 0.001,
 		luminanceInfluence = 0.7,
 		radius = 18.25,
 		scale = 1.0,
-		bias = 0.5
+		bias = 0.0
 	} = {}) {
 
 		super("SSAOEffect", fragmentShader$u, {
@@ -7569,9 +8632,9 @@ class SSAOEffect extends Effect {
 				["normalBuffer", new Uniform(normalBuffer)],
 				["cameraInverseProjectionMatrix", new Uniform(new Matrix4())],
 				["cameraProjectionMatrix", new Uniform(new Matrix4())],
-				["radiusStep", new Uniform(new Vector2())],
-				["distanceCutoff", new Uniform(new Vector2())],
-				["proximityCutoff", new Uniform(new Vector2())],
+				["radiusStep", new Uniform(new Vector2$1())],
+				["distanceCutoff", new Uniform(new Vector2$1())],
+				["proximityCutoff", new Uniform(new Vector2$1())],
 				["seed", new Uniform(Math.random())],
 				["luminanceInfluence", new Uniform(luminanceInfluence)],
 				["scale", new Uniform(scale)],
@@ -7596,7 +8659,7 @@ class SSAOEffect extends Effect {
 		 * @private
 		 */
 
-		this.resolution = new Vector2(1, 1);
+		this.resolution = new Vector2$1(1, 1);
 
 		/**
 		 * The main camera.
@@ -7737,7 +8800,10 @@ class SSAOEffect extends Effect {
 
 	setDistanceCutoff(threshold, falloff) {
 
-		this.uniforms.get("distanceCutoff").value.set(threshold, Math.min(threshold + falloff, 1.0 - 1e-6));
+		this.uniforms.get("distanceCutoff").value.set(
+			Math.min(Math.max(threshold, 0.0), 1.0),
+			Math.min(Math.max(threshold + falloff, 0.0), 1.0)
+		);
 
 	}
 
@@ -7750,7 +8816,10 @@ class SSAOEffect extends Effect {
 
 	setProximityCutoff(threshold, falloff) {
 
-		this.uniforms.get("proximityCutoff").value.set(threshold, Math.min(threshold + falloff, 1.0 - 1e-6));
+		this.uniforms.get("proximityCutoff").value.set(
+			Math.min(Math.max(threshold, 0.0), 1.0),
+			Math.min(Math.max(threshold + falloff, 0.0), 1.0)
+		);
 
 	}
 
@@ -7871,7 +8940,6 @@ class ToneMappingEffect extends Effect {
 	 * @param {BlendFunction} [options.blendFunction=BlendFunction.NORMAL] - The blend function of this effect.
 	 * @param {Boolean} [options.adaptive=true] - Whether the tone mapping should use an adaptive luminance map.
 	 * @param {Number} [options.resolution=256] - The render texture resolution of the luminance map.
-	 * @param {Number} [options.distinction=1.0] - A luminance distinction factor.
 	 * @param {Number} [options.middleGrey=0.6] - The middle grey factor.
 	 * @param {Number} [options.maxLuminance=16.0] - The maximum luminance.
 	 * @param {Number} [options.averageLuminance=1.0] - The average luminance.
@@ -7882,7 +8950,6 @@ class ToneMappingEffect extends Effect {
 		blendFunction = BlendFunction.NORMAL,
 		adaptive = true,
 		resolution = 256,
-		distinction = 1.0,
 		middleGrey = 0.6,
 		maxLuminance = 16.0,
 		averageLuminance = 1.0,
@@ -7907,11 +8974,11 @@ class ToneMappingEffect extends Effect {
 		 *
 		 * @type {WebGLRenderTarget}
 		 * @private
-		 * @todo Use RED format in WebGL 2.0.
+		 * @todo Use RED format in WebGL 2.0 and remove LinearMipMapLinearFilter in next major release.
 		 */
 
 		this.renderTargetLuminance = new WebGLRenderTarget(1, 1, {
-			minFilter: LinearMipMapLinearFilter,
+			minFilter: (LinearMipmapLinearFilter !== undefined) ? LinearMipmapLinearFilter : LinearMipMapLinearFilter,
 			magFilter: LinearFilter,
 			stencilBuffer: false,
 			depthBuffer: false,
@@ -7961,6 +9028,9 @@ class ToneMappingEffect extends Effect {
 
 		this.luminancePass = new ShaderPass(new LuminanceMaterial());
 
+		const luminanceMaterial = this.luminancePass.getFullscreenMaterial();
+		luminanceMaterial.useThreshold = false;
+
 		/**
 		 * An adaptive luminance shader pass.
 		 *
@@ -7971,7 +9041,6 @@ class ToneMappingEffect extends Effect {
 		this.adaptiveLuminancePass = new ShaderPass(new AdaptiveLuminanceMaterial());
 
 		this.adaptationRate = adaptationRate;
-		this.distinction = distinction;
 		this.resolution = resolution;
 		this.adaptive = adaptive;
 
@@ -8070,24 +9139,26 @@ class ToneMappingEffect extends Effect {
 	}
 
 	/**
-	 * The luminance distinction factor.
-	 *
 	 * @type {Number}
+	 * @deprecated
 	 */
 
 	get distinction() {
 
-		return this.luminancePass.getFullscreenMaterial().uniforms.distinction.value;
+		console.warn(this.name, "The distinction field has been removed.");
+
+		return 1.0;
 
 	}
 
 	/**
 	 * @type {Number}
+	 * @deprecated
 	 */
 
-	set distinction(value = 1.0) {
+	set distinction(value) {
 
-		this.luminancePass.getFullscreenMaterial().uniforms.distinction.value = value;
+		console.warn(this.name, "The distinction field has been removed.");
 
 	}
 
@@ -8228,36 +9299,16 @@ class VignetteEffect extends Effect {
  * @param {Number} width - The image width.
  * @param {Number} height - The image height.
  * @param {Uint8ClampedArray} data - The image data.
- * @param {Number} channels - The color channels used for a single pixel.
  * @return {Canvas} The canvas.
  */
 
-function createCanvas(width, height, data, channels) {
+function createCanvas(width, height, data) {
 
 	const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
 	const context = canvas.getContext("2d");
 
 	const imageData = context.createImageData(width, height);
-	const target = imageData.data;
-
-	let x, y;
-	let i, j;
-
-	for(y = 0; y < height; ++y) {
-
-		for(x = 0; x < width; ++x) {
-
-			i = (y * width + x) * 4;
-			j = (y * width + x) * channels;
-
-			target[i] = (channels > 0) ? data[j] : 0;
-			target[i + 1] = (channels > 1) ? data[j + 1] : 0;
-			target[i + 2] = (channels > 2) ? data[j + 2] : 0;
-			target[i + 3] = (channels > 3) ? data[j + 3] : 255;
-
-		}
-
-	}
+	imageData.data.set(data);
 
 	canvas.width = width;
 	canvas.height = height;
@@ -8280,10 +9331,9 @@ class RawImageData {
 	 * @param {Number} [width=0] - The width of the image.
 	 * @param {Number} [height=0] - The height of the image.
 	 * @param {Uint8ClampedArray} [data=null] - The image data.
-	 * @param {Number} [channels=4] - The amount of color channels used per pixel. Range [1, 4].
 	 */
 
-	constructor(width = 0, height = 0, data = null, channels = 4) {
+	constructor(width = 0, height = 0, data = null) {
 
 		/**
 		 * The width of the image.
@@ -8309,14 +9359,6 @@ class RawImageData {
 
 		this.data = data;
 
-		/**
-		 * The amount of color channels used per pixel. Range [1, 4].
-		 *
-		 * @type {Number}
-		 */
-
-		this.channels = channels;
-
 	}
 
 	/**
@@ -8330,9 +9372,252 @@ class RawImageData {
 		return (typeof document === "undefined") ? null : createCanvas(
 			this.width,
 			this.height,
-			this.data,
-			this.channels
+			this.data
 		);
+
+	}
+
+	/**
+	 * Creates a new image data container.
+	 *
+	 * @param {Object} data - Raw image data.
+	 * @return {RawImageData} The image data.
+	 */
+
+	static from(data) {
+
+		return new RawImageData(data.width, data.height, data.data);
+
+	}
+
+}
+
+var workerProgram = "!function(){\"use strict\";function e(e,t){if(!(e instanceof t))throw new TypeError(\"Cannot call a class as a function\")}function t(e,t){for(var a=0;a<t.length;a++){var n=t[a];n.enumerable=n.enumerable||!1,n.configurable=!0,\"value\"in n&&(n.writable=!0),Object.defineProperty(e,n.key,n)}}function a(e,a,n){return a&&t(e.prototype,a),n&&t(e,n),e}var n=function(){function t(){var a=arguments.length>0&&void 0!==arguments[0]?arguments[0]:0,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:0,s=arguments.length>2&&void 0!==arguments[2]?arguments[2]:null;e(this,t),this.width=a,this.height=n,this.data=s}return a(t,[{key:\"toCanvas\",value:function(){return\"undefined\"==typeof document?null:(e=this.width,t=this.height,a=this.data,n=document.createElementNS(\"http://www.w3.org/1999/xhtml\",\"canvas\"),s=n.getContext(\"2d\"),(r=s.createImageData(e,t)).data.set(a),n.width=e,n.height=t,s.putImageData(r,0,0),n);var e,t,a,n,s,r}}],[{key:\"from\",value:function(e){return new t(e.width,e.height,e.data)}}]),t}(),s=function(){function t(){var a=arguments.length>0&&void 0!==arguments[0]?arguments[0]:0,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:0;e(this,t),this.x=a,this.y=n}return a(t,[{key:\"set\",value:function(e,t){return this.x=e,this.y=t,this}},{key:\"equals\",value:function(e){return this===e||this.x===e.x&&this.y===e.y}}]),t}(),r=function t(){e(this,t),this.min=new s,this.max=new s},i=new r,y=new r,c=new Float32Array([0,-.25,.25,-.125,.125,-.375,.375]),u=[new Float32Array([0,0]),new Float32Array([.25,-.25]),new Float32Array([-.25,.25]),new Float32Array([.125,-.125]),new Float32Array([-.125,.125])],h=[new Uint8Array([0,0]),new Uint8Array([3,0]),new Uint8Array([0,3]),new Uint8Array([3,3]),new Uint8Array([1,0]),new Uint8Array([4,0]),new Uint8Array([1,3]),new Uint8Array([4,3]),new Uint8Array([0,1]),new Uint8Array([3,1]),new Uint8Array([0,4]),new Uint8Array([3,4]),new Uint8Array([1,1]),new Uint8Array([4,1]),new Uint8Array([1,4]),new Uint8Array([4,4])],o=[new Uint8Array([0,0]),new Uint8Array([1,0]),new Uint8Array([0,2]),new Uint8Array([1,2]),new Uint8Array([2,0]),new Uint8Array([3,0]),new Uint8Array([2,2]),new Uint8Array([3,2]),new Uint8Array([0,1]),new Uint8Array([1,1]),new Uint8Array([0,3]),new Uint8Array([1,3]),new Uint8Array([2,1]),new Uint8Array([3,1]),new Uint8Array([2,3]),new Uint8Array([3,3])];function w(e,t,a){return e+(t-e)*a}function x(e,t){var a,n=t.min,s=t.max,r=.5*Math.sqrt(2*n.x),i=.5*Math.sqrt(2*n.y),y=.5*Math.sqrt(2*s.x),c=.5*Math.sqrt(2*s.y),u=(a=e/32,Math.min(Math.max(a,0),1));return n.set(w(r,n.x,u),w(i,n.y,u)),s.set(w(y,s.x,u),w(c,s.y,u)),t}function f(e,t,a,n){var s,r,i,y,c=t.x-e.x,u=t.y-e.y,h=a,o=a+1,w=e.y+u*(h-e.x)/c,x=e.y+u*(o-e.x)/c;return h>=e.x&&h<t.x||o>e.x&&o<=t.x?Math.sign(w)===Math.sign(x)||Math.abs(w)<1e-4||Math.abs(x)<1e-4?(s=(w+x)/2)<0?n.set(Math.abs(s),0):n.set(0,Math.abs(s)):(r=(y=-e.y*c/u+e.x)>e.x?w*(y-Math.trunc(y))/2:0,i=y<t.x?x*(1-(y-Math.trunc(y)))/2:0,(s=Math.abs(r)>Math.abs(i)?r:-i)<0?n.set(Math.abs(r),Math.abs(i)):n.set(Math.abs(i),Math.abs(r))):n.set(0,0),n}function l(e,t,a,n,s){var r=i.min,c=i.max,u=y.min,h=y.max,o=y,w=.5+n,l=.5+n-1,b=t+a+1;switch(e){case 0:s.set(0,0);break;case 1:t<=a?f(r.set(0,l),c.set(b/2,0),t,s):s.set(0,0);break;case 2:t>=a?f(r.set(b/2,0),c.set(b,l),t,s):s.set(0,0);break;case 3:f(r.set(0,l),c.set(b/2,0),t,u),f(r.set(b/2,0),c.set(b,l),t,h),x(b,o),s.set(u.x+h.x,u.y+h.y);break;case 4:t<=a?f(r.set(0,w),c.set(b/2,0),t,s):s.set(0,0);break;case 5:s.set(0,0);break;case 6:Math.abs(n)>0?(f(r.set(0,w),c.set(b,l),t,u),f(r.set(0,w),c.set(b/2,0),t,h),f(r.set(b/2,0),c.set(b,l),t,s),h.set(h.x+s.x,h.y+s.y),s.set((u.x+h.x)/2,(u.y+h.y)/2)):f(r.set(0,w),c.set(b,l),t,s);break;case 7:f(r.set(0,w),c.set(b,l),t,s);break;case 8:t>=a?f(r.set(b/2,0),c.set(b,w),t,s):s.set(0,0);break;case 9:Math.abs(n)>0?(f(r.set(0,l),c.set(b,w),t,u),f(r.set(0,l),c.set(b/2,0),t,h),f(r.set(b/2,0),c.set(b,w),t,s),h.set(h.x+s.x,h.y+s.y),s.set((u.x+h.x)/2,(u.y+h.y)/2)):f(r.set(0,l),c.set(b,w),t,s);break;case 10:s.set(0,0);break;case 11:f(r.set(0,l),c.set(b,w),t,s);break;case 12:f(r.set(0,w),c.set(b/2,0),t,u),f(r.set(b/2,0),c.set(b,w),t,h),x(b,o),s.set(u.x+h.x,u.y+h.y);break;case 13:f(r.set(0,l),c.set(b,w),t,s);break;case 14:f(r.set(0,w),c.set(b,l),t,s);break;case 15:s.set(0,0)}return s}function b(e,t,a,n){var s=e.equals(t);if(!s){var r=(e.x+t.x)/2,i=(e.y+t.y)/2;s=(t.y-e.y)*(a-r)+(e.x-t.x)*(n-i)>0}return s}function A(e,t,a,n){var s,r,i;for(s=0,i=0;i<30;++i)for(r=0;r<30;++r)b(e,t,a+r/29,n+i/29)&&++s;return s/900}function v(e,t,a,n,s,r){var i=o[e],y=i[0],c=i[1];return y>0&&(t.x+=s[0],t.y+=s[1]),c>0&&(a.x+=s[0],a.y+=s[1]),r.set(1-A(t,a,1+n,0+n),A(t,a,1+n,1+n))}function k(e,t,a,n,s){var r=i.min,c=i.max,u=y.min,h=y.max,o=t+a+1;switch(e){case 0:v(e,r.set(1,1),c.set(1+o,1+o),t,n,u),v(e,r.set(1,0),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 1:v(e,r.set(1,0),c.set(0+o,0+o),t,n,u),v(e,r.set(1,0),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 2:v(e,r.set(0,0),c.set(1+o,0+o),t,n,u),v(e,r.set(1,0),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 3:v(e,r.set(1,0),c.set(1+o,0+o),t,n,s);break;case 4:v(e,r.set(1,1),c.set(0+o,0+o),t,n,u),v(e,r.set(1,1),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 5:v(e,r.set(1,1),c.set(0+o,0+o),t,n,u),v(e,r.set(1,0),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 6:v(e,r.set(1,1),c.set(1+o,0+o),t,n,s);break;case 7:v(e,r.set(1,1),c.set(1+o,0+o),t,n,u),v(e,r.set(1,0),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 8:v(e,r.set(0,0),c.set(1+o,1+o),t,n,u),v(e,r.set(1,0),c.set(1+o,1+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 9:v(e,r.set(1,0),c.set(1+o,1+o),t,n,s);break;case 10:v(e,r.set(0,0),c.set(1+o,1+o),t,n,u),v(e,r.set(1,0),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 11:v(e,r.set(1,0),c.set(1+o,1+o),t,n,u),v(e,r.set(1,0),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 12:v(e,r.set(1,1),c.set(1+o,1+o),t,n,s);break;case 13:v(e,r.set(1,1),c.set(1+o,1+o),t,n,u),v(e,r.set(1,0),c.set(1+o,1+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 14:v(e,r.set(1,1),c.set(1+o,1+o),t,n,u),v(e,r.set(1,1),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2);break;case 15:v(e,r.set(1,1),c.set(1+o,1+o),t,n,u),v(e,r.set(1,0),c.set(1+o,0+o),t,n,h),s.set((u.x+h.x)/2,(u.y+h.y)/2)}return s}function U(e,t,a){var n,r,i,y,c,u,h,o,w=new s;for(n=0,r=e.length;n<r;++n)for(h=(u=e[n]).data,o=u.width,y=0;y<o;++y)for(i=0;i<o;++i)a?l(n,i,y,t,w):k(n,i,y,t,w),h[c=2*(y*o+i)]=255*w.x,h[c+1]=255*w.y}function d(e,t,a,n,r,i){var y,c,u,h,o,w,x,f,l,b,A=new s,v=i.data,k=i.width;for(y=0,c=t.length;y<c;++y)for(x=a[y],l=(f=t[y]).data,b=f.width,h=0;h<n;++h)for(u=0;u<n;++u)A.set(x[0]*n+e.x+u,x[1]*n+e.y+h),w=r?2*(h*h*b+u*u):2*(h*b+u),v[o=4*(A.y*k+A.x)]=l[w],v[o+1]=l[w+1],v[o+2]=0,v[o+3]=255}var g=function(){function t(){e(this,t)}return a(t,null,[{key:\"generate\",value:function(){var e,t,a=5*c.length*16,r=new Uint8ClampedArray(160*a*4),i=new n(160,a,r),y=Math.pow(15,2)+1,w=[],x=[],f=new s;for(e=0;e<16;++e)w.push(new n(y,y,new Uint8ClampedArray(y*y*2),2)),x.push(new n(20,20,new Uint8ClampedArray(800),2));for(e=0,t=c.length;e<t;++e)U(w,c[e],!0),f.set(0,80*e),d(f,w,h,16,!0,i);for(e=0,t=u.length;e<t;++e)U(x,u[e],!1),f.set(80,80*e),d(f,x,o,20,!1,i);return i}}]),t}(),m=new Map([[p([0,0,0,0]),[0,0,0,0]],[p([0,0,0,1]),[0,0,0,1]],[p([0,0,1,0]),[0,0,1,0]],[p([0,0,1,1]),[0,0,1,1]],[p([0,1,0,0]),[0,1,0,0]],[p([0,1,0,1]),[0,1,0,1]],[p([0,1,1,0]),[0,1,1,0]],[p([0,1,1,1]),[0,1,1,1]],[p([1,0,0,0]),[1,0,0,0]],[p([1,0,0,1]),[1,0,0,1]],[p([1,0,1,0]),[1,0,1,0]],[p([1,0,1,1]),[1,0,1,1]],[p([1,1,0,0]),[1,1,0,0]],[p([1,1,0,1]),[1,1,0,1]],[p([1,1,1,0]),[1,1,1,0]],[p([1,1,1,1]),[1,1,1,1]]]);function M(e,t,a){return e+(t-e)*a}function p(e){var t=M(e[0],e[1],.75),a=M(e[2],e[3],.75);return M(t,a,.875)}function C(e,t){var a=0;return 1===t[3]&&1!==e[1]&&1!==e[3]&&(a+=1),1===a&&1===t[2]&&1!==e[0]&&1!==e[2]&&(a+=1),a}var q=function(){function t(){e(this,t)}return a(t,null,[{key:\"generate\",value:function(){var e,t,a,s,r,i,y,c,u,h,o=new Uint8ClampedArray(2178),w=new Uint8ClampedArray(4096);for(t=0;t<33;++t)for(e=0;e<66;++e)a=.03125*e,s=.03125*t,m.has(a)&&m.has(s)&&(i=m.get(a),y=m.get(s),o[r=66*t+e]=127*(c=i,h=void 0,h=0,1===(u=y)[3]&&(h+=1),1===h&&1===u[2]&&1!==c[1]&&1!==c[3]&&(h+=1),h),o[r+33]=127*C(i,y));for(r=0,t=17;t<33;++t)for(e=0;e<64;++e,r+=4)w[r]=o[66*t+e],w[r+3]=255;return new n(64,16,w)}}]),t}();self.addEventListener(\"message\",(function(e){var t=g.generate(),a=q.generate();postMessage({areaImageData:t,searchImageData:a},[t.data.buffer,a.data.buffer]),close()}))}();\n";
+
+/**
+ * Generates the SMAA data images.
+ *
+ * @private
+ * @param {Boolean} [disableCache=false] - Determines whether the generated image data should be cached.
+ * @return {Promise} A promise that returns the search image and area image blobs.
+ */
+
+function generate(disableCache = false) {
+
+	const workerURL = URL.createObjectURL(new Blob([workerProgram], { type: "text/javascript" }));
+	const worker = new Worker(workerURL);
+
+	return new Promise((resolve, reject) => {
+
+		worker.addEventListener("error", (event) => reject(event.error));
+		worker.addEventListener("message", (event) => {
+
+			const searchImageData = RawImageData.from(event.data.searchImageData);
+			const areaImageData = RawImageData.from(event.data.areaImageData);
+
+			const urls = [
+				searchImageData.toCanvas().toDataURL(),
+				areaImageData.toCanvas().toDataURL()
+			];
+
+			if(!disableCache && window.localStorage !== undefined) {
+
+				localStorage.setItem("smaa-search", urls[0]);
+				localStorage.setItem("smaa-area", urls[1]);
+
+			}
+
+			URL.revokeObjectURL(workerURL);
+			resolve(urls);
+
+		});
+
+		worker.postMessage(null);
+
+	});
+
+}
+
+/**
+ * An SMAA image loader.
+ *
+ * This loader uses a worker thread to generate the search and area images. The
+ * Generated data URLs will be cached using localStorage, if available. To
+ * disable caching, please refer to {@link SMAAImageLoader.disableCache}.
+ *
+ * @experimental Added for testing, API might change in patch or minor releases.
+ */
+
+class SMAAImageLoader {
+
+	/**
+	 * Constructs a new SMAA image loader.
+	 *
+	 * @param {LoadingManager} [loadingManager] - A loading manager.
+	 */
+
+	constructor(loadingManager = new LoadingManager()) {
+
+		/**
+		 * A loading manager.
+		 *
+		 * @type {LoadingManager}
+		 */
+
+		this.loadingManager = loadingManager;
+
+		/**
+		 * Indicates whether data image caching is disabled.
+		 *
+		 * @type {Boolean}
+		 */
+
+		this.disableCache = false;
+
+	}
+
+	/**
+	 * Loads the SMAA data images.
+	 *
+	 * @param {Function} [onLoad] - A function to call when the loading process is done.
+	 * @param {Function} [onError] - A function to call when an error occurs.
+	 * @return {Promise} A promise that returns the search image and area image as a tupel.
+	 */
+
+	load(onLoad = () => {}, onError = () => {}) {
+
+		const externalManager = this.loadingManager;
+		const internalManager = new LoadingManager();
+
+		externalManager.itemStart("smaa-search");
+		externalManager.itemStart("smaa-area");
+		internalManager.itemStart("smaa-search");
+		internalManager.itemStart("smaa-area");
+
+		return new Promise((resolve, reject) => {
+
+			const cachedURLs = (!this.disableCache && window.localStorage !== undefined) ? [
+				localStorage.getItem("smaa-search"),
+				localStorage.getItem("smaa-area")
+			] : [null, null];
+
+			const promise = (cachedURLs[0] !== null && cachedURLs[1] !== null) ?
+				Promise.resolve(cachedURLs) : generate(this.disableCache);
+
+			promise.then((urls) => {
+
+				const result = [new Image(), new Image()];
+
+				internalManager.onLoad = () => {
+
+					onLoad(result);
+					resolve(result);
+
+				};
+
+				result[0].addEventListener("load", () => {
+
+					externalManager.itemEnd("smaa-search");
+					internalManager.itemEnd("smaa-search");
+
+				});
+
+				result[1].addEventListener("load", () => {
+
+					externalManager.itemEnd("smaa-area");
+					internalManager.itemEnd("smaa-area");
+
+				});
+
+				result[0].src = urls[0];
+				result[1].src = urls[1];
+
+			}).catch((error) => {
+
+				externalManager.itemError("smaa-search");
+				externalManager.itemError("smaa-area");
+
+				onError(error);
+				reject(error);
+
+			});
+
+		});
+
+	}
+
+}
+
+/**
+ * A 2D vector.
+ *
+ * @private
+ */
+
+class Vector2 {
+
+	/**
+	 * Constructs a new vector.
+	 *
+	 * @param {Number} [x=0] - The initial x value.
+	 * @param {Number} [y=0] - The initial y value.
+	 */
+
+	constructor(x = 0, y = 0) {
+
+		this.x = x;
+		this.y = y;
+
+	}
+
+	/**
+	 * Sets the components of this vector.
+	 *
+	 * @param {Number} x - The new x value.
+	 * @param {Number} y - The new y value.
+	 * @return {Vector2} This vector.
+	 */
+
+	set(x, y) {
+
+		this.x = x;
+		this.y = y;
+
+		return this;
+
+	}
+
+	/**
+	 * Checks if the given vector equals this vector.
+	 *
+	 * @param {Vector2} v - A vector.
+	 * @return {Boolean} Whether this vector equals the given one.
+	 */
+
+	equals(v) {
+
+		return (this === v || (this.x === v.x && this.y === v.y));
+
+	}
+
+}
+
+/**
+ * A 2D box.
+ *
+ * @private
+ */
+
+class Box2 {
+
+	/**
+	 * Constructs a new box.
+	 */
+
+	constructor() {
+
+		this.min = new Vector2();
+		this.max = new Vector2();
 
 	}
 
@@ -8401,13 +9686,7 @@ const SMOOTH_MAX_DISTANCE = 32;
  */
 
 const orthogonalSubsamplingOffsets = new Float32Array([
-	0.0,
-	-0.25,
-	0.25,
-	-0.125,
-	0.125,
-	-0.375,
-	0.375
+	0.0, -0.25, 0.25, -0.125, 0.125, -0.375, 0.375
 ]);
 
 /**
@@ -8724,7 +10003,7 @@ function calculateOrthogonalAreaForPattern(pattern, left, right, offset, result)
 
 			smoothArea(d, a);
 
-			result.addVectors(a1, a2);
+			result.set(a1.x + a2.x, a1.y + a2.y);
 
 			break;
 
@@ -8780,9 +10059,10 @@ function calculateOrthogonalAreaForPattern(pattern, left, right, offset, result)
 
 				calculateOrthogonalArea(p1.set(0.0, o1), p2.set(d, o2), left, a1);
 				calculateOrthogonalArea(p1.set(0.0, o1), p2.set(d / 2.0, 0.0), left, a2);
-				a2.add(calculateOrthogonalArea(p1.set(d / 2.0, 0.0), p2.set(d, o2), left, result));
+				calculateOrthogonalArea(p1.set(d / 2.0, 0.0), p2.set(d, o2), left, result);
+				a2.set(a2.x + result.x, a2.y + result.y);
 
-				result.addVectors(a1, a2).divideScalar(2.0);
+				result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			} else {
 
@@ -8838,9 +10118,10 @@ function calculateOrthogonalAreaForPattern(pattern, left, right, offset, result)
 
 				calculateOrthogonalArea(p1.set(0.0, o2), p2.set(d, o1), left, a1);
 				calculateOrthogonalArea(p1.set(0.0, o2), p2.set(d / 2.0, 0.0), left, a2);
-				a2.add(calculateOrthogonalArea(p1.set(d / 2.0, 0.0), p2.set(d, o1), left, result));
+				calculateOrthogonalArea(p1.set(d / 2.0, 0.0), p2.set(d, o1), left, result);
+				a2.set(a2.x + result.x, a2.y + result.y);
 
-				result.addVectors(a1, a2).divideScalar(2.0);
+				result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			} else {
 
@@ -8889,7 +10170,7 @@ function calculateOrthogonalAreaForPattern(pattern, left, right, offset, result)
 
 			smoothArea(d, a);
 
-			result.addVectors(a1, a2);
+			result.set(a1.x + a2.x, a1.y + a2.y);
 
 			break;
 
@@ -8955,18 +10236,15 @@ function isInsideArea(p1, p2, x, y) {
 
 	let result = p1.equals(p2);
 
-	let xm, ym;
-	let a, b, c;
-
 	if(!result) {
 
-		xm = (p1.x + p2.x) / 2.0;
-		ym = (p1.y + p2.y) / 2.0;
+		let xm = (p1.x + p2.x) / 2.0;
+		let ym = (p1.y + p2.y) / 2.0;
 
-		a = p2.y - p1.y;
-		b = p1.x - p2.x;
+		let a = p2.y - p1.y;
+		let b = p1.x - p2.x;
 
-		c = a * (x - xm) + b * (y - ym);
+		let c = a * (x - xm) + b * (y - ym);
 
 		result = (c > 0.0);
 
@@ -9083,7 +10361,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 	 * Unlike orthogonal patterns, the "null" pattern (one without crossing edges)
 	 * must be filtered, and the ends of both the "null" and L patterns are not
 	 * known: L and U patterns have different endings, and the adjacent pattern is
-	 * unknown. Therefore, a blend of both possibilites is computed.
+	 * unknown. Therefore, a blend of both possibilities is computed.
 	 */
 
 	switch(pattern) {
@@ -9104,7 +10382,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
 			// Blend both possibilities together.
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9123,7 +10401,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(0.0 + d, 0.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9141,7 +10419,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(0.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9175,7 +10453,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 1.0), p2.set(0.0 + d, 0.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 1.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9194,7 +10472,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 1.0), p2.set(0.0 + d, 0.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9227,7 +10505,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 1.0), p2.set(1.0 + d, 0.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9246,7 +10524,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(0.0, 0.0), p2.set(1.0 + d, 1.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 1.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9282,7 +10560,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(0.0, 0.0), p2.set(1.0 + d, 1.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9302,7 +10580,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 1.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9337,7 +10615,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 1.0), p2.set(1.0 + d, 1.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 1.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9355,7 +10633,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 1.0), p2.set(1.0 + d, 1.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 1.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9375,7 +10653,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 			calculateDiagonalArea(pattern, p1.set(1.0, 1.0), p2.set(1.0 + d, 1.0 + d), left, offset, a1);
 			calculateDiagonalArea(pattern, p1.set(1.0, 0.0), p2.set(1.0 + d, 0.0 + d), left, offset, a2);
 
-			result.addVectors(a1, a2).divideScalar(2.0);
+			result.set((a1.x + a2.x) / 2.0, (a1.y + a2.y) / 2.0);
 
 			break;
 
@@ -9390,6 +10668,7 @@ function calculateDiagonalAreaForPattern(pattern, left, right, offset, result) {
 /**
  * Calculates orthogonal or diagonal patterns for a given offset.
  *
+ * @private
  * @param {RawImageData[]} patterns - The patterns to assemble.
  * @param {Number|Float32Array} offset - A pattern offset. Diagonal offsets are pairs.
  * @param {Boolean} orthogonal - Whether the patterns are orthogonal or diagonal.
@@ -9443,6 +10722,7 @@ function generatePatterns(patterns, offset, orthogonal) {
 /**
  * Assembles orthogonal or diagonal patterns into the final area image.
  *
+ * @private
  * @param {Vector2} base - A base position.
  * @param {RawImageData[]} patterns - The patterns to assemble.
  * @param {Uint8Array[]} edges - Edge coordinate pairs, used for positioning.
@@ -9478,12 +10758,12 @@ function assemble(base, patterns, edges, size, orthogonal, target) {
 
 			for(x = 0; x < size; ++x) {
 
-				p.fromArray(edge).multiplyScalar(size);
-				p.add(base);
-				p.x += x;
-				p.y += y;
+				p.set(
+					edge[0] * size + base.x + x,
+					edge[1] * size + base.y + y
+				);
 
-				c = (p.y * dstWidth + p.x) * 2;
+				c = (p.y * dstWidth + p.x) * 4;
 
 				/* The texture coordinates of orthogonal patterns are compressed
 				quadratically to reach longer distances for a given texture size. */
@@ -9492,6 +10772,8 @@ function assemble(base, patterns, edges, size, orthogonal, target) {
 
 				dstData[c] = srcData[d];
 				dstData[c + 1] = srcData[d + 1];
+				dstData[c + 2] = 0;
+				dstData[c + 3] = 255;
 
 			}
 
@@ -9524,8 +10806,8 @@ class SMAAAreaImageData {
 		const width = 2 * 5 * ORTHOGONAL_SIZE;
 		const height = orthogonalSubsamplingOffsets.length * 5 * ORTHOGONAL_SIZE;
 
-		const data = new Uint8ClampedArray(width * height * 2);
-		const result = new RawImageData(width, height, data, 2);
+		const data = new Uint8ClampedArray(width * height * 4);
+		const result = new RawImageData(width, height, data);
 
 		const orthogonalPatternSize = Math.pow(ORTHOGONAL_SIZE - 1, 2) + 1;
 		const diagonalPatternSize = DIAGONAL_SIZE;
@@ -9732,12 +11014,13 @@ class SMAASearchImageData {
 
 		const width = 66;
 		const height = 33;
+		const halfWidth = width / 2;
 
 		const croppedWidth = 64;
 		const croppedHeight = 16;
 
 		const data = new Uint8ClampedArray(width * height);
-		const croppedData = new Uint8ClampedArray(croppedWidth * croppedHeight);
+		const croppedData = new Uint8ClampedArray(croppedWidth * croppedHeight * 4);
 
 		let x, y;
 		let s, t, i;
@@ -9756,9 +11039,11 @@ class SMAASearchImageData {
 					e1 = edges.get(s);
 					e2 = edges.get(t);
 
+					i = y * width + x;
+
 					// Maximize the dynamic range to help the compression.
-					data[y * width + x] = (127 * deltaLeft(e1, e2));
-					data[y * width + x + (width / 2)] = (127 * deltaRight(e1, e2));
+					data[i] = (127 * deltaLeft(e1, e2));
+					data[i + halfWidth] = (127 * deltaRight(e1, e2));
 
 				}
 
@@ -9769,18 +11054,19 @@ class SMAASearchImageData {
 		// Crop the result to powers-of-two to make it BC4-friendly.
 		for(i = 0, y = height - croppedHeight; y < height; ++y) {
 
-			for(x = 0; x < croppedWidth; ++x, ++i) {
+			for(x = 0; x < croppedWidth; ++x, i += 4) {
 
 				croppedData[i] = data[y * width + x];
+				croppedData[i + 3] = 255;
 
 			}
 
 		}
 
-		return new RawImageData(croppedWidth, croppedHeight, croppedData, 1);
+		return new RawImageData(croppedWidth, croppedHeight, croppedData);
 
 	}
 
 }
 
-export { AdaptiveLuminanceMaterial, BlendFunction, BlendMode, BloomEffect, BlurPass, BokehEffect, BrightnessContrastEffect, ChromaticAberrationEffect, ClearMaskPass, ClearPass, ColorAverageEffect, ColorDepthEffect, ColorEdgesMaterial, ConvolutionMaterial, CopyMaterial, DepthComparisonMaterial, DepthEffect, DepthMaskMaterial, DepthPass, Disposable, DotScreenEffect, Effect, EffectAttribute, EffectComposer, EffectMaterial, EffectPass, GammaCorrectionEffect, GlitchEffect, GlitchMode, GodRaysEffect, GodRaysMaterial, GridEffect, HueSaturationEffect, Initializable, KernelSize, LuminanceMaterial, MaskPass, NoiseEffect, NormalPass, OutlineEdgesMaterial, OutlineEffect, Pass, PixelationEffect, RawImageData, RealisticBokehEffect, RenderPass, Resizable, SMAAAreaImageData, SMAAEffect, SMAAPreset, SMAASearchImageData, SMAAWeightsMaterial, SSAOEffect, SavePass, ScanlineEffect, SepiaEffect, ShaderPass, ShockWaveEffect, TextureEffect, ToneMappingEffect, VignetteEffect, WebGLExtension };
+export { AdaptiveLuminanceMaterial, BlendFunction, BlendMode, BloomEffect, BlurPass, BokehEffect, BrightnessContrastEffect, ChromaticAberrationEffect, ClearMaskPass, ClearPass, ColorAverageEffect, ColorDepthEffect, ColorEdgesMaterial, ConvolutionMaterial, CopyMaterial, DepthComparisonMaterial, DepthEffect, DepthMaskMaterial, DepthPass, Disposable, DotScreenEffect, Effect, EffectAttribute, EffectComposer, EffectMaterial, EffectPass, GammaCorrectionEffect, GlitchEffect, GlitchMode, GodRaysEffect, GodRaysMaterial, GridEffect, HueSaturationEffect, Initializable, KernelSize, LuminanceMaterial, MaskPass, NoiseEffect, NormalPass, OutlineEdgesMaterial, OutlineEffect, Pass, PixelationEffect, RawImageData, RealisticBokehEffect, RenderPass, Resizable, Resizer, SMAAAreaImageData, SMAAEffect, SMAAImageLoader, SMAAPreset, SMAASearchImageData, SMAAWeightsMaterial, SSAOEffect, SavePass, ScanlineEffect, Selection, SelectiveBloomEffect, SepiaEffect, ShaderPass, ShockWaveEffect, TextureEffect, ToneMappingEffect, VignetteEffect, WebGLExtension };

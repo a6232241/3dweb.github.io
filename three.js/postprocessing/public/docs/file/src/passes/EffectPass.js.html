@@ -30,6 +30,8 @@
   <ul>
     
   <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#core">core</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/core/EffectComposer.js~EffectComposer.html">EffectComposer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/core/Resizer.js~Resizer.html">Resizer</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/core/Selection.js~Selection.html">Selection</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-interface">I</span><span data-ice="name"><span><a href="class/src/core/Disposable.js~Disposable.html">Disposable</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-interface">I</span><span data-ice="name"><span><a href="class/src/core/Initializable.js~Initializable.html">Initializable</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-interface">I</span><span data-ice="name"><span><a href="class/src/core/Resizable.js~Resizable.html">Resizable</a></span></span></li>
@@ -54,6 +56,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/effects/SMAAEffect.js~SMAAEffect.html">SMAAEffect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/effects/SSAOEffect.js~SSAOEffect.html">SSAOEffect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/effects/ScanlineEffect.js~ScanlineEffect.html">ScanlineEffect</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html">SelectiveBloomEffect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/effects/SepiaEffect.js~SepiaEffect.html">SepiaEffect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/effects/ShockWaveEffect.js~ShockWaveEffect.html">ShockWaveEffect</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/effects/TextureEffect.js~TextureEffect.html">TextureEffect</a></span></span></li>
@@ -67,6 +70,7 @@
 <li data-ice="doc"><span data-ice="kind" class="kind-variable">V</span><span data-ice="name"><span><a href="variable/index.html#static-variable-BlendFunction">BlendFunction</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#images">images</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/images/RawImageData.js~RawImageData.html">RawImageData</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#images-smaa-utils">images/smaa/utils</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/images/smaa/utils/SMAAAreaImageData.js~SMAAAreaImageData.html">SMAAAreaImageData</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader.html">SMAAImageLoader</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/images/smaa/utils/SMAASearchImageData.js~SMAASearchImageData.html">SMAASearchImageData</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#materials">materials</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/materials/AdaptiveLuminanceMaterial.js~AdaptiveLuminanceMaterial.html">AdaptiveLuminanceMaterial</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/src/materials/ColorEdgesMaterial.js~ColorEdgesMaterial.html">ColorEdgesMaterial</a></span></span></li>
@@ -320,14 +324,7 @@ export class EffectPass extends Pass {
 
 		super(&quot;EffectPass&quot;);
 
-		/**
-		 * The main camera.
-		 *
-		 * @type {Camera}
-		 * @private
-		 */
-
-		this.mainCamera = camera;
+		this.setFullscreenMaterial(new EffectMaterial(null, null, null, camera));
 
 		/**
 		 * The effects, sorted by attribute priority, DESC.
@@ -348,15 +345,6 @@ export class EffectPass extends Pass {
 		 */
 
 		this.skipRendering = false;
-
-		/**
-		 * Indicates whether dithering is enabled.
-		 *
-		 * @type {Boolean}
-		 * @private
-		 */
-
-		this.quantize = false;
 
 		/**
 		 * The amount of shader uniforms that this pass uses.
@@ -396,7 +384,18 @@ export class EffectPass extends Pass {
 
 		this.maxTime = 1e3;
 
-		this.setFullscreenMaterial(this.createMaterial());
+	}
+
+	/**
+	 * The current render size.
+	 *
+	 * @type {Vector2}
+	 * @private
+	 */
+
+	get size() {
+
+		return this.getFullscreenMaterial().uniforms.resolution.value;
 
 	}
 
@@ -410,7 +409,7 @@ export class EffectPass extends Pass {
 
 	get dithering() {
 
-		return this.quantize;
+		return this.getFullscreenMaterial().dithering;
 
 	}
 
@@ -424,31 +423,24 @@ export class EffectPass extends Pass {
 
 	set dithering(value) {
 
-		if(this.quantize !== value) {
+		const material = this.getFullscreenMaterial();
 
-			const material = this.getFullscreenMaterial();
+		if(material.dithering !== value) {
 
-			if(material !== null) {
-
-				material.dithering = value;
-				material.needsUpdate = true;
-
-			}
-
-			this.quantize = value;
+			material.dithering = value;
+			material.needsUpdate = true;
 
 		}
 
 	}
 
 	/**
-	 * Creates a compound shader material.
+	 * Updates the compound shader material.
 	 *
 	 * @private
-	 * @return {Material} The new material.
 	 */
 
-	createMaterial() {
+	updateMaterial() {
 
 		const blendRegExp = /\bblend\b/g;
 
@@ -525,7 +517,8 @@ export class EffectPass extends Pass {
 
 			}
 
-			this.needsDepthTexture = true;
+			// Only request a depth texture if none has been provided yet.
+			this.needsDepthTexture = (this.getDepthTexture() === null);
 
 		}
 
@@ -551,7 +544,9 @@ export class EffectPass extends Pass {
 		this.skipRendering = (id === 0);
 		this.needsSwap = !this.skipRendering;
 
-		const material = new EffectMaterial(shaderParts, defines, uniforms, this.mainCamera, this.dithering);
+		const material = this.getFullscreenMaterial();
+		material.setShaderParts(shaderParts).setDefines(defines).setUniforms(uniforms);
+		material.extensions = {};
 
 		if(extensions.size &gt; 0) {
 
@@ -564,40 +559,17 @@ export class EffectPass extends Pass {
 
 		}
 
-		return material;
-
 	}
 
 	/**
-	 * Destroys the current fullscreen shader material and builds a new one.
+	 * Updates the shader material.
 	 *
-	 * Warning: This method performs a relatively expensive shader recompilation.
+	 * Warning: This method triggers a relatively expensive shader recompilation.
 	 */
 
 	recompile() {
 
-		let material = this.getFullscreenMaterial();
-		let width = 0, height = 0;
-		let depthTexture = null;
-		let depthPacking = 0;
-
-		if(material !== null) {
-
-			const resolution = material.uniforms.resolution.value;
-			width = resolution.x; height = resolution.y;
-			depthTexture = material.uniforms.depthBuffer.value;
-			depthPacking = material.depthPacking;
-			material.dispose();
-
-			this.uniforms = 0;
-			this.varyings = 0;
-
-		}
-
-		material = this.createMaterial();
-		material.setSize(width, height);
-		this.setFullscreenMaterial(material);
-		this.setDepthTexture(depthTexture, depthPacking);
+		this.updateMaterial();
 
 	}
 
@@ -609,9 +581,7 @@ export class EffectPass extends Pass {
 
 	getDepthTexture() {
 
-		const material = this.getFullscreenMaterial();
-
-		return (material !== null) ? material.uniforms.depthBuffer.value : null;
+		return this.getFullscreenMaterial().uniforms.depthBuffer.value;
 
 	}
 
@@ -625,7 +595,6 @@ export class EffectPass extends Pass {
 	setDepthTexture(depthTexture, depthPacking = 0) {
 
 		const material = this.getFullscreenMaterial();
-
 		material.uniforms.depthBuffer.value = depthTexture;
 		material.depthPacking = depthPacking;
 		material.needsUpdate = true;
@@ -698,8 +667,18 @@ export class EffectPass extends Pass {
 
 	initialize(renderer, alpha) {
 
-		const capabilities = renderer.capabilities;
+		// Initialize effects before building the final shader.
+		for(const effect of this.effects) {
 
+			effect.initialize(renderer, alpha);
+
+		}
+
+		// Initialize the fullscreen material.
+		this.updateMaterial();
+
+		// Compare required resources with capabilities.
+		const capabilities = renderer.capabilities;
 		let max = Math.min(capabilities.maxFragmentUniforms, capabilities.maxVertexUniforms);
 
 		if(this.uniforms &gt; max) {
@@ -713,12 +692,6 @@ export class EffectPass extends Pass {
 		if(this.varyings &gt; max) {
 
 			console.warn(&quot;The current rendering context doesn&apos;t support more than &quot; + max + &quot; varyings, but &quot; + this.varyings + &quot; were defined&quot;);
-
-		}
-
-		for(const effect of this.effects) {
-
-			effect.initialize(renderer, alpha);
 
 		}
 

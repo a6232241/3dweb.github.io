@@ -10,7 +10,8 @@ import {
 	GammaCorrectionEffect,
 	HueSaturationEffect,
 	SepiaEffect,
-	SMAAEffect
+	SMAAEffect,
+	SMAAImageLoader
 } from "../../../src";
 
 /**
@@ -96,6 +97,7 @@ export class ColorGradingDemo extends PostProcessingDemo {
 		const assets = this.assets;
 		const loadingManager = this.loadingManager;
 		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
+		const smaaImageLoader = new SMAAImageLoader(loadingManager);
 
 		const path = "textures/skies/sunset/";
 		const format = ".png";
@@ -110,23 +112,20 @@ export class ColorGradingDemo extends PostProcessingDemo {
 			if(assets.size === 0) {
 
 				loadingManager.onError = reject;
-				loadingManager.onProgress = (item, loaded, total) => {
+				loadingManager.onLoad = resolve;
 
-					if(loaded === total) {
+				cubeTextureLoader.load(urls, (t) => {
 
-						resolve();
-
-					}
-
-				};
-
-				cubeTextureLoader.load(urls, function(textureCube) {
-
-					assets.set("sky", textureCube);
+					assets.set("sky", t);
 
 				});
 
-				this.loadSMAAImages();
+				smaaImageLoader.load(([search, area]) => {
+
+					assets.set("smaa-search", search);
+					assets.set("smaa-area", area);
+
+				});
 
 			} else {
 
@@ -147,11 +146,11 @@ export class ColorGradingDemo extends PostProcessingDemo {
 		const scene = this.scene;
 		const assets = this.assets;
 		const composer = this.composer;
-		const renderer = composer.renderer;
+		const renderer = composer.getRenderer();
 
 		// Camera.
 
-		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
+		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 2000);
 		camera.position.set(-0.75, -0.1, -1);
 		camera.lookAt(scene.position);
 		this.camera = camera;
@@ -171,7 +170,10 @@ export class ColorGradingDemo extends PostProcessingDemo {
 
 		// Passes.
 
-		const smaaEffect = new SMAAEffect(assets.get("smaa-search"), assets.get("smaa-area"));
+		const smaaEffect = new SMAAEffect(
+			assets.get("smaa-search"),
+			assets.get("smaa-area")
+		);
 
 		const colorAverageEffect = new ColorAverageEffect(BlendFunction.SKIP);
 		const sepiaEffect = new SepiaEffect({ blendFunction: BlendFunction.SKIP });

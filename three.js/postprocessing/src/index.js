@@ -2,7 +2,9 @@ export {
 	Disposable,
 	Initializable,
 	EffectComposer,
-	Resizable
+	Resizable,
+	Resizer,
+	Selection
 } from "./core";
 
 export {
@@ -30,6 +32,7 @@ export {
 	RealisticBokehEffect,
 	ScanlineEffect,
 	ShockWaveEffect,
+	SelectiveBloomEffect,
 	SepiaEffect,
 	SMAAEffect,
 	SMAAPreset,
@@ -43,6 +46,7 @@ export {
 export {
 	RawImageData,
 	SMAAAreaImageData,
+	SMAAImageLoader,
 	SMAASearchImageData
 } from "./images";
 

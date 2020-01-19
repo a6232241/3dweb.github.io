@@ -1,8 +1,17 @@
 #include <common>
 
 uniform sampler2D inputBuffer;
-uniform float distinction;
-uniform vec2 range;
+
+#ifdef RANGE
+
+	uniform vec2 range;
+
+#elif defined(THRESHOLD)
+
+	uniform float threshold;
+	uniform float smoothing;
+
+#endif
 
 varying vec2 vUv;
 
@@ -13,23 +22,25 @@ void main() {
 
 	#ifdef RANGE
 
+		// Apply a luminance range mask.
 		float low = step(range.x, l);
 		float high = step(l, range.y);
 
-		// Apply the mask.
 		l *= low * high;
+
+	#elif defined(THRESHOLD)
+
+		l = smoothstep(threshold, threshold + smoothing, l);
 
 	#endif
 
-	l = pow(abs(l), distinction);
-
 	#ifdef COLOR
 
-		gl_FragColor = vec4(texel.rgb * l, texel.a);
+		gl_FragColor = vec4(texel.rgb * l, l);
 
 	#else
 
-		gl_FragColor = vec4(l, l, l, texel.a);
+		gl_FragColor = vec4(l);
 
 	#endif
 

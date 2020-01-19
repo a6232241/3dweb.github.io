@@ -2,7 +2,6 @@ import {
 	AmbientLight,
 	CubeTextureLoader,
 	DirectionalLight,
-	FogExp2,
 	Mesh,
 	MeshPhongMaterial,
 	Object3D,
@@ -20,6 +19,7 @@ import {
 	KernelSize,
 	SavePass,
 	SMAAEffect,
+	SMAAImageLoader,
 	TextureEffect
 } from "../../../src";
 
@@ -88,6 +88,7 @@ export class BlurDemo extends PostProcessingDemo {
 		const assets = this.assets;
 		const loadingManager = this.loadingManager;
 		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
+		const smaaImageLoader = new SMAAImageLoader(loadingManager);
 
 		const path = "textures/skies/sunset/";
 		const format = ".png";
@@ -102,23 +103,20 @@ export class BlurDemo extends PostProcessingDemo {
 			if(assets.size === 0) {
 
 				loadingManager.onError = reject;
-				loadingManager.onProgress = (item, loaded, total) => {
+				loadingManager.onLoad = resolve;
 
-					if(loaded === total) {
+				cubeTextureLoader.load(urls, (t) => {
 
-						resolve();
-
-					}
-
-				};
-
-				cubeTextureLoader.load(urls, function(textureCube) {
-
-					assets.set("sky", textureCube);
+					assets.set("sky", t);
 
 				});
 
-				this.loadSMAAImages();
+				smaaImageLoader.load(([search, area]) => {
+
+					assets.set("smaa-search", search);
+					assets.set("smaa-area", area);
+
+				});
 
 			} else {
 
@@ -139,11 +137,11 @@ export class BlurDemo extends PostProcessingDemo {
 		const scene = this.scene;
 		const assets = this.assets;
 		const composer = this.composer;
-		const renderer = composer.renderer;
+		const renderer = composer.getRenderer();
 
 		// Camera.
 
-		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
+		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 2000);
 		camera.position.set(-15, 0, -15);
 		camera.lookAt(scene.position);
 		this.camera = camera;
@@ -156,11 +154,6 @@ export class BlurDemo extends PostProcessingDemo {
 		controls.settings.sensitivity.zoom = 1.0;
 		controls.lookAt(scene.position);
 		this.controls = controls;
-
-		// Fog.
-
-		scene.fog = new FogExp2(0x000000, 0.0025);
-		renderer.setClearColor(scene.fog.color);
 
 		// Sky.
 
@@ -208,7 +201,9 @@ export class BlurDemo extends PostProcessingDemo {
 		// Passes.
 
 		const savePass = new SavePass();
-		const blurPass = new BlurPass();
+		const blurPass = new BlurPass({
+			height: 480
+		});
 
 		const smaaEffect = new SMAAEffect(assets.get("smaa-search"), assets.get("smaa-area"));
 		const textureEffect = new TextureEffect({
@@ -279,21 +274,28 @@ export class BlurDemo extends PostProcessingDemo {
 
 		const params = {
 			"enabled": blurPass.enabled,
-			"resolution": blurPass.getResolutionScale(),
+			"resolution": blurPass.height,
 			"kernel size": blurPass.kernelSize,
+			"scale": blurPass.scale,
 			"opacity": 1.0 - blendMode.opacity.value,
 			"blend mode": blendMode.blendFunction
 		};
 
-		menu.add(params, "resolution").min(0.01).max(1.0).step(0.01).onChange(() => {
+		menu.add(params, "resolution", [240, 360, 480, 720, 1080]).onChange(() => {
 
-			blurPass.setResolutionScale(params.resolution);
+			blurPass.resolution.height = Number.parseInt(params.resolution);
 
 		});
 
 		menu.add(params, "kernel size", KernelSize).onChange(() => {
 
 			blurPass.kernelSize = Number.parseInt(params["kernel size"]);
+
+		});
+
+		menu.add(params, "scale").min(0.0).max(1.0).step(0.01).onChange(() => {
+
+			blurPass.scale = Number.parseFloat(params.scale);
 
 		});
 

@@ -1,7 +1,7 @@
 {
-  "coverage": "96.95%",
-  "expectCount": 526,
-  "actualCount": 510,
+  "coverage": "95.9%",
+  "expectCount": 611,
+  "actualCount": 586,
   "files": {
     "src/core/Disposable.js": {
       "expectCount": 2,
@@ -23,6 +23,16 @@
       "actualCount": 2,
       "undocumentLines": []
     },
+    "src/core/Resizer.js": {
+      "expectCount": 12,
+      "actualCount": 12,
+      "undocumentLines": []
+    },
+    "src/core/Selection.js": {
+      "expectCount": 11,
+      "actualCount": 11,
+      "undocumentLines": []
+    },
     "src/effects/blending/BlendFunction.js": {
       "expectCount": 1,
       "actualCount": 1,
@@ -34,8 +44,8 @@
       "undocumentLines": []
     },
     "src/effects/BloomEffect.js": {
-      "expectCount": 18,
-      "actualCount": 18,
+      "expectCount": 23,
+      "actualCount": 23,
       "undocumentLines": []
     },
     "src/effects/BokehEffect.js": {
@@ -49,8 +59,8 @@
       "undocumentLines": []
     },
     "src/effects/ChromaticAberrationEffect.js": {
-      "expectCount": 4,
-      "actualCount": 4,
+      "expectCount": 5,
+      "actualCount": 5,
       "undocumentLines": []
     },
     "src/effects/ColorAverageEffect.js": {
@@ -89,8 +99,8 @@
       "undocumentLines": []
     },
     "src/effects/GodRaysEffect.js": {
-      "expectCount": 33,
-      "actualCount": 33,
+      "expectCount": 37,
+      "actualCount": 37,
       "undocumentLines": []
     },
     "src/effects/GridEffect.js": {
@@ -109,11 +119,11 @@
       "undocumentLines": []
     },
     "src/effects/OutlineEffect.js": {
-      "expectCount": 39,
-      "actualCount": 37,
+      "expectCount": 42,
+      "actualCount": 40,
       "undocumentLines": [
-        72,
-        383
+        76,
+        447
       ]
     },
     "src/effects/PixelationEffect.js": {
@@ -129,6 +139,11 @@
     "src/effects/ScanlineEffect.js": {
       "expectCount": 7,
       "actualCount": 7,
+      "undocumentLines": []
+    },
+    "src/effects/SelectiveBloomEffect.js": {
+      "expectCount": 16,
+      "actualCount": 16,
       "undocumentLines": []
     },
     "src/effects/SepiaEffect.js": {
@@ -174,8 +189,18 @@
       "undocumentLines": []
     },
     "src/images/smaa/utils/SMAAAreaImageData.js": {
-      "expectCount": 23,
-      "actualCount": 23,
+      "expectCount": 33,
+      "actualCount": 29,
+      "undocumentLines": [
+        20,
+        21,
+        71,
+        72
+      ]
+    },
+    "src/images/smaa/utils/SMAAImageLoader.js": {
+      "expectCount": 6,
+      "actualCount": 6,
       "undocumentLines": []
     },
     "src/images/smaa/utils/SMAASearchImageData.js": {
@@ -216,9 +241,13 @@
       "undocumentLines": []
     },
     "src/materials/EffectMaterial.js": {
-      "expectCount": 7,
-      "actualCount": 7,
-      "undocumentLines": []
+      "expectCount": 13,
+      "actualCount": 10,
+      "undocumentLines": [
+        119,
+        123,
+        126
+      ]
     },
     "src/materials/GodRaysMaterial.js": {
       "expectCount": 5,
@@ -228,10 +257,10 @@
       ]
     },
     "src/materials/LuminanceMaterial.js": {
-      "expectCount": 9,
-      "actualCount": 8,
+      "expectCount": 17,
+      "actualCount": 16,
       "undocumentLines": [
-        86
+        136
       ]
     },
     "src/materials/OutlineEdgesMaterial.js": {
@@ -247,8 +276,8 @@
       ]
     },
     "src/passes/BlurPass.js": {
-      "expectCount": 18,
-      "actualCount": 18,
+      "expectCount": 22,
+      "actualCount": 22,
       "undocumentLines": []
     },
     "src/passes/ClearMaskPass.js": {
@@ -267,17 +296,18 @@
     },
     "src/passes/DepthPass.js": {
       "expectCount": 11,
-      "actualCount": 10,
+      "actualCount": 9,
       "undocumentLines": [
-        33
+        40,
+        115
       ]
     },
     "src/passes/EffectPass.js": {
-      "expectCount": 25,
-      "actualCount": 23,
+      "expectCount": 24,
+      "actualCount": 22,
       "undocumentLines": [
-        429,
-        453
+        418,
+        442
       ]
     },
     "src/passes/MaskPass.js": {
@@ -289,9 +319,10 @@
     },
     "src/passes/NormalPass.js": {
       "expectCount": 11,
-      "actualCount": 10,
+      "actualCount": 9,
       "undocumentLines": [
-        33
+        40,
+        116
       ]
     },
     "src/passes/Pass.js": {

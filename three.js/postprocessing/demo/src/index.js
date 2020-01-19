@@ -101,22 +101,18 @@ function onLoad(event) {
 }
 
 /**
- * Starts the program.
+ * Performs initialization tasks when the page has been fully loaded.
  *
  * @private
  * @param {Event} event - An event.
  */
 
-window.addEventListener("load", function main(event) {
-
-	// Clean up.
-	this.removeEventListener("load", main);
+window.addEventListener("load", (event) => {
 
 	const viewport = document.getElementById("viewport");
 
 	// Create a custom renderer.
 	renderer = new WebGLRenderer({
-		logarithmicDepthBuffer: true,
 		antialias: false
 	});
 
@@ -130,10 +126,10 @@ window.addEventListener("load", function main(event) {
 		stencilBuffer: true
 	});
 
-	// Initialise the demo manager.
+	// Initialize the demo manager.
 	manager = new DemoManager(viewport, {
 		aside: document.getElementById("aside"),
-		renderer: renderer
+		renderer
 	});
 
 	// Setup demo switch and load event handlers.
@@ -216,17 +212,41 @@ window.addEventListener("resize", (function() {
 }()));
 
 /**
- * Toggles the visibility of the interface on Alt key press.
+ * Performs initialization tasks when the document is ready.
  *
  * @private
  * @param {Event} event - An event.
  */
 
-document.addEventListener("keydown", function onKeyDown(event) {
+document.addEventListener("DOMContentLoaded", (event) => {
 
-	const aside = this.getElementById("aside");
+	const infoImg = document.querySelector(".info img");
+	const infoDiv = document.querySelector(".info div");
 
-	if(event.altKey && aside !== null) {
+	if(infoImg !== null && infoDiv !== null) {
+
+		infoImg.addEventListener("click", (event) => {
+
+			infoDiv.style.display = (infoDiv.style.display === "block") ? "none" : "block";
+
+		});
+
+	}
+
+});
+
+/**
+ * Toggles the visibility of the interface on H key press.
+ *
+ * @private
+ * @param {Event} event - An event.
+ */
+
+document.addEventListener("keydown", (event) => {
+
+	const aside = document.getElementById("aside");
+
+	if(aside !== null && event.key === "h") {
 
 		event.preventDefault();
 		aside.style.visibility = (aside.style.visibility === "hidden") ? "visible" : "hidden";

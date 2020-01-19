@@ -41,9 +41,6 @@ export class EffectComposer {
 		/**
 		 * The renderer.
 		 *
-		 * You may replace the renderer at any time by using
-		 * {@link EffectComposer#replaceRenderer}.
-		 *
 		 * @type {WebGLRenderer}
 		 * @private
 		 */
@@ -111,6 +108,9 @@ export class EffectComposer {
 	/**
 	 * Returns the WebGL renderer.
 	 *
+	 * You may replace the renderer at any time by using
+	 * {@link EffectComposer#replaceRenderer}.
+	 *
 	 * @return {WebGLRenderer} The renderer.
 	 */
 
@@ -121,17 +121,21 @@ export class EffectComposer {
 	}
 
 	/**
-	 * Replaces the current renderer with the given one. The DOM element of the
-	 * current renderer will automatically be removed from its parent node and the
-	 * DOM element of the new renderer will take its place.
+	 * Replaces the current renderer with the given one.
 	 *
-	 * The auto clear mechanism of the provided renderer will be disabled.
+	 * The auto clear mechanism of the provided renderer will be disabled. If the
+	 * new render size differs from the previous one, all passes will be updated.
+	 *
+	 * By default, the DOM element of the current renderer will automatically be
+	 * removed from its parent node and the DOM element of the new renderer will
+	 * take its place.
 	 *
 	 * @param {WebGLRenderer} renderer - The new renderer.
+	 * @param {Boolean} updateDOM - Indicates whether the old canvas should be replaced by the new one in the DOM.
 	 * @return {WebGLRenderer} The old renderer.
 	 */
 
-	replaceRenderer(renderer) {
+	replaceRenderer(renderer, updateDOM = true) {
 
 		const oldRenderer = this.renderer;
 
@@ -150,7 +154,7 @@ export class EffectComposer {
 
 			}
 
-			if(parent !== null) {
+			if(updateDOM && parent !== null) {
 
 				parent.removeChild(oldRenderer.domElement);
 				parent.appendChild(renderer.domElement);
@@ -204,7 +208,7 @@ export class EffectComposer {
 	createBuffer(depthBuffer, stencilBuffer) {
 
 		const drawingBufferSize = this.renderer.getDrawingBufferSize(new Vector2());
-		const alpha = this.renderer.context.getContextAttributes().alpha;
+		const alpha = this.renderer.getContext().getContextAttributes().alpha;
 
 		const renderTarget = new WebGLRenderTarget(drawingBufferSize.width, drawingBufferSize.height, {
 			minFilter: LinearFilter,
@@ -235,7 +239,7 @@ export class EffectComposer {
 		const drawingBufferSize = renderer.getDrawingBufferSize(new Vector2());
 
 		pass.setSize(drawingBufferSize.width, drawingBufferSize.height);
-		pass.initialize(renderer, renderer.context.getContextAttributes().alpha);
+		pass.initialize(renderer, renderer.getContext().getContextAttributes().alpha);
 
 		if(index !== undefined) {
 
@@ -320,7 +324,7 @@ export class EffectComposer {
 		let outputBuffer = this.outputBuffer;
 
 		let stencilTest = false;
-		let context, state, buffer;
+		let context, stencil, buffer;
 
 		for(const pass of this.passes) {
 
@@ -333,14 +337,13 @@ export class EffectComposer {
 					if(stencilTest) {
 
 						copyPass.renderToScreen = pass.renderToScreen;
-
-						context = renderer.context;
-						state = renderer.state;
+						context = renderer.getContext();
+						stencil = renderer.state.buffers.stencil;
 
 						// Preserve the unaffected pixels.
-						state.buffers.stencil.setFunc(context.NOTEQUAL, 1, 0xffffffff);
+						stencil.setFunc(context.NOTEQUAL, 1, 0xffffffff);
 						copyPass.render(renderer, inputBuffer, outputBuffer, deltaTime, stencilTest);
-						state.buffers.stencil.setFunc(context.EQUAL, 1, 0xffffffff);
+						stencil.setFunc(context.EQUAL, 1, 0xffffffff);
 
 					}
 
@@ -377,9 +380,10 @@ export class EffectComposer {
 	 *
 	 * @param {Number} [width] - The width.
 	 * @param {Number} [height] - The height.
+	 * @param {Boolean} [updateStyle] - Determines whether the style of the canvas should be updated.
 	 */
 
-	setSize(width, height) {
+	setSize(width, height, updateStyle) {
 
 		const renderer = this.renderer;
 
@@ -391,7 +395,7 @@ export class EffectComposer {
 		}
 
 		// Update the logical render size.
-		renderer.setSize(width, height);
+		renderer.setSize(width, height, updateStyle);
 
 		// The drawing buffer size takes the device pixel ratio into account.
 		const drawingBufferSize = renderer.getDrawingBufferSize(new Vector2());

@@ -1,380 +1,404 @@
 window.esdocSearchIndex = [
   [
-    "postprocessing/src/materials/adaptiveluminancematerial.js~adaptiveluminancematerial",
+    "postprocessing~adaptiveluminancematerial",
     "class/src/materials/AdaptiveLuminanceMaterial.js~AdaptiveLuminanceMaterial.html",
-    "<span>AdaptiveLuminanceMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/AdaptiveLuminanceMaterial.js</span>",
+    "<span>AdaptiveLuminanceMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/blending/blendfunction.js~blendfunction",
+    "postprocessing~blendfunction",
     "variable/index.html#static-variable-BlendFunction",
-    "<span>BlendFunction</span> <span class=\"search-result-import-path\">postprocessing/src/effects/blending/BlendFunction.js</span>",
+    "<span>BlendFunction</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "variable"
   ],
   [
-    "postprocessing/src/effects/blending/blendmode.js~blendmode",
+    "postprocessing~blendmode",
     "class/src/effects/blending/BlendMode.js~BlendMode.html",
-    "<span>BlendMode</span> <span class=\"search-result-import-path\">postprocessing/src/effects/blending/BlendMode.js</span>",
+    "<span>BlendMode</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/bloomeffect.js~bloomeffect",
+    "postprocessing~bloomeffect",
     "class/src/effects/BloomEffect.js~BloomEffect.html",
-    "<span>BloomEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/BloomEffect.js</span>",
+    "<span>BloomEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/blurpass.js~blurpass",
+    "postprocessing~blurpass",
     "class/src/passes/BlurPass.js~BlurPass.html",
-    "<span>BlurPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/BlurPass.js</span>",
+    "<span>BlurPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/bokeheffect.js~bokeheffect",
+    "postprocessing~bokeheffect",
     "class/src/effects/BokehEffect.js~BokehEffect.html",
-    "<span>BokehEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/BokehEffect.js</span>",
+    "<span>BokehEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/brightnesscontrasteffect.js~brightnesscontrasteffect",
+    "postprocessing~brightnesscontrasteffect",
     "class/src/effects/BrightnessContrastEffect.js~BrightnessContrastEffect.html",
-    "<span>BrightnessContrastEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/BrightnessContrastEffect.js</span>",
+    "<span>BrightnessContrastEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/chromaticaberrationeffect.js~chromaticaberrationeffect",
+    "postprocessing~chromaticaberrationeffect",
     "class/src/effects/ChromaticAberrationEffect.js~ChromaticAberrationEffect.html",
-    "<span>ChromaticAberrationEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/ChromaticAberrationEffect.js</span>",
+    "<span>ChromaticAberrationEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/clearmaskpass.js~clearmaskpass",
+    "postprocessing~clearmaskpass",
     "class/src/passes/ClearMaskPass.js~ClearMaskPass.html",
-    "<span>ClearMaskPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/ClearMaskPass.js</span>",
+    "<span>ClearMaskPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/clearpass.js~clearpass",
+    "postprocessing~clearpass",
     "class/src/passes/ClearPass.js~ClearPass.html",
-    "<span>ClearPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/ClearPass.js</span>",
+    "<span>ClearPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/coloraverageeffect.js~coloraverageeffect",
+    "postprocessing~coloraverageeffect",
     "class/src/effects/ColorAverageEffect.js~ColorAverageEffect.html",
-    "<span>ColorAverageEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/ColorAverageEffect.js</span>",
+    "<span>ColorAverageEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/colordeptheffect.js~colordeptheffect",
+    "postprocessing~colordeptheffect",
     "class/src/effects/ColorDepthEffect.js~ColorDepthEffect.html",
-    "<span>ColorDepthEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/ColorDepthEffect.js</span>",
+    "<span>ColorDepthEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/coloredgesmaterial.js~coloredgesmaterial",
+    "postprocessing~coloredgesmaterial",
     "class/src/materials/ColorEdgesMaterial.js~ColorEdgesMaterial.html",
-    "<span>ColorEdgesMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/ColorEdgesMaterial.js</span>",
+    "<span>ColorEdgesMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/convolutionmaterial.js~convolutionmaterial",
+    "postprocessing~convolutionmaterial",
     "class/src/materials/ConvolutionMaterial.js~ConvolutionMaterial.html",
-    "<span>ConvolutionMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/ConvolutionMaterial.js</span>",
+    "<span>ConvolutionMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/copymaterial.js~copymaterial",
+    "postprocessing~copymaterial",
     "class/src/materials/CopyMaterial.js~CopyMaterial.html",
-    "<span>CopyMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/CopyMaterial.js</span>",
+    "<span>CopyMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/depthcomparisonmaterial.js~depthcomparisonmaterial",
+    "postprocessing~depthcomparisonmaterial",
     "class/src/materials/DepthComparisonMaterial.js~DepthComparisonMaterial.html",
-    "<span>DepthComparisonMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/DepthComparisonMaterial.js</span>",
+    "<span>DepthComparisonMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/deptheffect.js~deptheffect",
+    "postprocessing~deptheffect",
     "class/src/effects/DepthEffect.js~DepthEffect.html",
-    "<span>DepthEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/DepthEffect.js</span>",
+    "<span>DepthEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/depthmaskmaterial.js~depthmaskmaterial",
+    "postprocessing~depthmaskmaterial",
     "class/src/materials/DepthMaskMaterial.js~DepthMaskMaterial.html",
-    "<span>DepthMaskMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/DepthMaskMaterial.js</span>",
+    "<span>DepthMaskMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/depthpass.js~depthpass",
+    "postprocessing~depthpass",
     "class/src/passes/DepthPass.js~DepthPass.html",
-    "<span>DepthPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/DepthPass.js</span>",
+    "<span>DepthPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/core/disposable.js~disposable",
+    "postprocessing~disposable",
     "class/src/core/Disposable.js~Disposable.html",
-    "<span>Disposable</span> <span class=\"search-result-import-path\">postprocessing/src/core/Disposable.js</span>",
+    "<span>Disposable</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/dotscreeneffect.js~dotscreeneffect",
+    "postprocessing~dotscreeneffect",
     "class/src/effects/DotScreenEffect.js~DotScreenEffect.html",
-    "<span>DotScreenEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/DotScreenEffect.js</span>",
+    "<span>DotScreenEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/effect.js~effect",
+    "postprocessing~effect",
     "class/src/effects/Effect.js~Effect.html",
-    "<span>Effect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/Effect.js</span>",
+    "<span>Effect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/effect.js~effectattribute",
+    "postprocessing~effectattribute",
     "variable/index.html#static-variable-EffectAttribute",
-    "<span>EffectAttribute</span> <span class=\"search-result-import-path\">postprocessing/src/effects/Effect.js</span>",
+    "<span>EffectAttribute</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "variable"
   ],
   [
-    "postprocessing/src/core/effectcomposer.js~effectcomposer",
+    "postprocessing~effectcomposer",
     "class/src/core/EffectComposer.js~EffectComposer.html",
-    "<span>EffectComposer</span> <span class=\"search-result-import-path\">postprocessing/src/core/EffectComposer.js</span>",
+    "<span>EffectComposer</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/effectmaterial.js~effectmaterial",
+    "postprocessing~effectmaterial",
     "class/src/materials/EffectMaterial.js~EffectMaterial.html",
-    "<span>EffectMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/EffectMaterial.js</span>",
+    "<span>EffectMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/effectpass.js~effectpass",
+    "postprocessing~effectpass",
     "class/src/passes/EffectPass.js~EffectPass.html",
-    "<span>EffectPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/EffectPass.js</span>",
+    "<span>EffectPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/gammacorrectioneffect.js~gammacorrectioneffect",
+    "postprocessing~gammacorrectioneffect",
     "class/src/effects/GammaCorrectionEffect.js~GammaCorrectionEffect.html",
-    "<span>GammaCorrectionEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/GammaCorrectionEffect.js</span>",
+    "<span>GammaCorrectionEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/glitcheffect.js~glitcheffect",
+    "postprocessing~glitcheffect",
     "class/src/effects/GlitchEffect.js~GlitchEffect.html",
-    "<span>GlitchEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/GlitchEffect.js</span>",
+    "<span>GlitchEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/glitcheffect.js~glitchmode",
+    "postprocessing~glitchmode",
     "variable/index.html#static-variable-GlitchMode",
-    "<span>GlitchMode</span> <span class=\"search-result-import-path\">postprocessing/src/effects/GlitchEffect.js</span>",
+    "<span>GlitchMode</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "variable"
   ],
   [
-    "postprocessing/src/effects/godrayseffect.js~godrayseffect",
+    "postprocessing~godrayseffect",
     "class/src/effects/GodRaysEffect.js~GodRaysEffect.html",
-    "<span>GodRaysEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/GodRaysEffect.js</span>",
+    "<span>GodRaysEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/godraysmaterial.js~godraysmaterial",
+    "postprocessing~godraysmaterial",
     "class/src/materials/GodRaysMaterial.js~GodRaysMaterial.html",
-    "<span>GodRaysMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/GodRaysMaterial.js</span>",
+    "<span>GodRaysMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/grideffect.js~grideffect",
+    "postprocessing~grideffect",
     "class/src/effects/GridEffect.js~GridEffect.html",
-    "<span>GridEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/GridEffect.js</span>",
+    "<span>GridEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/huesaturationeffect.js~huesaturationeffect",
+    "postprocessing~huesaturationeffect",
     "class/src/effects/HueSaturationEffect.js~HueSaturationEffect.html",
-    "<span>HueSaturationEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/HueSaturationEffect.js</span>",
+    "<span>HueSaturationEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/core/initializable.js~initializable",
+    "postprocessing~initializable",
     "class/src/core/Initializable.js~Initializable.html",
-    "<span>Initializable</span> <span class=\"search-result-import-path\">postprocessing/src/core/Initializable.js</span>",
+    "<span>Initializable</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/convolutionmaterial.js~kernelsize",
+    "postprocessing~kernelsize",
     "variable/index.html#static-variable-KernelSize",
-    "<span>KernelSize</span> <span class=\"search-result-import-path\">postprocessing/src/materials/ConvolutionMaterial.js</span>",
+    "<span>KernelSize</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "variable"
   ],
   [
-    "postprocessing/src/materials/luminancematerial.js~luminancematerial",
+    "postprocessing~luminancematerial",
     "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html",
-    "<span>LuminanceMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/LuminanceMaterial.js</span>",
+    "<span>LuminanceMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/maskpass.js~maskpass",
+    "postprocessing~maskpass",
     "class/src/passes/MaskPass.js~MaskPass.html",
-    "<span>MaskPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/MaskPass.js</span>",
+    "<span>MaskPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/noiseeffect.js~noiseeffect",
+    "postprocessing~noiseeffect",
     "class/src/effects/NoiseEffect.js~NoiseEffect.html",
-    "<span>NoiseEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/NoiseEffect.js</span>",
+    "<span>NoiseEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/normalpass.js~normalpass",
+    "postprocessing~normalpass",
     "class/src/passes/NormalPass.js~NormalPass.html",
-    "<span>NormalPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/NormalPass.js</span>",
+    "<span>NormalPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/outlineedgesmaterial.js~outlineedgesmaterial",
+    "postprocessing~outlineedgesmaterial",
     "class/src/materials/OutlineEdgesMaterial.js~OutlineEdgesMaterial.html",
-    "<span>OutlineEdgesMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/OutlineEdgesMaterial.js</span>",
+    "<span>OutlineEdgesMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/outlineeffect.js~outlineeffect",
+    "postprocessing~outlineeffect",
     "class/src/effects/OutlineEffect.js~OutlineEffect.html",
-    "<span>OutlineEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/OutlineEffect.js</span>",
+    "<span>OutlineEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/pass.js~pass",
+    "postprocessing~pass",
     "class/src/passes/Pass.js~Pass.html",
-    "<span>Pass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/Pass.js</span>",
+    "<span>Pass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/pixelationeffect.js~pixelationeffect",
+    "postprocessing~pixelationeffect",
     "class/src/effects/PixelationEffect.js~PixelationEffect.html",
-    "<span>PixelationEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/PixelationEffect.js</span>",
+    "<span>PixelationEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/images/rawimagedata.js~rawimagedata",
+    "postprocessing~rawimagedata",
     "class/src/images/RawImageData.js~RawImageData.html",
-    "<span>RawImageData</span> <span class=\"search-result-import-path\">postprocessing/src/images/RawImageData.js</span>",
+    "<span>RawImageData</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/realisticbokeheffect.js~realisticbokeheffect",
+    "postprocessing~realisticbokeheffect",
     "class/src/effects/RealisticBokehEffect.js~RealisticBokehEffect.html",
-    "<span>RealisticBokehEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/RealisticBokehEffect.js</span>",
+    "<span>RealisticBokehEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/renderpass.js~renderpass",
+    "postprocessing~renderpass",
     "class/src/passes/RenderPass.js~RenderPass.html",
-    "<span>RenderPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/RenderPass.js</span>",
+    "<span>RenderPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/core/resizable.js~resizable",
+    "postprocessing~resizable",
     "class/src/core/Resizable.js~Resizable.html",
-    "<span>Resizable</span> <span class=\"search-result-import-path\">postprocessing/src/core/Resizable.js</span>",
+    "<span>Resizable</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/images/smaa/utils/smaaareaimagedata.js~smaaareaimagedata",
+    "postprocessing~resizer",
+    "class/src/core/Resizer.js~Resizer.html",
+    "<span>Resizer</span> <span class=\"search-result-import-path\">postprocessing</span>",
+    "class"
+  ],
+  [
+    "postprocessing~smaaareaimagedata",
     "class/src/images/smaa/utils/SMAAAreaImageData.js~SMAAAreaImageData.html",
-    "<span>SMAAAreaImageData</span> <span class=\"search-result-import-path\">postprocessing/src/images/smaa/utils/SMAAAreaImageData.js</span>",
+    "<span>SMAAAreaImageData</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/smaaeffect.js~smaaeffect",
+    "postprocessing~smaaeffect",
     "class/src/effects/SMAAEffect.js~SMAAEffect.html",
-    "<span>SMAAEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/SMAAEffect.js</span>",
+    "<span>SMAAEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/smaaeffect.js~smaapreset",
+    "postprocessing~smaaimageloader",
+    "class/src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader.html",
+    "<span>SMAAImageLoader</span> <span class=\"search-result-import-path\">postprocessing</span>",
+    "class"
+  ],
+  [
+    "postprocessing~smaapreset",
     "variable/index.html#static-variable-SMAAPreset",
-    "<span>SMAAPreset</span> <span class=\"search-result-import-path\">postprocessing/src/effects/SMAAEffect.js</span>",
+    "<span>SMAAPreset</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "variable"
   ],
   [
-    "postprocessing/src/images/smaa/utils/smaasearchimagedata.js~smaasearchimagedata",
+    "postprocessing~smaasearchimagedata",
     "class/src/images/smaa/utils/SMAASearchImageData.js~SMAASearchImageData.html",
-    "<span>SMAASearchImageData</span> <span class=\"search-result-import-path\">postprocessing/src/images/smaa/utils/SMAASearchImageData.js</span>",
+    "<span>SMAASearchImageData</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/smaaweightsmaterial.js~smaaweightsmaterial",
+    "postprocessing~smaaweightsmaterial",
     "class/src/materials/SMAAWeightsMaterial.js~SMAAWeightsMaterial.html",
-    "<span>SMAAWeightsMaterial</span> <span class=\"search-result-import-path\">postprocessing/src/materials/SMAAWeightsMaterial.js</span>",
+    "<span>SMAAWeightsMaterial</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/ssaoeffect.js~ssaoeffect",
+    "postprocessing~ssaoeffect",
     "class/src/effects/SSAOEffect.js~SSAOEffect.html",
-    "<span>SSAOEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/SSAOEffect.js</span>",
+    "<span>SSAOEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/savepass.js~savepass",
+    "postprocessing~savepass",
     "class/src/passes/SavePass.js~SavePass.html",
-    "<span>SavePass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/SavePass.js</span>",
+    "<span>SavePass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/scanlineeffect.js~scanlineeffect",
+    "postprocessing~scanlineeffect",
     "class/src/effects/ScanlineEffect.js~ScanlineEffect.html",
-    "<span>ScanlineEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/ScanlineEffect.js</span>",
+    "<span>ScanlineEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/materials/effectmaterial.js~section",
+    "postprocessing~section",
     "variable/index.html#static-variable-Section",
-    "<span>Section</span> <span class=\"search-result-import-path\">postprocessing/src/materials/EffectMaterial.js</span>",
+    "<span>Section</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "variable"
   ],
   [
-    "postprocessing/src/effects/sepiaeffect.js~sepiaeffect",
+    "postprocessing~selection",
+    "class/src/core/Selection.js~Selection.html",
+    "<span>Selection</span> <span class=\"search-result-import-path\">postprocessing</span>",
+    "class"
+  ],
+  [
+    "postprocessing~selectivebloomeffect",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html",
+    "<span>SelectiveBloomEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
+    "class"
+  ],
+  [
+    "postprocessing~sepiaeffect",
     "class/src/effects/SepiaEffect.js~SepiaEffect.html",
-    "<span>SepiaEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/SepiaEffect.js</span>",
+    "<span>SepiaEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/passes/shaderpass.js~shaderpass",
+    "postprocessing~shaderpass",
     "class/src/passes/ShaderPass.js~ShaderPass.html",
-    "<span>ShaderPass</span> <span class=\"search-result-import-path\">postprocessing/src/passes/ShaderPass.js</span>",
+    "<span>ShaderPass</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/shockwaveeffect.js~shockwaveeffect",
+    "postprocessing~shockwaveeffect",
     "class/src/effects/ShockWaveEffect.js~ShockWaveEffect.html",
-    "<span>ShockWaveEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/ShockWaveEffect.js</span>",
+    "<span>ShockWaveEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/textureeffect.js~textureeffect",
+    "postprocessing~textureeffect",
     "class/src/effects/TextureEffect.js~TextureEffect.html",
-    "<span>TextureEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/TextureEffect.js</span>",
+    "<span>TextureEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/tonemappingeffect.js~tonemappingeffect",
+    "postprocessing~tonemappingeffect",
     "class/src/effects/ToneMappingEffect.js~ToneMappingEffect.html",
-    "<span>ToneMappingEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/ToneMappingEffect.js</span>",
+    "<span>ToneMappingEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/vignetteeffect.js~vignetteeffect",
+    "postprocessing~vignetteeffect",
     "class/src/effects/VignetteEffect.js~VignetteEffect.html",
-    "<span>VignetteEffect</span> <span class=\"search-result-import-path\">postprocessing/src/effects/VignetteEffect.js</span>",
+    "<span>VignetteEffect</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "class"
   ],
   [
-    "postprocessing/src/effects/effect.js~webglextension",
+    "postprocessing~webglextension",
     "variable/index.html#static-variable-WebGLExtension",
-    "<span>WebGLExtension</span> <span class=\"search-result-import-path\">postprocessing/src/effects/Effect.js</span>",
+    "<span>WebGLExtension</span> <span class=\"search-result-import-path\">postprocessing</span>",
     "variable"
   ],
   [
@@ -762,6 +786,126 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/core/resizer.js",
+    "file/src/core/Resizer.js.html",
+    "src/core/Resizer.js",
+    "file"
+  ],
+  [
+    "src/core/resizer.js~resizer#base",
+    "class/src/core/Resizer.js~Resizer.html#instance-member-base",
+    "src/core/Resizer.js~Resizer#base",
+    "member"
+  ],
+  [
+    "src/core/resizer.js~resizer#constructor",
+    "class/src/core/Resizer.js~Resizer.html#instance-constructor-constructor",
+    "src/core/Resizer.js~Resizer#constructor",
+    "method"
+  ],
+  [
+    "src/core/resizer.js~resizer#height",
+    "class/src/core/Resizer.js~Resizer.html#instance-get-height",
+    "src/core/Resizer.js~Resizer#height",
+    "member"
+  ],
+  [
+    "src/core/resizer.js~resizer#height",
+    "class/src/core/Resizer.js~Resizer.html#instance-set-height",
+    "src/core/Resizer.js~Resizer#height",
+    "member"
+  ],
+  [
+    "src/core/resizer.js~resizer#resizable",
+    "class/src/core/Resizer.js~Resizer.html#instance-member-resizable",
+    "src/core/Resizer.js~Resizer#resizable",
+    "member"
+  ],
+  [
+    "src/core/resizer.js~resizer#scale",
+    "class/src/core/Resizer.js~Resizer.html#instance-member-scale",
+    "src/core/Resizer.js~Resizer#scale",
+    "member"
+  ],
+  [
+    "src/core/resizer.js~resizer#width",
+    "class/src/core/Resizer.js~Resizer.html#instance-get-width",
+    "src/core/Resizer.js~Resizer#width",
+    "member"
+  ],
+  [
+    "src/core/resizer.js~resizer#width",
+    "class/src/core/Resizer.js~Resizer.html#instance-set-width",
+    "src/core/Resizer.js~Resizer#width",
+    "member"
+  ],
+  [
+    "src/core/resizer.js~resizer.auto_size",
+    "class/src/core/Resizer.js~Resizer.html#static-get-AUTO_SIZE",
+    "src/core/Resizer.js~Resizer.AUTO_SIZE",
+    "member"
+  ],
+  [
+    "src/core/selection.js",
+    "file/src/core/Selection.js.html",
+    "src/core/Selection.js",
+    "file"
+  ],
+  [
+    "src/core/selection.js~selection#add",
+    "class/src/core/Selection.js~Selection.html#instance-method-add",
+    "src/core/Selection.js~Selection#add",
+    "method"
+  ],
+  [
+    "src/core/selection.js~selection#clear",
+    "class/src/core/Selection.js~Selection.html#instance-method-clear",
+    "src/core/Selection.js~Selection#clear",
+    "method"
+  ],
+  [
+    "src/core/selection.js~selection#constructor",
+    "class/src/core/Selection.js~Selection.html#instance-constructor-constructor",
+    "src/core/Selection.js~Selection#constructor",
+    "method"
+  ],
+  [
+    "src/core/selection.js~selection#delete",
+    "class/src/core/Selection.js~Selection.html#instance-method-delete",
+    "src/core/Selection.js~Selection#delete",
+    "method"
+  ],
+  [
+    "src/core/selection.js~selection#indexof",
+    "class/src/core/Selection.js~Selection.html#instance-method-indexOf",
+    "src/core/Selection.js~Selection#indexOf",
+    "method"
+  ],
+  [
+    "src/core/selection.js~selection#layer",
+    "class/src/core/Selection.js~Selection.html#instance-get-layer",
+    "src/core/Selection.js~Selection#layer",
+    "member"
+  ],
+  [
+    "src/core/selection.js~selection#layer",
+    "class/src/core/Selection.js~Selection.html#instance-set-layer",
+    "src/core/Selection.js~Selection#layer",
+    "member"
+  ],
+  [
+    "src/core/selection.js~selection#set",
+    "class/src/core/Selection.js~Selection.html#instance-method-set",
+    "src/core/Selection.js~Selection#set",
+    "method"
+  ],
+  [
+    "src/core/selection.js~selection#setvisible",
+    "class/src/core/Selection.js~Selection.html#instance-method-setVisible",
+    "src/core/Selection.js~Selection#setVisible",
+    "method"
+  ],
+  [
     "src/core/index.js",
     "file/src/core/index.js.html",
     "src/core/index.js",
@@ -772,6 +916,12 @@ window.esdocSearchIndex = [
     "file/src/effects/BloomEffect.js.html",
     "src/effects/BloomEffect.js",
     "file"
+  ],
+  [
+    "src/effects/bloomeffect.js~bloomeffect#blurpass",
+    "class/src/effects/BloomEffect.js~BloomEffect.html#instance-member-blurPass",
+    "src/effects/BloomEffect.js~BloomEffect#blurPass",
+    "member"
   ],
   [
     "src/effects/bloomeffect.js~bloomeffect#constructor",
@@ -810,6 +960,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/effects/bloomeffect.js~bloomeffect#height",
+    "class/src/effects/BloomEffect.js~BloomEffect.html#instance-get-height",
+    "src/effects/BloomEffect.js~BloomEffect#height",
+    "member"
+  ],
+  [
+    "src/effects/bloomeffect.js~bloomeffect#height",
+    "class/src/effects/BloomEffect.js~BloomEffect.html#instance-set-height",
+    "src/effects/BloomEffect.js~BloomEffect#height",
+    "member"
+  ],
+  [
     "src/effects/bloomeffect.js~bloomeffect#initialize",
     "class/src/effects/BloomEffect.js~BloomEffect.html#instance-method-initialize",
     "src/effects/BloomEffect.js~BloomEffect#initialize",
@@ -825,6 +987,24 @@ window.esdocSearchIndex = [
     "src/effects/bloomeffect.js~bloomeffect#kernelsize",
     "class/src/effects/BloomEffect.js~BloomEffect.html#instance-set-kernelSize",
     "src/effects/BloomEffect.js~BloomEffect#kernelSize",
+    "member"
+  ],
+  [
+    "src/effects/bloomeffect.js~bloomeffect#luminancematerial",
+    "class/src/effects/BloomEffect.js~BloomEffect.html#instance-get-luminanceMaterial",
+    "src/effects/BloomEffect.js~BloomEffect#luminanceMaterial",
+    "member"
+  ],
+  [
+    "src/effects/bloomeffect.js~bloomeffect#luminancepass",
+    "class/src/effects/BloomEffect.js~BloomEffect.html#instance-member-luminancePass",
+    "src/effects/BloomEffect.js~BloomEffect#luminancePass",
+    "member"
+  ],
+  [
+    "src/effects/bloomeffect.js~bloomeffect#resolution",
+    "class/src/effects/BloomEffect.js~BloomEffect.html#instance-get-resolution",
+    "src/effects/BloomEffect.js~BloomEffect#resolution",
     "member"
   ],
   [
@@ -850,6 +1030,18 @@ window.esdocSearchIndex = [
     "class/src/effects/BloomEffect.js~BloomEffect.html#instance-method-update",
     "src/effects/BloomEffect.js~BloomEffect#update",
     "method"
+  ],
+  [
+    "src/effects/bloomeffect.js~bloomeffect#width",
+    "class/src/effects/BloomEffect.js~BloomEffect.html#instance-get-width",
+    "src/effects/BloomEffect.js~BloomEffect#width",
+    "member"
+  ],
+  [
+    "src/effects/bloomeffect.js~bloomeffect#width",
+    "class/src/effects/BloomEffect.js~BloomEffect.html#instance-set-width",
+    "src/effects/BloomEffect.js~BloomEffect#width",
+    "member"
   ],
   [
     "src/effects/bokeheffect.js",
@@ -885,6 +1077,12 @@ window.esdocSearchIndex = [
     "src/effects/chromaticaberrationeffect.js~chromaticaberrationeffect#constructor",
     "class/src/effects/ChromaticAberrationEffect.js~ChromaticAberrationEffect.html#instance-constructor-constructor",
     "src/effects/ChromaticAberrationEffect.js~ChromaticAberrationEffect#constructor",
+    "method"
+  ],
+  [
+    "src/effects/chromaticaberrationeffect.js~chromaticaberrationeffect#initialize",
+    "class/src/effects/ChromaticAberrationEffect.js~ChromaticAberrationEffect.html#instance-method-initialize",
+    "src/effects/ChromaticAberrationEffect.js~ChromaticAberrationEffect#initialize",
     "method"
   ],
   [
@@ -1176,6 +1374,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/effects/godrayseffect.js~godrayseffect#blurpass",
+    "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-member-blurPass",
+    "src/effects/GodRaysEffect.js~GodRaysEffect#blurPass",
+    "member"
+  ],
+  [
     "src/effects/godrayseffect.js~godrayseffect#constructor",
     "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-constructor-constructor",
     "src/effects/GodRaysEffect.js~GodRaysEffect#constructor",
@@ -1206,6 +1410,18 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/effects/godrayseffect.js~godrayseffect#height",
+    "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-get-height",
+    "src/effects/GodRaysEffect.js~GodRaysEffect#height",
+    "member"
+  ],
+  [
+    "src/effects/godrayseffect.js~godrayseffect#height",
+    "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-set-height",
+    "src/effects/GodRaysEffect.js~GodRaysEffect#height",
+    "member"
+  ],
+  [
     "src/effects/godrayseffect.js~godrayseffect#initialize",
     "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-method-initialize",
     "src/effects/GodRaysEffect.js~GodRaysEffect#initialize",
@@ -1221,6 +1437,12 @@ window.esdocSearchIndex = [
     "src/effects/godrayseffect.js~godrayseffect#kernelsize",
     "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-set-kernelSize",
     "src/effects/GodRaysEffect.js~GodRaysEffect#kernelSize",
+    "member"
+  ],
+  [
+    "src/effects/godrayseffect.js~godrayseffect#resolution",
+    "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-get-resolution",
+    "src/effects/GodRaysEffect.js~GodRaysEffect#resolution",
     "member"
   ],
   [
@@ -1264,6 +1486,18 @@ window.esdocSearchIndex = [
     "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-method-update",
     "src/effects/GodRaysEffect.js~GodRaysEffect#update",
     "method"
+  ],
+  [
+    "src/effects/godrayseffect.js~godrayseffect#width",
+    "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-get-width",
+    "src/effects/GodRaysEffect.js~GodRaysEffect#width",
+    "member"
+  ],
+  [
+    "src/effects/godrayseffect.js~godrayseffect#width",
+    "class/src/effects/GodRaysEffect.js~GodRaysEffect.html#instance-set-width",
+    "src/effects/GodRaysEffect.js~GodRaysEffect#width",
+    "member"
   ],
   [
     "src/effects/grideffect.js",
@@ -1374,6 +1608,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/effects/outlineeffect.js~outlineeffect#blurpass",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-member-blurPass",
+    "src/effects/OutlineEffect.js~OutlineEffect#blurPass",
+    "member"
+  ],
+  [
     "src/effects/outlineeffect.js~outlineeffect#clearselection",
     "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-method-clearSelection",
     "src/effects/OutlineEffect.js~OutlineEffect#clearSelection",
@@ -1410,6 +1650,18 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/effects/outlineeffect.js~outlineeffect#height",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-get-height",
+    "src/effects/OutlineEffect.js~OutlineEffect#height",
+    "member"
+  ],
+  [
+    "src/effects/outlineeffect.js~outlineeffect#height",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-set-height",
+    "src/effects/OutlineEffect.js~OutlineEffect#height",
+    "member"
+  ],
+  [
     "src/effects/outlineeffect.js~outlineeffect#initialize",
     "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-method-initialize",
     "src/effects/OutlineEffect.js~OutlineEffect#initialize",
@@ -1434,14 +1686,32 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/effects/outlineeffect.js~outlineeffect#resolution",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-get-resolution",
+    "src/effects/OutlineEffect.js~OutlineEffect#resolution",
+    "member"
+  ],
+  [
     "src/effects/outlineeffect.js~outlineeffect#selectobject",
     "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-method-selectObject",
     "src/effects/OutlineEffect.js~OutlineEffect#selectObject",
     "method"
   ],
   [
+    "src/effects/outlineeffect.js~outlineeffect#selection",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-member-selection",
+    "src/effects/OutlineEffect.js~OutlineEffect#selection",
+    "member"
+  ],
+  [
     "src/effects/outlineeffect.js~outlineeffect#selectionlayer",
-    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-member-selectionLayer",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-get-selectionLayer",
+    "src/effects/OutlineEffect.js~OutlineEffect#selectionLayer",
+    "member"
+  ],
+  [
+    "src/effects/outlineeffect.js~outlineeffect#selectionlayer",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-set-selectionLayer",
     "src/effects/OutlineEffect.js~OutlineEffect#selectionLayer",
     "member"
   ],
@@ -1479,6 +1749,18 @@ window.esdocSearchIndex = [
     "src/effects/outlineeffect.js~outlineeffect#vertexshader",
     "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-member-vertexShader",
     "src/effects/OutlineEffect.js~OutlineEffect#vertexShader",
+    "member"
+  ],
+  [
+    "src/effects/outlineeffect.js~outlineeffect#width",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-get-width",
+    "src/effects/OutlineEffect.js~OutlineEffect#width",
+    "member"
+  ],
+  [
+    "src/effects/outlineeffect.js~outlineeffect#width",
+    "class/src/effects/OutlineEffect.js~OutlineEffect.html#instance-set-width",
+    "src/effects/OutlineEffect.js~OutlineEffect#width",
     "member"
   ],
   [
@@ -1758,6 +2040,60 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/effects/selectivebloomeffect.js",
+    "file/src/effects/SelectiveBloomEffect.js.html",
+    "src/effects/SelectiveBloomEffect.js",
+    "file"
+  ],
+  [
+    "src/effects/selectivebloomeffect.js~selectivebloomeffect#constructor",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html#instance-constructor-constructor",
+    "src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect#constructor",
+    "method"
+  ],
+  [
+    "src/effects/selectivebloomeffect.js~selectivebloomeffect#ignorebackground",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html#instance-get-ignoreBackground",
+    "src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect#ignoreBackground",
+    "member"
+  ],
+  [
+    "src/effects/selectivebloomeffect.js~selectivebloomeffect#ignorebackground",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html#instance-set-ignoreBackground",
+    "src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect#ignoreBackground",
+    "member"
+  ],
+  [
+    "src/effects/selectivebloomeffect.js~selectivebloomeffect#initialize",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html#instance-method-initialize",
+    "src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect#initialize",
+    "method"
+  ],
+  [
+    "src/effects/selectivebloomeffect.js~selectivebloomeffect#inverted",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html#instance-member-inverted",
+    "src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect#inverted",
+    "member"
+  ],
+  [
+    "src/effects/selectivebloomeffect.js~selectivebloomeffect#selection",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html#instance-member-selection",
+    "src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect#selection",
+    "member"
+  ],
+  [
+    "src/effects/selectivebloomeffect.js~selectivebloomeffect#setsize",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html#instance-method-setSize",
+    "src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect#setSize",
+    "method"
+  ],
+  [
+    "src/effects/selectivebloomeffect.js~selectivebloomeffect#update",
+    "class/src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect.html#instance-method-update",
+    "src/effects/SelectiveBloomEffect.js~SelectiveBloomEffect#update",
+    "method"
+  ],
+  [
     "src/effects/sepiaeffect.js",
     "file/src/effects/SepiaEffect.js.html",
     "src/effects/SepiaEffect.js",
@@ -1998,12 +2334,6 @@ window.esdocSearchIndex = [
     "file"
   ],
   [
-    "src/images/rawimagedata.js~rawimagedata#channels",
-    "class/src/images/RawImageData.js~RawImageData.html#instance-member-channels",
-    "src/images/RawImageData.js~RawImageData#channels",
-    "member"
-  ],
-  [
     "src/images/rawimagedata.js~rawimagedata#constructor",
     "class/src/images/RawImageData.js~RawImageData.html#instance-constructor-constructor",
     "src/images/RawImageData.js~RawImageData#constructor",
@@ -2032,6 +2362,12 @@ window.esdocSearchIndex = [
     "class/src/images/RawImageData.js~RawImageData.html#instance-member-width",
     "src/images/RawImageData.js~RawImageData#width",
     "member"
+  ],
+  [
+    "src/images/rawimagedata.js~rawimagedata.from",
+    "class/src/images/RawImageData.js~RawImageData.html#static-method-from",
+    "src/images/RawImageData.js~RawImageData.from",
+    "method"
   ],
   [
     "src/images/index.js",
@@ -2064,6 +2400,36 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/images/smaa/utils/smaaimageloader.js",
+    "file/src/images/smaa/utils/SMAAImageLoader.js.html",
+    "src/images/smaa/utils/SMAAImageLoader.js",
+    "file"
+  ],
+  [
+    "src/images/smaa/utils/smaaimageloader.js~smaaimageloader#constructor",
+    "class/src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader.html#instance-constructor-constructor",
+    "src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader#constructor",
+    "method"
+  ],
+  [
+    "src/images/smaa/utils/smaaimageloader.js~smaaimageloader#disablecache",
+    "class/src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader.html#instance-member-disableCache",
+    "src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader#disableCache",
+    "member"
+  ],
+  [
+    "src/images/smaa/utils/smaaimageloader.js~smaaimageloader#load",
+    "class/src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader.html#instance-method-load",
+    "src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader#load",
+    "method"
+  ],
+  [
+    "src/images/smaa/utils/smaaimageloader.js~smaaimageloader#loadingmanager",
+    "class/src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader.html#instance-member-loadingManager",
+    "src/images/smaa/utils/SMAAImageLoader.js~SMAAImageLoader#loadingManager",
+    "member"
+  ],
+  [
     "src/images/smaa/utils/smaasearchimagedata.js",
     "file/src/images/smaa/utils/SMAASearchImageData.js.html",
     "src/images/smaa/utils/SMAASearchImageData.js",
@@ -2074,6 +2440,12 @@ window.esdocSearchIndex = [
     "class/src/images/smaa/utils/SMAASearchImageData.js~SMAASearchImageData.html#static-method-generate",
     "src/images/smaa/utils/SMAASearchImageData.js~SMAASearchImageData.generate",
     "method"
+  ],
+  [
+    "src/images/smaa/utils/worker.js",
+    "file/src/images/smaa/utils/worker.js.html",
+    "src/images/smaa/utils/worker.js",
+    "file"
   ],
   [
     "src/index.js",
@@ -2226,10 +2598,46 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/materials/effectmaterial.js~effectmaterial#fragmentshader",
+    "class/src/materials/EffectMaterial.js~EffectMaterial.html#instance-member-fragmentShader",
+    "src/materials/EffectMaterial.js~EffectMaterial#fragmentShader",
+    "member"
+  ],
+  [
+    "src/materials/effectmaterial.js~effectmaterial#needsupdate",
+    "class/src/materials/EffectMaterial.js~EffectMaterial.html#instance-member-needsUpdate",
+    "src/materials/EffectMaterial.js~EffectMaterial#needsUpdate",
+    "member"
+  ],
+  [
+    "src/materials/effectmaterial.js~effectmaterial#setdefines",
+    "class/src/materials/EffectMaterial.js~EffectMaterial.html#instance-method-setDefines",
+    "src/materials/EffectMaterial.js~EffectMaterial#setDefines",
+    "method"
+  ],
+  [
+    "src/materials/effectmaterial.js~effectmaterial#setshaderparts",
+    "class/src/materials/EffectMaterial.js~EffectMaterial.html#instance-method-setShaderParts",
+    "src/materials/EffectMaterial.js~EffectMaterial#setShaderParts",
+    "method"
+  ],
+  [
     "src/materials/effectmaterial.js~effectmaterial#setsize",
     "class/src/materials/EffectMaterial.js~EffectMaterial.html#instance-method-setSize",
     "src/materials/EffectMaterial.js~EffectMaterial#setSize",
     "method"
+  ],
+  [
+    "src/materials/effectmaterial.js~effectmaterial#setuniforms",
+    "class/src/materials/EffectMaterial.js~EffectMaterial.html#instance-method-setUniforms",
+    "src/materials/EffectMaterial.js~EffectMaterial#setUniforms",
+    "method"
+  ],
+  [
+    "src/materials/effectmaterial.js~effectmaterial#vertexshader",
+    "class/src/materials/EffectMaterial.js~EffectMaterial.html#instance-member-vertexShader",
+    "src/materials/EffectMaterial.js~EffectMaterial#vertexShader",
+    "member"
   ],
   [
     "src/materials/godraysmaterial.js",
@@ -2314,6 +2722,54 @@ window.esdocSearchIndex = [
     "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-method-setLuminanceRangeEnabled",
     "src/materials/LuminanceMaterial.js~LuminanceMaterial#setLuminanceRangeEnabled",
     "method"
+  ],
+  [
+    "src/materials/luminancematerial.js~luminancematerial#smoothing",
+    "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-get-smoothing",
+    "src/materials/LuminanceMaterial.js~LuminanceMaterial#smoothing",
+    "member"
+  ],
+  [
+    "src/materials/luminancematerial.js~luminancematerial#smoothing",
+    "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-set-smoothing",
+    "src/materials/LuminanceMaterial.js~LuminanceMaterial#smoothing",
+    "member"
+  ],
+  [
+    "src/materials/luminancematerial.js~luminancematerial#threshold",
+    "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-get-threshold",
+    "src/materials/LuminanceMaterial.js~LuminanceMaterial#threshold",
+    "member"
+  ],
+  [
+    "src/materials/luminancematerial.js~luminancematerial#threshold",
+    "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-set-threshold",
+    "src/materials/LuminanceMaterial.js~LuminanceMaterial#threshold",
+    "member"
+  ],
+  [
+    "src/materials/luminancematerial.js~luminancematerial#userange",
+    "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-get-useRange",
+    "src/materials/LuminanceMaterial.js~LuminanceMaterial#useRange",
+    "member"
+  ],
+  [
+    "src/materials/luminancematerial.js~luminancematerial#userange",
+    "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-set-useRange",
+    "src/materials/LuminanceMaterial.js~LuminanceMaterial#useRange",
+    "member"
+  ],
+  [
+    "src/materials/luminancematerial.js~luminancematerial#usethreshold",
+    "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-get-useThreshold",
+    "src/materials/LuminanceMaterial.js~LuminanceMaterial#useThreshold",
+    "member"
+  ],
+  [
+    "src/materials/luminancematerial.js~luminancematerial#usethreshold",
+    "class/src/materials/LuminanceMaterial.js~LuminanceMaterial.html#instance-set-useThreshold",
+    "src/materials/LuminanceMaterial.js~LuminanceMaterial#useThreshold",
+    "member"
   ],
   [
     "src/materials/outlineedgesmaterial.js",
@@ -2430,6 +2886,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/passes/blurpass.js~blurpass#height",
+    "class/src/passes/BlurPass.js~BlurPass.html#instance-set-height",
+    "src/passes/BlurPass.js~BlurPass#height",
+    "member"
+  ],
+  [
     "src/passes/blurpass.js~blurpass#initialize",
     "class/src/passes/BlurPass.js~BlurPass.html#instance-method-initialize",
     "src/passes/BlurPass.js~BlurPass#initialize",
@@ -2454,6 +2916,24 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/passes/blurpass.js~blurpass#resolution",
+    "class/src/passes/BlurPass.js~BlurPass.html#instance-member-resolution",
+    "src/passes/BlurPass.js~BlurPass#resolution",
+    "member"
+  ],
+  [
+    "src/passes/blurpass.js~blurpass#scale",
+    "class/src/passes/BlurPass.js~BlurPass.html#instance-get-scale",
+    "src/passes/BlurPass.js~BlurPass#scale",
+    "member"
+  ],
+  [
+    "src/passes/blurpass.js~blurpass#scale",
+    "class/src/passes/BlurPass.js~BlurPass.html#instance-set-scale",
+    "src/passes/BlurPass.js~BlurPass#scale",
+    "member"
+  ],
+  [
     "src/passes/blurpass.js~blurpass#setresolutionscale",
     "class/src/passes/BlurPass.js~BlurPass.html#instance-method-setResolutionScale",
     "src/passes/BlurPass.js~BlurPass#setResolutionScale",
@@ -2469,6 +2949,18 @@ window.esdocSearchIndex = [
     "src/passes/blurpass.js~blurpass#width",
     "class/src/passes/BlurPass.js~BlurPass.html#instance-get-width",
     "src/passes/BlurPass.js~BlurPass#width",
+    "member"
+  ],
+  [
+    "src/passes/blurpass.js~blurpass#width",
+    "class/src/passes/BlurPass.js~BlurPass.html#instance-set-width",
+    "src/passes/BlurPass.js~BlurPass#width",
+    "member"
+  ],
+  [
+    "src/passes/blurpass.js~blurpass.auto_size",
+    "class/src/passes/BlurPass.js~BlurPass.html#static-get-AUTO_SIZE",
+    "src/passes/BlurPass.js~BlurPass.AUTO_SIZE",
     "member"
   ],
   [
@@ -2583,6 +3075,18 @@ window.esdocSearchIndex = [
     "src/passes/depthpass.js~depthpass#rendertarget",
     "class/src/passes/DepthPass.js~DepthPass.html#instance-member-renderTarget",
     "src/passes/DepthPass.js~DepthPass#renderTarget",
+    "member"
+  ],
+  [
+    "src/passes/depthpass.js~depthpass#resolution",
+    "class/src/passes/DepthPass.js~DepthPass.html#instance-member-resolution",
+    "src/passes/DepthPass.js~DepthPass#resolution",
+    "member"
+  ],
+  [
+    "src/passes/depthpass.js~depthpass#resolutionscale",
+    "class/src/passes/DepthPass.js~DepthPass.html#instance-member-resolutionScale",
+    "src/passes/DepthPass.js~DepthPass#resolutionScale",
     "member"
   ],
   [
@@ -2763,6 +3267,18 @@ window.esdocSearchIndex = [
     "src/passes/normalpass.js~normalpass#rendertarget",
     "class/src/passes/NormalPass.js~NormalPass.html#instance-member-renderTarget",
     "src/passes/NormalPass.js~NormalPass#renderTarget",
+    "member"
+  ],
+  [
+    "src/passes/normalpass.js~normalpass#resolution",
+    "class/src/passes/NormalPass.js~NormalPass.html#instance-member-resolution",
+    "src/passes/NormalPass.js~NormalPass#resolution",
+    "member"
+  ],
+  [
+    "src/passes/normalpass.js~normalpass#resolutionscale",
+    "class/src/passes/NormalPass.js~NormalPass.html#instance-member-resolutionScale",
+    "src/passes/NormalPass.js~NormalPass#resolutionScale",
     "member"
   ],
   [

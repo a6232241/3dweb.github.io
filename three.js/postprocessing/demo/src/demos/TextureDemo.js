@@ -12,6 +12,7 @@ import {
 	BlendFunction,
 	EffectPass,
 	SMAAEffect,
+	SMAAImageLoader,
 	TextureEffect
 } from "../../../src";
 
@@ -63,6 +64,7 @@ export class TextureDemo extends PostProcessingDemo {
 		const loadingManager = this.loadingManager;
 		const textureLoader = new TextureLoader(loadingManager);
 		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
+		const smaaImageLoader = new SMAAImageLoader(loadingManager);
 
 		const path = "textures/skies/sunset/";
 		const format = ".png";
@@ -77,30 +79,27 @@ export class TextureDemo extends PostProcessingDemo {
 			if(assets.size === 0) {
 
 				loadingManager.onError = reject;
-				loadingManager.onProgress = (item, loaded, total) => {
+				loadingManager.onLoad = resolve;
 
-					if(loaded === total) {
+				cubeTextureLoader.load(urls, (t) => {
 
-						resolve();
-
-					}
-
-				};
-
-				cubeTextureLoader.load(urls, function(textureCube) {
-
-					assets.set("sky", textureCube);
+					assets.set("sky", t);
 
 				});
 
-				textureLoader.load("textures/scratches.jpg", function(texture) {
+				textureLoader.load("textures/scratches.jpg", (t) => {
 
-					texture.wrapS = texture.wrapT = RepeatWrapping;
-					assets.set("scratches-color", texture);
+					t.wrapS = t.wrapT = RepeatWrapping;
+					assets.set("scratches-color", t);
 
 				});
 
-				this.loadSMAAImages();
+				smaaImageLoader.load(([search, area]) => {
+
+					assets.set("smaa-search", search);
+					assets.set("smaa-area", area);
+
+				});
 
 			} else {
 
@@ -121,7 +120,7 @@ export class TextureDemo extends PostProcessingDemo {
 		const scene = this.scene;
 		const assets = this.assets;
 		const composer = this.composer;
-		const renderer = composer.renderer;
+		const renderer = composer.getRenderer();
 
 		// Camera.
 

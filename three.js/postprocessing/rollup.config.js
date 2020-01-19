@@ -1,8 +1,9 @@
+import commonjs from "@rollup/plugin-commonjs";
+import resolve from "@rollup/plugin-node-resolve";
 import babel from "rollup-plugin-babel";
-import minify from "rollup-plugin-babel-minify";
-import commonjs from "rollup-plugin-commonjs";
 import glsl from "rollup-plugin-glsl";
-import resolve from "rollup-plugin-node-resolve";
+import { string } from "rollup-plugin-string";
+import { terser } from "rollup-plugin-terser";
 
 const pkg = require("./package.json");
 const date = (new Date()).toDateString();
@@ -10,125 +11,137 @@ const date = (new Date()).toDateString();
 const banner = `/**
  * ${pkg.name} v${pkg.version} build ${date}
  * ${pkg.homepage}
- * Copyright ${date.slice(-4)} ${pkg.author.name}, ${pkg.license}
+ * Copyright ${date.slice(-4)} ${pkg.author.name}
+ * @license ${pkg.license}
  */`;
 
 const production = (process.env.NODE_ENV === "production");
-const globals = { three: "THREE" };
-const external = ["three"];
+const external = Object.keys(pkg.peerDependencies);
+const globals = Object.assign({}, ...external.map((value) => ({
+	[value]: value.replace(/-/g, "").toUpperCase()
+})));
+
+const worker = {
+
+	input: "src/images/smaa/utils/worker.js",
+	plugins: [resolve()].concat(production ? [terser(), babel()] : []),
+	output: {
+		file: "src/images/smaa/utils/worker.tmp",
+		format: "iife"
+	}
+
+}
 
 const lib = {
 
-	esm: {
-
+	module: {
 		input: "src/index.js",
-		external: external,
+		external,
 		plugins: [resolve(), glsl({
 			include: ["**/*.frag", "**/*.vert"],
 			compress: production,
 			sourceMap: false
+		}), string({
+			include: ["**/*.tmp"]
 		})],
 		output: [{
+			file: pkg.module,
+			format: "esm",
+			globals,
+			banner
+		}, {
 			file: pkg.main,
 			format: "esm",
-			globals: globals
-		}].concat(!production ? [] : [
-			{
-				file: pkg.module,
-				format: "esm",
-				banner: banner,
-				globals: globals
-			}, {
-				file: pkg.main.replace(".js", ".min.js"),
-				format: "esm",
-				globals: globals
-			}
-		])
-
+			globals
+		}, {
+			file: pkg.main.replace(".js", ".min.js"),
+			format: "esm",
+			globals
+		}]
 	},
 
-	umd: {
-
+	main: {
 		input: pkg.main,
-		external: external,
-		plugins: production ? [babel()] : [],
+		external,
+		plugins: [babel()],
 		output: {
 			file: pkg.main,
 			format: "umd",
 			name: pkg.name.replace(/-/g, "").toUpperCase(),
-			banner: banner,
-			globals: globals
+			globals,
+			banner
 		}
+	},
 
+	min: {
+		input: pkg.main.replace(".js", ".min.js"),
+		external,
+		plugins: [terser(), babel()],
+		output: {
+			file: pkg.main.replace(".js", ".min.js"),
+			format: "umd",
+			name: pkg.name.replace(/-/g, "").toUpperCase(),
+			globals,
+			banner
+		}
 	}
 
 };
 
 const demo = {
 
-	esm: {
-
+	module: {
 		input: "demo/src/index.js",
-		external: external,
+		external,
 		plugins: [resolve(), commonjs(), glsl({
 			include: ["**/*.frag", "**/*.vert"],
 			compress: production,
 			sourceMap: false
+		}), string({
+			include: ["**/*.tmp"]
 		})],
 		output: [{
 			file: "public/demo/index.js",
 			format: "esm",
-			globals: globals
-		}].concat(!production ? [] : [{
+			globals
+		}].concat(production ? [{
 			file: "public/demo/index.min.js",
 			format: "esm",
-			globals: globals
-		}])
-
+			globals
+		}] : [])
 	},
 
-	iife: {
-
-		input: "public/demo/index.js",
-		external: external,
-		plugins: production ? [babel()] : [],
-		output: {
+	main: {
+		input: production ? "public/demo/index.js" : "demo/src/index.js",
+		external,
+		plugins: production ? [babel()] : [resolve(), commonjs(), glsl({
+			include: ["**/*.frag", "**/*.vert"],
+			compress: false,
+			sourceMap: false
+		}), string({
+			include: ["**/*.tmp"]
+		})],
+		output: [{
 			file: "public/demo/index.js",
 			format: "iife",
-			globals: globals
-		}
+			globals
+		}]
+	},
 
+	min: {
+		input: "public/demo/index.min.js",
+		external,
+		plugins: [terser(), babel()],
+		output: {
+			file: "public/demo/index.min.js",
+			format: "iife",
+			globals
+		}
 	}
 
 };
 
-export default [lib.esm, lib.umd, demo.esm, demo.iife].concat(production ? [{
-
-		input: lib.esm.output[2].file,
-		external: external,
-		plugins: [babel(), minify({
-			bannerNewLine: true,
-			comments: false
-		})],
-		output: {
-			file: lib.esm.output[2].file,
-			format: "umd",
-			name: pkg.name.replace(/-/g, "").toUpperCase(),
-			banner: banner,
-			globals: globals
-		}
-
-	}, {
-
-		input: demo.esm.output[1].file,
-		external: external,
-		plugins: [babel(), minify({
-			comments: false
-		})],
-		output: {
-			file: demo.esm.output[1].file,
-			format: "iife",
-			globals: globals
-		}
-
-}] : []);
+export default [worker].concat(production ? [
+	lib.module, lib.main, lib.min,
+	demo.module, demo.main, demo.min
+] : [demo.main]);

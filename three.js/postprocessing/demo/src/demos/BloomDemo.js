@@ -3,13 +3,14 @@ import {
 	BoxBufferGeometry,
 	CubeTextureLoader,
 	DirectionalLight,
-	FogExp2,
 	Mesh,
 	MeshPhongMaterial,
 	MeshLambertMaterial,
 	Object3D,
 	PerspectiveCamera,
-	SphereBufferGeometry
+	Raycaster,
+	SphereBufferGeometry,
+	Vector2
 } from "three";
 
 import { DeltaControls } from "delta-controls";
@@ -20,11 +21,24 @@ import {
 	BloomEffect,
 	EffectPass,
 	KernelSize,
-	SMAAEffect
+	SelectiveBloomEffect,
+	SMAAEffect,
+	SMAAImageLoader
 } from "../../../src";
 
 /**
+ * A mouse position.
+ *
+ * @type {Vector2}
+ * @private
+ */
+
+const mouse = new Vector2();
+
+/**
  * A bloom demo setup.
+ *
+ * @implements {EventListener}
  */
 
 export class BloomDemo extends PostProcessingDemo {
@@ -40,22 +54,58 @@ export class BloomDemo extends PostProcessingDemo {
 		super("bloom", composer);
 
 		/**
-		 * An effect.
+		 * A raycaster.
 		 *
-		 * @type {Effect}
+		 * @type {Raycaster}
 		 * @private
 		 */
 
-		this.effect = null;
+		this.raycaster = null;
 
 		/**
-		 * A pass.
+		 * A selected object.
+		 *
+		 * @type {Object3D}
+		 * @private
+		 */
+
+		this.selectedObject = null;
+
+		/**
+		 * A bloom effect.
+		 *
+		 * @type {BloomEffect}
+		 * @private
+		 */
+
+		this.effectA = null;
+
+		/**
+		 * A selective bloom effect.
+		 *
+		 * @type {SelectiveBloomEffect}
+		 * @private
+		 */
+
+		this.effectB = null;
+
+		/**
+		 * A pass that contains the normal bloom effect.
 		 *
 		 * @type {Pass}
 		 * @private
 		 */
 
-		this.pass = null;
+		this.passA = null;
+
+		/**
+		 * A pass that contains the selective bloom effect.
+		 *
+		 * @type {Pass}
+		 * @private
+		 */
+
+		this.passB = null;
 
 		/**
 		 * An object.
@@ -65,6 +115,91 @@ export class BloomDemo extends PostProcessingDemo {
 		 */
 
 		this.object = null;
+
+	}
+
+	/**
+	 * Raycasts the scene.
+	 *
+	 * @param {PointerEvent} event - A pointer event.
+	 */
+
+	raycast(event) {
+
+		const raycaster = this.raycaster;
+
+		mouse.x = (event.clientX / window.innerWidth) * 2.0 - 1.0;
+		mouse.y = -(event.clientY / window.innerHeight) * 2.0 + 1.0;
+
+		raycaster.setFromCamera(mouse, this.camera);
+		const intersects = raycaster.intersectObjects(this.object.children);
+
+		this.selectedObject = null;
+
+		if(intersects.length > 0) {
+
+			const x = intersects[0];
+
+			if(x.object !== undefined) {
+
+				this.selectedObject = x.object;
+
+			} else {
+
+				console.warn("Encountered an undefined object", intersects);
+
+			}
+
+		}
+
+	}
+
+	/**
+	 * Handles the current selection.
+	 *
+	 * @private
+	 */
+
+	handleSelection() {
+
+		const selection = this.effectB.selection;
+		const selectedObject = this.selectedObject;
+
+		if(selectedObject !== null) {
+
+			if(selection.has(selectedObject)) {
+
+				selection.delete(selectedObject);
+
+			} else {
+
+				selection.add(selectedObject);
+
+			}
+
+		}
+
+	}
+
+	/**
+	 * Raycasts on mouse move events.
+	 *
+	 * @param {Event} event - An event.
+	 */
+
+	handleEvent(event) {
+
+		switch(event.type) {
+
+			case "mousemove":
+				this.raycast(event);
+				break;
+
+			case "mousedown":
+				this.handleSelection();
+				break;
+
+		}
 
 	}
 
@@ -79,6 +214,7 @@ export class BloomDemo extends PostProcessingDemo {
 		const assets = this.assets;
 		const loadingManager = this.loadingManager;
 		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
+		const smaaImageLoader = new SMAAImageLoader(loadingManager);
 
 		const path = "textures/skies/space2/";
 		const format = ".jpg";
@@ -93,23 +229,20 @@ export class BloomDemo extends PostProcessingDemo {
 			if(assets.size === 0) {
 
 				loadingManager.onError = reject;
-				loadingManager.onProgress = (item, loaded, total) => {
+				loadingManager.onLoad = resolve;
 
-					if(loaded === total) {
+				cubeTextureLoader.load(urls, (t) => {
 
-						resolve();
-
-					}
-
-				};
-
-				cubeTextureLoader.load(urls, function(textureCube) {
-
-					assets.set("sky", textureCube);
+					assets.set("sky", t);
 
 				});
 
-				this.loadSMAAImages();
+				smaaImageLoader.load(([search, area]) => {
+
+					assets.set("smaa-search", search);
+					assets.set("smaa-area", area);
+
+				});
 
 			} else {
 
@@ -130,11 +263,11 @@ export class BloomDemo extends PostProcessingDemo {
 		const scene = this.scene;
 		const assets = this.assets;
 		const composer = this.composer;
-		const renderer = composer.renderer;
+		const renderer = composer.getRenderer();
 
 		// Camera.
 
-		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 2000);
+		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 2000);
 		camera.position.set(-10, 6, 15);
 		camera.lookAt(scene.position);
 		this.camera = camera;
@@ -147,11 +280,6 @@ export class BloomDemo extends PostProcessingDemo {
 		controls.settings.sensitivity.zoom = 1.0;
 		controls.lookAt(scene.position);
 		this.controls = controls;
-
-		// Fog.
-
-		scene.fog = new FogExp2(0x000000, 0.0025);
-		renderer.setClearColor(scene.fog.color);
 
 		// Sky.
 
@@ -201,7 +329,7 @@ export class BloomDemo extends PostProcessingDemo {
 		mesh = new Mesh(
 			new BoxBufferGeometry(0.25, 8.25, 0.25),
 			new MeshLambertMaterial({
-				color: 0x0b0b0b
+				color: 0x000000
 			})
 		);
 
@@ -234,27 +362,52 @@ export class BloomDemo extends PostProcessingDemo {
 
 		scene.add(object);
 
+		// Raycaster.
+
+		this.raycaster = new Raycaster();
+
 		// Passes.
 
 		const smaaEffect = new SMAAEffect(assets.get("smaa-search"), assets.get("smaa-area"));
-		smaaEffect.setEdgeDetectionThreshold(0.065);
+		smaaEffect.colorEdgesMaterial.setEdgeDetectionThreshold(0.05);
 
-		const bloomEffect = new BloomEffect({
+		const bloomOptions = {
 			blendFunction: BlendFunction.SCREEN,
-			resolutionScale: 0.5,
-			distinction: 4.0
-		});
+			kernelSize: KernelSize.MEDIUM,
+			luminanceThreshold: 0.825,
+			luminanceSmoothing: 0.075,
+			height: 480
+		};
 
-		bloomEffect.blendMode.opacity.value = 2.1;
-		this.effect = bloomEffect;
+		/* If you don't need to limit bloom to a subset of objects, it's recommended
+		to use the BloomEffect for better performance. */
+		const bloomEffect = new BloomEffect(bloomOptions);
+		const selectiveBloomEffect = new SelectiveBloomEffect(scene, camera, bloomOptions);
 
-		const pass = new EffectPass(camera, smaaEffect, bloomEffect);
-		this.pass = pass;
+		bloomEffect.blendMode.opacity.value = 2.3;
+		selectiveBloomEffect.blendMode.opacity.value = 2.3;
+		selectiveBloomEffect.inverted = true;
+
+		this.effectA = bloomEffect;
+		this.effectB = selectiveBloomEffect;
+
+		const effectPassA = new EffectPass(camera, smaaEffect, bloomEffect);
+		const effectPassB = new EffectPass(camera, smaaEffect, selectiveBloomEffect);
+
+		this.passA = effectPassA;
+		this.passB = effectPassB;
 
 		this.renderPass.renderToScreen = false;
-		pass.renderToScreen = true;
+		effectPassA.renderToScreen = true;
+		effectPassB.renderToScreen = true;
+		effectPassB.enabled = false;
 
-		composer.addPass(pass);
+		composer.addPass(effectPassA);
+		composer.addPass(effectPassB);
+
+		// Important: Make sure your lights are on!
+		ambientLight.layers.enable(selectiveBloomEffect.selection.layer);
+		directionalLight.layers.enable(selectiveBloomEffect.selection.layer);
 
 	}
 
@@ -296,47 +449,144 @@ export class BloomDemo extends PostProcessingDemo {
 
 	registerOptions(menu) {
 
-		const pass = this.pass;
-		const effect = this.effect;
-		const blendMode = effect.blendMode;
+		const renderer = this.composer.getRenderer();
+
+		const passA = this.passA;
+		const passB = this.passB;
+		const effectA = this.effectA;
+		const effectB = this.effectB;
+		const blendModeA = effectA.blendMode;
+		const blendModeB = effectB.blendMode;
 
 		const params = {
-			"resolution": effect.getResolutionScale(),
-			"kernel size": effect.kernelSize,
-			"opacity": blendMode.opacity.value,
-			"blend mode": blendMode.blendFunction
+			"resolution": effectA.height,
+			"kernel size": effectA.blurPass.kernelSize,
+			"scale": effectA.blurPass.scale,
+			"luminance": {
+				"filter": effectA.luminancePass.enabled,
+				"threshold": effectA.luminanceMaterial.threshold,
+				"smoothing": effectA.luminanceMaterial.smoothing
+			},
+			"selection": {
+				"enabled": false,
+				"inverted": effectB.inverted,
+				"ignore bg": effectB.ignoreBackground
+			},
+			"opacity": blendModeA.opacity.value,
+			"blend mode": blendModeA.blendFunction
 		};
 
-		menu.add(params, "resolution").min(0.01).max(1.0).step(0.01).onChange(() => {
+		menu.add(params, "resolution", [240, 360, 480, 720, 1080]).onChange(() => {
 
-			effect.setResolutionScale(params.resolution);
+			effectA.resolution.height = effectB.resolution.height = Number.parseInt(params.resolution);
 
 		});
 
 		menu.add(params, "kernel size", KernelSize).onChange(() => {
 
-			effect.kernelSize = Number.parseInt(params["kernel size"]);
+			effectA.blurPass.kernelSize = effectB.blurPass.kernelSize = Number.parseInt(params["kernel size"]);
 
 		});
 
-		const folder = menu.addFolder("Luminance");
-		folder.add(effect, "distinction").min(1.0).max(10.0).step(0.1);
+		menu.add(params, "scale").min(0.0).max(1.0).step(0.01).onChange(() => {
+
+			effectA.blurPass.scale = effectB.blurPass.scale = Number.parseFloat(params.scale);
+
+		});
+
+		let folder = menu.addFolder("Luminance");
+
+		folder.add(params.luminance, "filter").onChange(() => {
+
+			effectA.luminancePass.enabled = effectB.luminancePass.enabled = params.luminance.filter;
+
+		});
+
+		folder.add(params.luminance, "threshold").min(0.0).max(1.0).step(0.001).onChange(() => {
+
+			effectA.luminanceMaterial.threshold = effectB.luminanceMaterial.threshold = Number.parseFloat(params.luminance.threshold);
+
+		});
+
+		folder.add(params.luminance, "smoothing").min(0.0).max(1.0).step(0.001).onChange(() => {
+
+			effectA.luminanceMaterial.smoothing = effectB.luminanceMaterial.smoothing = Number.parseFloat(params.luminance.smoothing);
+
+		});
+
 		folder.open();
+
+		folder = menu.addFolder("Selection");
+
+		folder.add(params.selection, "enabled").onChange(() => {
+
+			passB.enabled = params.selection.enabled;
+			passA.enabled = !passB.enabled;
+
+			if(passB.enabled) {
+
+				renderer.domElement.addEventListener("mousemove", this);
+				renderer.domElement.addEventListener("mousedown", this);
+
+			} else {
+
+				renderer.domElement.removeEventListener("mousemove", this);
+				renderer.domElement.removeEventListener("mousedown", this);
+
+			}
+
+		});
+
+		folder.add(params.selection, "inverted").onChange(() => {
+
+			effectB.inverted = params.selection.inverted;
+
+		});
+
+		folder.add(params.selection, "ignore bg").onChange(() => {
+
+			effectB.ignoreBackground = params.selection["ignore bg"];
+
+		});
 
 		menu.add(params, "opacity").min(0.0).max(4.0).step(0.01).onChange(() => {
 
-			blendMode.opacity.value = params.opacity;
+			blendModeA.opacity.value = blendModeB.opacity.value = params.opacity;
 
 		});
 
 		menu.add(params, "blend mode", BlendFunction).onChange(() => {
 
-			blendMode.blendFunction = Number.parseInt(params["blend mode"]);
-			pass.recompile();
+			blendModeA.blendFunction = blendModeB.blendFunction = Number.parseInt(params["blend mode"]);
+
+			passA.recompile();
+			passB.recompile();
 
 		});
 
-		menu.add(effect, "dithering");
+		menu.add(effectA, "dithering").onChange(() => {
+
+			effectB.dithering = effectA.dithering;
+
+		});
+
+	}
+
+	/**
+	 * Resets this demo.
+	 *
+	 * @return {Demo} This demo.
+	 */
+
+	reset() {
+
+		super.reset();
+
+		const dom = this.composer.getRenderer().domElement;
+		dom.removeEventListener("mousemove", this);
+		dom.removeEventListener("mousedown", this);
+
+		return this;
 
 	}
 

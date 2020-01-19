@@ -5,14 +5,14 @@ import Stats from '../three.js/examples/jsm/libs/stats.module.js';
 import { OrbitControls } from '../three.js/examples/jsm/controls/OrbitControls.js';
 
 let container = document.querySelector('#scene-container');
-container.width = 800;
-container.height = 500;
-
-let container_width = container.width;
-let container_height = container.height;
-
 let camera, scene, renderer
 let controls;
+
+let container_width = window.innerWidth;
+let container_height = window.innerHeight;
+
+// let containerHalfX = container.clientWidth / 2;
+// let containerHalfY = container.clientHeight / 2;
 
 //建立場景
 function init() {
@@ -42,7 +42,6 @@ function createCamera() {
     let near = 0.1;
     let far = 1000;
     camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.lookAt(scene.position);
     camera.position.z = 50;
 
     // let left = - container_width * 3;
@@ -64,9 +63,11 @@ function createLights() {
 
 function createRenderer() {
 
-    renderer = new THREE.WebGLRenderer({ canvas: container });
+    renderer = new THREE.WebGLRenderer();
     renderer.setSize(container_width, container_height);
     renderer.setPixelRatio(window.devicePixelRatio);
+
+    container.appendChild(renderer.domElement);
 
 }
 
@@ -82,15 +83,32 @@ function render() {
 function createControls() {
 
     controls = new OrbitControls(camera, renderer.domElement);
-    // controls.autoRotate = true;
-    // controls.autoRotateSpeed = 1;
-    controls.addEventListener('change', renderer);
     controls.panSpeed = 0.1;
     controls.rotateSpeed = 0.1;
-    controls.update();
+    // controls.update(); 適用於改變相機時使用，例如 enableDamping、autoRotate
 
 }
 
 function createEvent(){
+
+    window.addEventListener('resize', onWindowResize, false);
+
+}
+
+function onWindowResize(){
+
+    container_width = window.innerWidth;
+    container_height = window.innerHeight;
+
+    camera.aspect = container_width / container_height;
+    camera.updateProjectionMatrix();
+
+    // camera.left = -containerHalfX;
+    // camera.right = containerHalfX;
+    // camera.top = containerHalfY;
+    // camera.bottom = -containerHalfY;
+    // camera.updateProjectionMatrix();
+
+    renderer.setSize( container_width, container_height );
 
 }

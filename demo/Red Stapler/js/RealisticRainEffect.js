@@ -68,7 +68,7 @@ function createLights() {
 // 創造烏雲
 function createDarkClouds() {
 
-    loader.load('assets/darkCloud.png', (texture) => {
+    loader.load('assets/cloud.png', (texture) => {
 
         let cloudGeo = new THREE.PlaneBufferGeometry(500, 500);
         let cloudMat = new THREE.MeshLambertMaterial({

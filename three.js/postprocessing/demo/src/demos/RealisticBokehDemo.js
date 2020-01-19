@@ -2,7 +2,6 @@ import {
 	AmbientLight,
 	CubeTextureLoader,
 	DirectionalLight,
-	FogExp2,
 	Mesh,
 	MeshPhongMaterial,
 	PerspectiveCamera,
@@ -17,6 +16,7 @@ import {
 	RealisticBokehEffect,
 	EffectPass,
 	SMAAEffect,
+	SMAAImageLoader,
 	VignetteEffect
 } from "../../../src";
 
@@ -67,6 +67,7 @@ export class RealisticBokehDemo extends PostProcessingDemo {
 		const assets = this.assets;
 		const loadingManager = this.loadingManager;
 		const cubeTextureLoader = new CubeTextureLoader(loadingManager);
+		const smaaImageLoader = new SMAAImageLoader(loadingManager);
 
 		const path = "textures/skies/space3/";
 		const format = ".jpg";
@@ -81,23 +82,20 @@ export class RealisticBokehDemo extends PostProcessingDemo {
 			if(assets.size === 0) {
 
 				loadingManager.onError = reject;
-				loadingManager.onProgress = (item, loaded, total) => {
+				loadingManager.onLoad = resolve;
 
-					if(loaded === total) {
+				cubeTextureLoader.load(urls, (t) => {
 
-						resolve();
-
-					}
-
-				};
-
-				cubeTextureLoader.load(urls, function(textureCube) {
-
-					assets.set("sky", textureCube);
+					assets.set("sky", t);
 
 				});
 
-				this.loadSMAAImages();
+				smaaImageLoader.load(([search, area]) => {
+
+					assets.set("smaa-search", search);
+					assets.set("smaa-area", area);
+
+				});
 
 			} else {
 
@@ -118,11 +116,11 @@ export class RealisticBokehDemo extends PostProcessingDemo {
 		const scene = this.scene;
 		const assets = this.assets;
 		const composer = this.composer;
-		const renderer = composer.renderer;
+		const renderer = composer.getRenderer();
 
 		// Camera.
 
-		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 50);
+		const camera = new PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 2000);
 		camera.position.set(12.5, -0.3, 1.7);
 		this.camera = camera;
 
@@ -137,11 +135,6 @@ export class RealisticBokehDemo extends PostProcessingDemo {
 		controls.settings.zoom.maxDistance = 40.0;
 		controls.lookAt(scene.position);
 		this.controls = controls;
-
-		// Fog.
-
-		scene.fog = new FogExp2(0x000000, 0.0025);
-		renderer.setClearColor(scene.fog.color);
 
 		// Sky.
 
@@ -174,11 +167,12 @@ export class RealisticBokehDemo extends PostProcessingDemo {
 		// Passes.
 
 		const smaaEffect = new SMAAEffect(assets.get("smaa-search"), assets.get("smaa-area"));
-		smaaEffect.setEdgeDetectionThreshold(0.06);
+		smaaEffect.colorEdgesMaterial.setEdgeDetectionThreshold(0.05);
 
 		const bokehEffect = new RealisticBokehEffect({
-			focus: 1.55,
+			focus: 2.65,
 			focalLength: camera.getFocalLength(),
+			fStop: 1.6,
 			luminanceThreshold: 0.325,
 			luminanceGain: 2.0,
 			bias: -0.35,
@@ -221,6 +215,7 @@ export class RealisticBokehDemo extends PostProcessingDemo {
 		const params = {
 			"focus": uniforms.get("focus").value,
 			"focal length": uniforms.get("focalLength").value,
+			"f-stop": uniforms.get("fStop").value,
 			"threshold": uniforms.get("luminanceThreshold").value,
 			"gain": uniforms.get("luminanceGain").value,
 			"bias": uniforms.get("bias").value,
@@ -244,6 +239,12 @@ export class RealisticBokehDemo extends PostProcessingDemo {
 		menu.add(params, "focal length").min(0.1).max(35.0).step(0.01).onChange(() => {
 
 			uniforms.get("focalLength").value = params["focal length"];
+
+		});
+
+		menu.add(params, "f-stop").min(0.01).max(4.0).step(0.01).onChange(() => {
+
+			uniforms.get("fStop").value = params["f-stop"];
 
 		});
 

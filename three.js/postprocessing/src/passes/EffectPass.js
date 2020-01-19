@@ -221,14 +221,7 @@ export class EffectPass extends Pass {
 
 		super("EffectPass");
 
-		/**
-		 * The main camera.
-		 *
-		 * @type {Camera}
-		 * @private
-		 */
-
-		this.mainCamera = camera;
+		this.setFullscreenMaterial(new EffectMaterial(null, null, null, camera));
 
 		/**
 		 * The effects, sorted by attribute priority, DESC.
@@ -249,15 +242,6 @@ export class EffectPass extends Pass {
 		 */
 
 		this.skipRendering = false;
-
-		/**
-		 * Indicates whether dithering is enabled.
-		 *
-		 * @type {Boolean}
-		 * @private
-		 */
-
-		this.quantize = false;
 
 		/**
 		 * The amount of shader uniforms that this pass uses.
@@ -297,7 +281,18 @@ export class EffectPass extends Pass {
 
 		this.maxTime = 1e3;
 
-		this.setFullscreenMaterial(this.createMaterial());
+	}
+
+	/**
+	 * The current render size.
+	 *
+	 * @type {Vector2}
+	 * @private
+	 */
+
+	get size() {
+
+		return this.getFullscreenMaterial().uniforms.resolution.value;
 
 	}
 
@@ -311,7 +306,7 @@ export class EffectPass extends Pass {
 
 	get dithering() {
 
-		return this.quantize;
+		return this.getFullscreenMaterial().dithering;
 
 	}
 
@@ -325,31 +320,24 @@ export class EffectPass extends Pass {
 
 	set dithering(value) {
 
-		if(this.quantize !== value) {
+		const material = this.getFullscreenMaterial();
 
-			const material = this.getFullscreenMaterial();
+		if(material.dithering !== value) {
 
-			if(material !== null) {
-
-				material.dithering = value;
-				material.needsUpdate = true;
-
-			}
-
-			this.quantize = value;
+			material.dithering = value;
+			material.needsUpdate = true;
 
 		}
 
 	}
 
 	/**
-	 * Creates a compound shader material.
+	 * Updates the compound shader material.
 	 *
 	 * @private
-	 * @return {Material} The new material.
 	 */
 
-	createMaterial() {
+	updateMaterial() {
 
 		const blendRegExp = /\bblend\b/g;
 
@@ -426,7 +414,8 @@ export class EffectPass extends Pass {
 
 			}
 
-			this.needsDepthTexture = true;
+			// Only request a depth texture if none has been provided yet.
+			this.needsDepthTexture = (this.getDepthTexture() === null);
 
 		}
 
@@ -452,7 +441,9 @@ export class EffectPass extends Pass {
 		this.skipRendering = (id === 0);
 		this.needsSwap = !this.skipRendering;
 
-		const material = new EffectMaterial(shaderParts, defines, uniforms, this.mainCamera, this.dithering);
+		const material = this.getFullscreenMaterial();
+		material.setShaderParts(shaderParts).setDefines(defines).setUniforms(uniforms);
+		material.extensions = {};
 
 		if(extensions.size > 0) {
 
@@ -465,40 +456,17 @@ export class EffectPass extends Pass {
 
 		}
 
-		return material;
-
 	}
 
 	/**
-	 * Destroys the current fullscreen shader material and builds a new one.
+	 * Updates the shader material.
 	 *
-	 * Warning: This method performs a relatively expensive shader recompilation.
+	 * Warning: This method triggers a relatively expensive shader recompilation.
 	 */
 
 	recompile() {
 
-		let material = this.getFullscreenMaterial();
-		let width = 0, height = 0;
-		let depthTexture = null;
-		let depthPacking = 0;
-
-		if(material !== null) {
-
-			const resolution = material.uniforms.resolution.value;
-			width = resolution.x; height = resolution.y;
-			depthTexture = material.uniforms.depthBuffer.value;
-			depthPacking = material.depthPacking;
-			material.dispose();
-
-			this.uniforms = 0;
-			this.varyings = 0;
-
-		}
-
-		material = this.createMaterial();
-		material.setSize(width, height);
-		this.setFullscreenMaterial(material);
-		this.setDepthTexture(depthTexture, depthPacking);
+		this.updateMaterial();
 
 	}
 
@@ -510,9 +478,7 @@ export class EffectPass extends Pass {
 
 	getDepthTexture() {
 
-		const material = this.getFullscreenMaterial();
-
-		return (material !== null) ? material.uniforms.depthBuffer.value : null;
+		return this.getFullscreenMaterial().uniforms.depthBuffer.value;
 
 	}
 
@@ -526,7 +492,6 @@ export class EffectPass extends Pass {
 	setDepthTexture(depthTexture, depthPacking = 0) {
 
 		const material = this.getFullscreenMaterial();
-
 		material.uniforms.depthBuffer.value = depthTexture;
 		material.depthPacking = depthPacking;
 		material.needsUpdate = true;
@@ -599,8 +564,18 @@ export class EffectPass extends Pass {
 
 	initialize(renderer, alpha) {
 
-		const capabilities = renderer.capabilities;
+		// Initialize effects before building the final shader.
+		for(const effect of this.effects) {
 
+			effect.initialize(renderer, alpha);
+
+		}
+
+		// Initialize the fullscreen material.
+		this.updateMaterial();
+
+		// Compare required resources with capabilities.
+		const capabilities = renderer.capabilities;
 		let max = Math.min(capabilities.maxFragmentUniforms, capabilities.maxVertexUniforms);
 
 		if(this.uniforms > max) {
@@ -614,12 +589,6 @@ export class EffectPass extends Pass {
 		if(this.varyings > max) {
 
 			console.warn("The current rendering context doesn't support more than " + max + " varyings, but " + this.varyings + " were defined");
-
-		}
-
-		for(const effect of this.effects) {
-
-			effect.initialize(renderer, alpha);
 
 		}
 
