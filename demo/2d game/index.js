@@ -405,7 +405,7 @@ function createAudio() {
 
     // 加載音樂
     let mediaElement = new Audio('../../three.js/examples/sounds/376737_Skullbeatz___Bad_Cat_Maste.mp3');
-    mediaElement.loop = true;;
+    mediaElement.loop = true;
     // mediaElement.play();
 
     sound.setMediaElementSource( mediaElement );
