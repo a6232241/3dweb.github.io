@@ -95,7 +95,7 @@ function createAudio() {
     let listener = new THREE.AudioListener();
     camera.add(listener);
 
-    let media = new Audio('../../../three.js/examples/sounds/376737_Skullbeatz___Bad_Cat_Maste.mp3');
+    let media = new Audio('../../three.js/examples/sounds/376737_Skullbeatz___Bad_Cat_Maste.mp3');
     media.loop = true;
     media.muted = false;
     media.play();
@@ -114,7 +114,7 @@ function createAudio() {
 function createModel() {
 
     let gltfLoader = new GLTFLoader();
-    gltfLoader.load('../../../three.js/examples/models/gltf/BoomBox/glTF-Binary/BoomBox.glb', function (gltf) {
+    gltfLoader.load('../../three.js/examples/models/gltf/BoomBox/glTF-Binary/BoomBox.glb', function (gltf) {
 
         let boomBox = gltf.scene;
         boomBox.position.set(0, 0.2, 0);
