@@ -97,6 +97,7 @@ function createAudio() {
 
     let media = new Audio('../../../three.js/examples/sounds/376737_Skullbeatz___Bad_Cat_Maste.mp3');
     media.loop = true;
+    media.muted = false;
     media.play();
 
     positionAudio = new THREE.PositionalAudio(listener);
