@@ -236,8 +236,8 @@ function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
 
-    let axes = new THREE.AxesHelper(50);
-    scene.add(axes);
+    // let axes = new THREE.AxesHelper(50);
+    // scene.add(axes);
 
     createCamera();
     createLights();
