@@ -17,14 +17,9 @@ let container_height = window.innerHeight;
 //建立場景
 function init() {
 
-    scene = new THREE.Scene();
-
-    let axes = new THREE.AxesHelper(5);
-    scene.add(axes);
-
-    createCamera();
-    createLights();
     createRenderer();
+    createScene();
+   
     createControls();
     createEvent();
 
@@ -32,6 +27,28 @@ function init() {
         // update();
         render();
     });
+}
+
+function createRenderer() {
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(container_width, container_height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+
+    container.appendChild(renderer.domElement);
+
+}
+
+function createScene(){
+
+    scene = new THREE.Scene();
+
+    let axes = new THREE.AxesHelper(5);
+    scene.add(axes);
+
+    createCamera();
+    createLights(); 
+
 }
 
 // 創建相機
@@ -61,15 +78,7 @@ function createLights() {
 
 }
 
-function createRenderer() {
 
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(container_width, container_height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-
-    container.appendChild(renderer.domElement);
-
-}
 
 init();
 
