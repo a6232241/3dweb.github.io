@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Gridspace</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="css/styles.css"> -->
+    <link rel="stylesheet" href="../../../css/global.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <main>
+        <div class="threejs">
+            <div id="scene-container"></div>
+            <div id="info">
+                <p>Gridspace</p>
+            </div>
+            <div id="OHSHIT" class="wrap">
+                <div class="text">
+                  o shit waddup!
+                </div>
+            </div>
+        </div>
+    </main>
+    <script type="module" src="index.js"></script>
+    <script type="x-shader/x-vertex" id="sky-vertex">  
+        varying vec2 vUV;
+        void main() {  
+            vUV = uv;
+            vec4 pos = vec4(position, 1.0);
+            gl_Position = projectionMatrix * modelViewMatrix * pos;
+        }
+      </script>
+      <script type="x-shader/x-fragment" id="sky-fragment">
+        precision mediump float;
+
+        uniform sampler2D texture;  
+        varying vec2 vUV;
+        void main() {  
+            vec4 sample = texture2D(texture, vUV);
+            gl_FragColor = vec4(sample.xyz, sample.w);
+        }
+    </script>
+</body>
+
+</html>
