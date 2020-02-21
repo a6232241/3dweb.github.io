@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Bunny</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="css/styles.css"> -->
+    <link rel="stylesheet" href="../../../css/global.css">
+</head>
+
+<body>
+    <main>
+        <div class="threejs">
+            <div id="scene-container"></div>
+            <div id="info">
+                <p>Bunny</p>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.19.0/TweenMax.min.js"></script>
+    <script type="module" src="index.js"></script>
+    <script type="x-shader/x-vertex" id="vertex">
+        attribute float aTime;
+        attribute vec3 aTarget;
+        attribute vec3 randomPos;
+        
+        varying float aAlpha;
+        
+        uniform float uTime;
+        uniform vec3 uCenter;
+        
+        void main(){
+            float curTime = mod(uTime + aTime, 3.);
+            float rate = curTime/2.;
+        
+            vec3 pos;
+
+            pos = mix(randomPos, position, clamp(rate, 0.0, 1.0));
+
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+
+            aAlpha = 1.0- clamp( (curTime/2.-1.0) * 5.0, 0.0, 1.0);
+        
+            gl_Position = projectionMatrix * mvPosition;
+        
+        }    
+    </script>
+    <script type="x-shader/x-fragment" id="fragment">
+        varying float aAlpha;
+        
+        uniform float uAlpha;
+        uniform vec3 uColor;
+        
+        void main() {
+            gl_FragColor = vec4(uColor, aAlpha * uAlpha);
+        }
+    </script>
+</body>
+
+</html>
