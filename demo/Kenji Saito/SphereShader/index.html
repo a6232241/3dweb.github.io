@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>SphereShader</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="css/styles.css"> -->
+    <link rel="stylesheet" href="../../../css/global.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.2/TweenMax.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <div class="threejs">
+            <div id="scene-container"></div>
+            <div id="info">
+                <p>SphereShader</p>
+            </div>
+        </div>
+        <script type='x-shader/x-vertex' id='vertexShader'>
+            precision highp float;
+            precision highp int;
+
+            attribute vec3 position;
+            attribute vec2 uv;
+            attribute vec3 normal;
+
+            uniform mat4 projectionMatrix;
+            uniform mat4 modelViewMatrix;
+
+            varying vec3 vNormal;
+            varying vec2 vUv;
+            varying vec3 vPosition;
+            varying vec3 vPositionFromCamera;
+
+            void main(){
+                vNormal = normal;
+                vUv = uv;
+                vPosition = position;
+                vPositionFromCamera = vec3(modelViewMatrix * vec4( position, 1.0 ));
+                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            }
+        </script>
+        <script type='x-shader/x-fragment' id='fragmentShader'>
+            precision highp float;
+            precision highp int;
+
+            uniform float uRad;
+            uniform vec3 cameraPosition;
+            uniform float uTime;
+            uniform float uDistance;
+
+            varying vec3 vNormal;
+            varying vec2 vUv;
+            varying vec3 vPosition;
+            varying vec3 vPositionFromCamera;
+
+            void main(){
+                vec3 light = vec3( 0.5, 0.2, 1.0);
+                    
+                float stripe = 2.0;
+                float theta = atan(vPosition.z, vPosition.x)/(2.0 * 3.14);  
+                float stripeVal1 = mod( (vUv.y + vUv.x ) * 40. + theta * 10., stripe);
+                stripeVal1 = stripeVal1 * (stripe - stripeVal1) * 2.;
+                
+                // float stripeVal2 = mod( (vUv.y + vUv.x ) * 30. + theta * 10. - uTime * 1.0, stripe);
+                // stripeVal2 = stripeVal2 * (stripe - stripeVal2) * 1.1;
+                
+                float stripeVal = stripeVal1 ; //max(stripeVal1, stripeVal2);
+                
+                if(stripeVal < 1.0) discard;
+                float distacenFromCamera = clamp(1.0 - (distance(vPositionFromCamera, vec3(0.0)) - uDistance + uRad) / (1.9 * uRad), 0.0, 1.0);
+                float time = mod(uTime, 4.) + 0.5;
+                float progress = mod( 10. * time * vUv.y * 2., uTime);
+                // progress = fract(progress);    
+                vec3 color = vec3(vUv.x * (1. - vUv.x) * 4.0, vUv.y, vUv.y);
+                
+                gl_FragColor = vec4( mix(vec3(0.), color * 3. , 1.0 - progress),
+                                distacenFromCamera *  clamp(progress, 0., 1.) );  // A,
+            }
+        </script>
+    </main>
+    <script type="module" src="index.js"></script>
+</body>
+
+</html>
