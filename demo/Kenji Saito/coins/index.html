@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Coins</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="css/styles.css"> -->
+    <link rel="stylesheet" href="../../../css/global.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.19.0/TweenMax.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <div class="threejs">
+            <div id="scene-container"></div>
+            <div id="info">
+                <p>Coins</p>
+            </div>
+        </div>
+    </main>
+    <script type="x-shader/x-vertex" id="vertex">
+        varying vec3 vPos;
+        varying vec3 vNormal;
+
+        uniform float uTime;
+
+        vec3 getNewVertPosition(){
+            vec3 outputPos = (modelMatrix * vec4(position, 1.0)).xyz;
+            float melt = outputPos.y;
+            melt = 1. - clamp(melt, 0., 1.);
+
+            vec3 uNormal = normal;
+            uNormal = normalize(uNormal);
+            outputPos.y = max(position.y/10., outputPos.y);
+            outputPos.xz = outputPos.xz;
+
+
+            return outputPos;
+        }
+
+        void main() {
+            vec3 outputPos = getNewVertPosition();
+
+
+            vPos = (modelMatrix * vec4(outputPos, 1.0 )).xyz;
+            vNormal = normalMatrix * normal;
+            gl_Position = projectionMatrix * viewMatrix * vec4(outputPos,1.0);
+        }   
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragment">
+        uniform vec3 diffuse;
+        varying vec3 vPos;
+        varying vec3 vNormal;
+
+
+        #if NUM_POINT_LIGHTS > 0
+        struct PointLight {
+            vec3 position;
+            vec3 color;
+        };
+        uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
+        #endif
+
+        #if NUM_DIR_LIGHTS > 0
+        struct DirectionalLight {
+            vec3 direction;
+            vec3 color;
+            int shadow;
+            float shadowBias;
+            float shadowRadius;
+            vec2 shadowMapSize;
+        };
+        uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+        #endif
+
+        uniform vec3 ambientLightColor;
+
+        void main() {
+            vec4 addedLights = vec4(0.0,0.0,0.0, 1.0);
+            for(int l = 0; l < NUM_POINT_LIGHTS; l++) {
+
+                vec3 lightDirection = normalize(vPos - pointLights[l].position);
+                vec3 Idiff = clamp(dot(-lightDirection, vNormal * 10.0), 0.0, 1.0) * pointLights[l].color;
+                addedLights = addedLights + vec4(Idiff.rgb, 0.0); // + ;
+            }
+
+            gl_FragColor =  mix(vec4(diffuse.x, diffuse.y, diffuse.z, 1.0), addedLights, addedLights);
+        }  
+    </script>
+    <script type="module" src="index.js"></script>
+</body>
+
+</html>
