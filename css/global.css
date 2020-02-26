@@ -12,16 +12,15 @@ body{
 }
 
 .threejs{
-    width: 100%;
     display: flex;
     justify-content: center;
     align-content: center;
+    flex-wrap: wrap;
 }
 
 #info{
     color: #ffffff;
     width: 100%;
-    top: 10px;
     box-sizing: border-box;
     text-align: center;
     font-size: 1.5vw;
