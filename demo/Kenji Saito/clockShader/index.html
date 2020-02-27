@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>ClockShader</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- <link rel="stylesheet" href="css/styles.css"> -->
+    <link rel="stylesheet" href="../../../css/global.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+</head>
+
+<body>
+    <main>
+        <div class="threejs">
+            <div id="scene-container"></div>
+            <div id="info">
+                <p>ClockShader</p>
+            </div>
+        </div>
+    </main>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        varying vec2 vUv;
+
+        void main()	{
+            vUv = uv;
+
+            gl_Position = vec4( position, 1.0 );
+
+        }
+
+    </script>
+
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        varying vec2 vUv;
+        uniform vec2 resolution;
+        uniform float time;
+        uniform sampler2D canvasSource;
+
+        void main()	{
+
+            vec2 sp = gl_FragCoord.xy / resolution.xy - vec2(0.5, 0.5);
+
+            float col = texture2D(canvasSource, vUv).r;
+            //vec2 sp = vec2(texture2D(canvasSource, gl_FragCoord).r, texture2D(canvasSource, gl_FragCoord).g);
+            vec2 p = (0.8 * 0.8 *sp) * 12.0 - vec2(0.0);
+            vec2 i = p;
+            float c = 1.0;
+
+            float inten = 1.1;
+
+            for(int n = 0; n < 18; n++){
+                float t = time * (1.0 - (3.0 / float(n + 7)));
+                i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
+                c += 11.0/length(vec2(p.x / (sin(i.x+t)/inten),p.y / (cos(i.y+t)/inten)));
+            }
+
+            c /= float(20);
+            c = 1.8 - sqrt(c);
+            //c *= .18;
+
+
+            gl_FragColor = vec4(vec3(c*c*col) , 1.0) * vec4(0.0, 0.5, 0.9, 1.0);
+        }
+
+    </script>
+    <script type="module" src="index.js"></script>
+</body>
+
+</html>
