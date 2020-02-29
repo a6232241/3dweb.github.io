@@ -3,9 +3,9 @@ body{
     overflow: hidden;
     user-select: none;
     margin: 0;
-    display: flex;
+    /* display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: center; */
     font-family: monospace;
     font-size: 15px;
     line-height: 24px;
@@ -26,10 +26,10 @@ body{
     font-size: 1.5vw;
     text-shadow: #000000 0px 0px 5px;
     line-height: 5px;
+    z-index: 1;
 }
 
 canvas{
-    z-index: -99;
     top: 0;
     left: 0;
     position: absolute;
