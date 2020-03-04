@@ -1,0 +1,225 @@
+body {
+    --color-text: #48d7d5;
+    --color-text-alt: #f14f58;
+    --color-bg: #343c3c;
+    --color-link: #a9bab1;
+    --color-link-hover: #48d7d5;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    font-family: Futura, "futura-pt", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+canvas {
+    position: fixed;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: calc(100vh - 13rem);
+    position: relative;
+    justify-content: flex-start;
+    align-items: center;
+    font-family: rift, sans-serif;
+    text-transform: uppercase;
+    font-style: italic;
+  }
+  
+  .content--final {
+    margin-top: 100vh;
+  }
+  
+  .content__title {
+    line-height: 0.9;
+    font-weight: 400;
+  }
+  
+  .content__title-inner {
+    display: block;
+    font-size: 5.5vw;
+    color: var(--color-text-alt);
+    -webkit-animation: glitch-anim-text 3s linear infinite;
+            animation: glitch-anim-text 3s linear infinite;
+  }
+  
+  @-webkit-keyframes glitch-anim-text {
+    0% {
+      -webkit-transform: translate3d(-10px, 0, 0) scale3d(-1, -1, 1);
+              transform: translate3d(-10px, 0, 0) scale3d(-1, -1, 1);
+      -webkit-clip-path: polygon(0 20%, 100% 20%, 100% 21%, 0 21%);
+      clip-path: polygon(0 20%, 100% 20%, 100% 21%, 0 21%);
+    }
+    2% {
+      -webkit-clip-path: polygon(0 33%, 100% 33%, 100% 33%, 0 33%);
+      clip-path: polygon(0 33%, 100% 33%, 100% 33%, 0 33%);
+    }
+    4% {
+      -webkit-clip-path: polygon(0 44%, 100% 44%, 100% 44%, 0 44%);
+      clip-path: polygon(0 44%, 100% 44%, 100% 44%, 0 44%);
+    }
+    5% {
+      -webkit-clip-path: polygon(0 50%, 100% 50%, 100% 20%, 0 20%);
+      clip-path: polygon(0 50%, 100% 50%, 100% 20%, 0 20%);
+    }
+    6% {
+      -webkit-clip-path: polygon(0 70%, 100% 70%, 100% 70%, 0 70%);
+      clip-path: polygon(0 70%, 100% 70%, 100% 70%, 0 70%);
+    }
+    7% {
+      -webkit-clip-path: polygon(0 80%, 100% 80%, 100% 80%, 0 80%);
+      clip-path: polygon(0 80%, 100% 80%, 100% 80%, 0 80%);
+    }
+    8% {
+      color: var(--color-text-alt);
+      -webkit-clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%);
+      clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%);
+    }
+    9% {
+      color: #fff;
+      -webkit-clip-path: polygon(0 70%, 100% 70%, 100% 80%, 0 80%);
+      clip-path: polygon(0 70%, 100% 70%, 100% 80%, 0 80%);
+    }
+    9.9% {
+      color: var(--color-text-alt);
+      -webkit-transform: translate3d(-10px, 0, 0) scale3d(-1, -1, 1);
+              transform: translate3d(-10px, 0, 0) scale3d(-1, -1, 1);
+    }
+    10%,
+    100% {
+      -webkit-transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+              transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      -webkit-clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+    }
+  }
+  
+  @keyframes glitch-anim-text {
+    0% {
+      -webkit-transform: translate3d(-10px, 0, 0) scale3d(-1, -1, 1);
+              transform: translate3d(-10px, 0, 0) scale3d(-1, -1, 1);
+      -webkit-clip-path: polygon(0 20%, 100% 20%, 100% 21%, 0 21%);
+      clip-path: polygon(0 20%, 100% 20%, 100% 21%, 0 21%);
+    }
+    2% {
+      -webkit-clip-path: polygon(0 33%, 100% 33%, 100% 33%, 0 33%);
+      clip-path: polygon(0 33%, 100% 33%, 100% 33%, 0 33%);
+    }
+    4% {
+      -webkit-clip-path: polygon(0 44%, 100% 44%, 100% 44%, 0 44%);
+      clip-path: polygon(0 44%, 100% 44%, 100% 44%, 0 44%);
+    }
+    5% {
+      -webkit-clip-path: polygon(0 50%, 100% 50%, 100% 20%, 0 20%);
+      clip-path: polygon(0 50%, 100% 50%, 100% 20%, 0 20%);
+    }
+    6% {
+      -webkit-clip-path: polygon(0 70%, 100% 70%, 100% 70%, 0 70%);
+      clip-path: polygon(0 70%, 100% 70%, 100% 70%, 0 70%);
+    }
+    7% {
+      -webkit-clip-path: polygon(0 80%, 100% 80%, 100% 80%, 0 80%);
+      clip-path: polygon(0 80%, 100% 80%, 100% 80%, 0 80%);
+    }
+    8% {
+      color: var(--color-text-alt);
+      -webkit-clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%);
+      clip-path: polygon(0 50%, 100% 50%, 100% 55%, 0 55%);
+    }
+    9% {
+      color: #fff;
+      -webkit-clip-path: polygon(0 70%, 100% 70%, 100% 80%, 0 80%);
+      clip-path: polygon(0 70%, 100% 70%, 100% 80%, 0 80%);
+    }
+    9.9% {
+      color: var(--color-text-alt);
+      -webkit-transform: translate3d(-10px, 0, 0) scale3d(-1, -1, 1);
+              transform: translate3d(-10px, 0, 0) scale3d(-1, -1, 1);
+    }
+    10%,
+    100% {
+      -webkit-transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+              transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+      -webkit-clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+    }
+  }
+  .content__title-sub {
+    display: block;
+    text-align: right;
+    font-size: 3vw;
+    margin-right: 0.25rem;
+  }
+  
+  .content__text {
+    font-size: 2rem;
+  }
+  
+  @media screen and (min-width: 53em) {
+    .frame {
+      position: fixed;
+      text-align: left;
+      z-index: 10000;
+      top: 0;
+      left: 0;
+      display: grid;
+      align-content: space-between;
+      width: 100%;
+      max-width: none;
+      height: 100vh;
+      padding: 3rem;
+      pointer-events: none;
+      grid-template-columns: 40% 20% 40%;
+      grid-template-rows: auto auto auto;
+      grid-template-areas: 'title ... links' '... ... ...' 'credits scroll demos';
+    }
+  
+    .frame__scroll {
+      grid-area: scroll;
+      justify-self: center;
+    }
+  
+    .frame__title-wrap {
+      grid-area: title;
+      display: flex;
+    }
+  
+    .frame__title {
+      margin: 0;
+    }
+  
+    .frame__tagline {
+      position: relative;
+      margin: 0 0 0 1rem;
+      padding: 0 0 0 1rem;
+      opacity: 0.5;
+    }
+  
+    .frame__credits {
+      grid-area: credits;
+      justify-self: start;
+      margin: 0;
+    }
+  
+    .frame__demos {
+      margin: 0;
+      grid-area: demos;
+      justify-self: end;
+    }
+  
+    .frame__links {
+      grid-area: links;
+      padding: 0;
+      justify-self: end;
+    }
+  
+    .frame a {
+      pointer-events: auto;
+    }
+  
+    .content {
+      height: 100vh;
+      justify-content: center;
+    }
+  }
