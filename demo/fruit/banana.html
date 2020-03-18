@@ -22,8 +22,8 @@
 
 			let container = document.querySelector('#scene-container');
             
-            let container_width = container.offsetWidth;
-            let container_height = container.offsetHeight;
+            let container_width = window.innerWidth;
+            let container_height = window.innerHeight;
 
             let controls;
 
@@ -215,8 +215,8 @@
             //設備視窗更新
             function onWindowResize(){
 
-                container_width = container.offsetWidth;
-                container_height = container.offsetHeight;
+                container_width = window.innerWidth;
+                container_height = window.innerHeight;
 
                 let aspect = container_width / container_height;
 
