@@ -1,255 +1,212 @@
 <!DOCTYPE html>
- <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>banana</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="../../css/styles.css">
-    </head>
-    <body>
-        <div id="scene-container">
-        </div>
-		
-		<script type="module">
-			
-			import * as THREE from '../../three.js/build/three.module.js';
+<html>
 
-			import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
-			import { FBXLoader } from '../../three.js/examples/jsm/loaders/FBXLoader.js';
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>banana</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div id="scene-container">
+    </div>
+
+    <script type="module">
+
+        import * as THREE from '../../three.js/build/three.module.js';
+
+        import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+        import { FBXLoader } from '../../three.js/examples/jsm/loaders/FBXLoader.js';
 
 
-			let container = document.querySelector('#scene-container');
-            
-            let container_width = window.innerWidth;
-            let container_height = window.innerHeight;
+        let container = document.querySelector('#scene-container');
 
-            let controls;
+        let container_width = window.innerWidth;
+        let container_height = window.innerHeight;
 
-            let scene, camera, renderer;
+        let controls;
 
-            let group = new THREE.Group();
+        let scene, camera, renderer;
 
-            //建立場景
-            function init(){
+        let group = new THREE.Group();
 
-                scene = new THREE.Scene();
-                scene.background = new THREE.Color( 0xffffff );
-                // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
+        //建立場景
+        function init() {
 
-                createCamera();
-                createLights();
-				// createMeshes();
-				loadingModel();
-                createRenderer();
-                // createGUI();
-                createControls();
-                createEvent();
-                
-                renderer.setAnimationLoop( ( )=> {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+            // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
 
-                    update();
-                    render();
+            createCamera();
+            createLights();
+            // createMeshes();
+            loadingModel();
+            createRenderer();
+            // createGUI();
+            createControls();
+            createEvent();
+
+            renderer.setAnimationLoop(() => {
+
+                update();
+                render();
+
+            });
+        }
+
+        //創建相機
+        function createCamera() {
+
+            let fov = 30;
+            let aspect = container_width / container_height;
+            let near = 1;
+            let far = 2000;
+            camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera.position.set(20, 20, 35);
+
+        }
+
+        //創建光源
+        function createLights() {
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+            let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5);
+            scene.add(hemiLight);
+
+
+        }
+
+        function loadingModel() {
+
+            let loader = new THREE.TextureLoader();
+
+            let cubeLoader = new THREE.CubeTextureLoader();
+
+            let fbxLoader = new FBXLoader();
+            fbxLoader.load('../../models/fbx/banana/Food00028.FBX', function (fbx) {
+
+                let arr = [];
+
+                fbx.traverse(function (obj) {
+
+                    if (obj.isMesh) {
+                        arr.push(obj);
+                    }
 
                 });
-            }
 
-            //創建相機
-            function createCamera(){
+                let envMap = cubeLoader
+                            .setPath('../../skybox/sh/')
+                            .load(['sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png']);
 
-                let fov = 30;
-                let aspect = container_width / container_height;
-                let near = 1;
-                let far = 2000;
-                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
-                camera.position.set( 20, 20, 35 );
+                for (let i = 0; i < arr.length; i++) {
 
-                // let left = - containerHalfX;
-                // let right = containerHalfX;
-                // let top = containerHalfY;
-                // let bottom = - containerHalfY;
-                // near = 3, far = 10;
-                // cameraO = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
-                // cameraO.position.z = 7;
+                    if (i < 1) {
 
-            }
+                        arr[i].material = new THREE.MeshPhongMaterial({
+                            envMap: envMap,
+                            map: loader.load('../../models/fbx/banana/maps/AM130_028_diffuse_03.jpg'),
+                            normalMap: loader.load('../../models/fbx/banana/maps/AM130_028_normals_03.jpg'),
+                            reflectivity: 0.05,
+                        });
 
-            //創建光源
-            function createLights(){
+                    } else if (i < 2) {
 
-                scene.add( new THREE.AmbientLight( 0xffffff, 0.5 ) );
+                        arr[i].material = new THREE.MeshPhongMaterial({
+                            envMap: envMap,
+                            map: loader.load('../../models/fbx/banana/maps/AM130_028_diffuse_02.jpg'),
+                            normalMap: loader.load('../../models/fbx/banana/maps/AM130_028_normals_02.jpg'),
+                            reflectivity: 0.05
+                        });
 
-                // let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
-                // dirLight.position.set( 0, 1, 0 );
-                // scene.add( dirLight );
+                    } else {
 
-                // let pointLight = new THREE.PointLight( 0xffffff );
-                // pointLight.position.set( -15, 5, 5 );
-                // scene.add( pointLight );
-
-                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.5 );
-                scene.add( hemiLight );
-
-
-            }
-
-			function loadingModel(){
-
-				let loader = new THREE.TextureLoader();
-
-                let cubeLoader = new THREE.CubeTextureLoader();
-
-				let fbxLoader = new FBXLoader();
-				fbxLoader.load( '../../models/fbx/banana/Food00028.FBX', function ( fbx ) {
-
-                    let arr = [];
-
-					fbx.traverse( function( obj ){
-
-                        if( obj.isMesh ){
-
-                            arr.push( obj );
-
-                        }
-
-                    } );
-
-                    console.log( arr.length );
-
-                    for( let i = 0; i < arr.length; i++ ){
-
-                        if( i < 1 ){
-
-                            arr[i].material = new THREE.MeshPhongMaterial( {
-                                envMap: cubeLoader
-                                    .setPath( '../../skybox/sh/' )
-					                .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] ),
-                                map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_03.jpg'),
-                                normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_03.jpg' ),
-                                reflectivity: 0.1
-                            } );
-
-                        }else if( i < 2 ){
-
-                            arr[i].material = new THREE.MeshPhongMaterial( {
-                                envMap: cubeLoader
-                                    .setPath( '../../skybox/sh/' )
-					                .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] ),
-                                map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_02.jpg'),
-                                normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_02.jpg' ),
-                                reflectivity: 0.1
-                            } );
-
-                        }else{
-
-                            arr[i].material = new THREE.MeshPhongMaterial( {
-                                envMap: cubeLoader
-                                    .setPath( '../../skybox/sh/' )
-					                .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] ),
-                                map: loader.load( '../../models/fbx/banana/maps/AM130_028_diffuse_01.jpg'),
-                                normalMap: loader.load( '../../models/fbx/banana/maps/AM130_028_normals_04.jpg' ),
-                                bumpMap: loader.load( '../../models/fbx/banana/maps/AM130_028_bump_01.jpg'),
-                                emissiveMap: loader.load( '../../models/fbx/banana/maps/AM130_028_blend_01.jpg'),
-                                reflectivity: 0.1
-                            } );
-
-                        }
+                        arr[i].material = new THREE.MeshPhongMaterial({
+                            envMap: envMap,
+                            map: loader.load('../../models/fbx/banana/maps/AM130_028_diffuse_01.jpg'),
+                            normalMap: loader.load('../../models/fbx/banana/maps/AM130_028_normals_04.jpg'),
+                            bumpMap: loader.load('../../models/fbx/banana/maps/AM130_028_bump_01.jpg'),
+                            emissiveMap: loader.load('../../models/fbx/banana/maps/AM130_028_blend_01.jpg'),
+                            reflectivity: 0.05
+                        });
 
                     }
 
-                    group.add( fbx );
+                }
 
-					scene.add( group );
+                group.add(fbx);
 
-				} );
+                scene.add(group);
 
-			}
+            });
 
-            //實現渲染
-            function createRenderer(){
+        }
 
-                renderer = new THREE.WebGLRenderer();
-                renderer.setSize( container_width, container_height );
-                renderer.setPixelRatio( window.devicePixelRatio );
+        //實現渲染
+        function createRenderer() {
 
-                container.appendChild( renderer.domElement );
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(container_width, container_height);
+            renderer.setPixelRatio(window.devicePixelRatio);
 
-            }
-            
-            //創建GUI
-            function createGUI(){
+            container.appendChild(renderer.domElement);
 
-                // if ( gui ) gui.destroy();
+        }
 
-                // gui = new GUI( { width: 300 } );
-                // gui.add( params, "pixelSize", 2, 32, 2 ).onChange( function( val ){
+        //實現控制
+        function createControls() {
 
-                //     pixelPass.uniforms[ "pixelSize" ].value = val;
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 3, 0);
 
-                // });
-                // gui.add( params, "postprocessing" );
-                // gui.open();
+        }
 
-            }
+        //創建事件
+        function createEvent() {
 
-            //實現控制
-            function createControls(){
+            window.addEventListener('resize', onWindowResize, false);
 
-                // controls = new OrbitControls( camera, renderer.domElement );
-				controls = new OrbitControls( camera, renderer.domElement );
-				controls.target.set( 0, 3, 0 );
-                // controls.rotateSpeed = 0.05;
-                // controls.panSpeed = 0.8;
-                // controls.zoomSpeed = 1.5;
+        }
 
-            }
+        //設備視窗更新
+        function onWindowResize() {
 
-            //創建事件
-            function createEvent(){
+            container_width = window.innerWidth;
+            container_height = window.innerHeight;
 
-                window.addEventListener('resize', onWindowResize, false);
+            let aspect = container_width / container_height;
 
-            }
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
 
-            //設備視窗更新
-            function onWindowResize(){
+            renderer.setSize(container_width, container_height);
 
-                container_width = window.innerWidth;
-                container_height = window.innerHeight;
+        }
 
-                let aspect = container_width / container_height;
+        //Object事件
+        function update() {
 
-                camera.aspect = aspect;
-				camera.updateProjectionMatrix();
-				
-				renderer.setSize( container_width, container_height );
+            group.rotation.y += 0.01;
 
-                // controls.handleResize();
+        }
 
-                // render();
+        //渲染更新
+        function render() {
 
-            }
+            controls.update();
 
-            //Object事件
-            function update(){
+            renderer.render(scene, camera);
 
-                group.rotation.y += 0.03;
+        }
 
-            }
+        init();
 
-            //渲染更新
-            function render(){
+    </script>
 
-                controls.update();
+</body>
 
-                renderer.render( scene, camera );
-
-            }
-
-            init();
-
-        </script>
-
-    </body>
 </html>

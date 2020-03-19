@@ -1,214 +1,176 @@
 <!DOCTYPE html>
- <html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>potato</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="../../css/styles.css">
-    </head>
-    <body>
-        <div id="scene-container">
-        </div>
-		
-		<script type="module">
-			
-			import * as THREE from '../../three.js/build/three.module.js';
+<html>
 
-			import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
-			import { GLTFLoader } from '../../three.js/examples/jsm/loaders/GLTFLoader.js';
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>potato</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
+
+<body>
+    <div id="scene-container">
+    </div>
+
+    <script type="module">
+
+        import * as THREE from '../../three.js/build/three.module.js';
+
+        import { OrbitControls } from '../../three.js/examples/jsm/controls/OrbitControls.js';
+        import { GLTFLoader } from '../../three.js/examples/jsm/loaders/GLTFLoader.js';
 
 
-			let container = document.querySelector('#scene-container');
-            
-            let container_width = window.innerWidth;
-            let container_height = window.innerHeight;
+        let container = document.querySelector('#scene-container');
 
-            let controls;
+        let container_width = window.innerWidth;
+        let container_height = window.innerHeight;
 
-            let scene, camera, renderer;
+        let controls;
 
-            let group = new THREE.Group();
+        let scene, camera, renderer;
 
-            //建立場景
-            function init(){
+        let group = new THREE.Group();
 
-                scene = new THREE.Scene();
-                scene.background = new THREE.Color( 0xffffff );
-                // scene.fog = new THREE.Fog( 0xcccccc, 100, 1500 );
+        //建立場景
+        function init() {
 
-                createCamera();
-                createLights();
-				loadingModel();
-                createRenderer();
-                // createGUI();
-                createControls();
-                createEvent();
-                
-                renderer.setAnimationLoop( ( )=> {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
 
-                    update();
-                    render();
+            createCamera();
+            createLights();
+            loadingModel();
+            createRenderer();
+            // createGUI();
+            createControls();
+            createEvent();
+
+            renderer.setAnimationLoop(() => {
+
+                update();
+                render();
+
+            });
+        }
+
+        //創建相機
+        function createCamera() {
+
+            let fov = 30;
+            let aspect = container_width / container_height;
+            let near = 1;
+            let far = 2000;
+            camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera.position.set(-25, 10, 25);
+
+        }
+
+        //創建光源
+        function createLights() {
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+            let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.7);
+            scene.add(hemiLight);
+
+
+        }
+
+        function loadingModel() {
+
+            let loader = new THREE.CubeTextureLoader();
+
+            let gltfLoader = new GLTFLoader();
+            gltfLoader.load('../../models/gltf/Potato/Potato.gltf', function (gltf) {
+
+                console.log(gltf.scene.children);
+
+                gltf.scene.traverse(function (child) {
+
+                    if (child.isMesh) {
+
+                        child.material.envMap = loader
+                            .setPath('../../skybox/sh/')
+                            .load(['sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png']);
+                        child.material.envMapIntensity = 0.5;
+                        child.position.y = -3;
+                        child.scale.setScalar(205);
+
+                    }
 
                 });
-            }
 
-            //創建相機
-            function createCamera(){
+                group.add(gltf.scene);
 
-                let fov = 30;
-                let aspect = container_width / container_height;
-                let near = 1;
-                let far = 2000;
-                camera = new THREE.PerspectiveCamera( fov, aspect, near, far );
-                camera.position.set( -25, 10, 25 );
+                scene.add(group);
 
-                // let left = - containerHalfX;
-                // let right = containerHalfX;
-                // let top = containerHalfY;
-                // let bottom = - containerHalfY;
-                // near = 3, far = 10;
-                // cameraO = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
-                // cameraO.position.z = 7;
+            });
 
-            }
+        }
 
-            //創建光源
-            function createLights(){
+        //實現渲染
+        function createRenderer() {
 
-                scene.add( new THREE.AmbientLight( 0xffffff ) );
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(container_width, container_height);
+            renderer.setPixelRatio(window.devicePixelRatio);
 
-                // let dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
-                // dirLight.position.set( 0, 1, 0 );
-                // scene.add( dirLight );
+            container.appendChild(renderer.domElement);
 
-                // let pointLight = new THREE.PointLight( 0xffffff );
-                // pointLight.position.set( -15, 5, 5 );
-                // scene.add( pointLight );
+        }
 
-                let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff );
-                scene.add( hemiLight );
+        //實現控制
+        function createControls() {
 
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 3, 0);
 
-            }
+        }
 
-			function loadingModel(){
+        //創建事件
+        function createEvent() {
 
-                let loader = new THREE.CubeTextureLoader();
+            window.addEventListener('resize', onWindowResize, false);
 
-				let gltfLoader = new GLTFLoader();
-				gltfLoader.load( '../../models/gltf/Potato/Potato.gltf', function ( gltf ) {
+        }
 
-                    console.log( gltf.scene.children );
+        //設備視窗更新
+        function onWindowResize() {
 
-                    gltf.scene.traverse( function( child ){
+            container_width = window.innerWidth;
+            container_height = window.innerHeight;
 
-                        if( child.isMesh ){
+            let aspect = container_width / container_height;
 
-                            child.material.envMap = loader
-                                .setPath( '../../skybox/sh/' )
-					            .load( [ 'sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png' ] );
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
 
-                            child.position.y = -3;
-                            child.scale.setScalar( 205 );
+            renderer.setSize(container_width, container_height);
 
-                        }
+        }
 
-                    } );
+        //Object事件
+        function update() {
 
-                    group.add( gltf.scene );
+            group.rotation.y += 0.01;
 
-					scene.add( group );
+        }
 
-				} );
+        //渲染更新
+        function render() {
 
-			}
+            controls.update();
 
-            //實現渲染
-            function createRenderer(){
+            renderer.render(scene, camera);
 
-                renderer = new THREE.WebGLRenderer();
-                renderer.setSize( container_width, container_height );
-                renderer.setPixelRatio( window.devicePixelRatio );
+        }
 
-                container.appendChild( renderer.domElement );
+        init();
 
-            }
-            
-            //創建GUI
-            function createGUI(){
+    </script>
 
-                // if ( gui ) gui.destroy();
+</body>
 
-                // gui = new GUI( { width: 300 } );
-                // gui.add( params, "pixelSize", 2, 32, 2 ).onChange( function( val ){
-
-                //     pixelPass.uniforms[ "pixelSize" ].value = val;
-
-                // });
-                // gui.add( params, "postprocessing" );
-                // gui.open();
-
-            }
-
-            //實現控制
-            function createControls(){
-
-                // controls = new OrbitControls( camera, renderer.domElement );
-				controls = new OrbitControls( camera, renderer.domElement );
-				controls.target.set( 0, 3, 0 );
-                // controls.rotateSpeed = 0.05;
-                // controls.panSpeed = 0.8;
-                // controls.zoomSpeed = 1.5;
-
-            }
-
-            //創建事件
-            function createEvent(){
-
-                window.addEventListener('resize', onWindowResize, false);
-
-            }
-
-            //設備視窗更新
-            function onWindowResize(){
-
-                container_width = window.innerWidth;
-                container_height = window.innerHeight;
-
-                let aspect = container_width / container_height;
-
-                camera.aspect = aspect;
-				camera.updateProjectionMatrix();
-				
-				renderer.setSize( container_width, container_height );
-
-                // controls.handleResize();
-
-                // render();
-
-            }
-
-            //Object事件
-            function update(){
-
-                group.rotation.y += 0.03;
-
-            }
-
-            //渲染更新
-            function render(){
-
-                controls.update();
-
-                renderer.render( scene, camera );
-
-            }
-
-            init();
-
-        </script>
-
-    </body>
 </html>
