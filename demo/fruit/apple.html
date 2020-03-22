@@ -69,9 +69,9 @@
         //創建光源
         function createLights() {
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            scene.add(new THREE.AmbientLight(0xffffff, 1.5));
 
-            let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff);
+            let hemiLight = new THREE.HemisphereLight(0xaa0000, 0x330000, 0.6);
             scene.add(hemiLight);
 
         }
@@ -92,7 +92,7 @@
                     if (child.isMesh) {
 
                         child.material.envMap = envMap
-                        child.material.envMapIntensity = 0.4;
+                        child.material.envMapIntensity = 0.3;
                         child.position.y = -2;
                         child.scale.setScalar(250);
 

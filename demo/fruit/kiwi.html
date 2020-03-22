@@ -70,11 +70,10 @@
         //創建光源
         function createLights() {
 
-            scene.add(new THREE.AmbientLight(0xffffff, 1.3));
+            scene.add(new THREE.AmbientLight(0xffffff, 2));
 
             let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff);
             scene.add(hemiLight);
-
 
         }
 

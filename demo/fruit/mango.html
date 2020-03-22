@@ -70,9 +70,9 @@
         //創建光源
         function createLights() {
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+            scene.add(new THREE.AmbientLight(0xffffff, 1.5));
 
-            let hemiLight = new THREE.HemisphereLight(0xff5e33, 0xff9033);
+            let hemiLight = new THREE.HemisphereLight(0xff5e33, 0xFFB833);
             scene.add(hemiLight);
 
         }
@@ -93,6 +93,7 @@
                             .load(['sh_ft.png', 'sh_bk.png', 'sh_up.png', 'sh_dn.png', 'sh_rt.png', 'sh_lf.png']);
                         child.material.envMapIntensity = 0.2;
                         child.position.set(-3, -3, 0);
+                        child.rotation.y = -Math.PI;
                         child.scale.setScalar(180);
 
                     }

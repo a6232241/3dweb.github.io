@@ -66,20 +66,12 @@
             camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
             camera.position.set(5, 10, 25);
 
-            // let left = - containerHalfX;
-            // let right = containerHalfX;
-            // let top = containerHalfY;
-            // let bottom = - containerHalfY;
-            // near = 3, far = 10;
-            // cameraO = new THREE.OrthographicCamera( left, right, top, bottom, near, far);
-            // cameraO.position.z = 7;
-
         }
 
         //創建光源
         function createLights() {
 
-            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            scene.add(new THREE.AmbientLight(0xffffff, 1.5));
 
             let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff);
             scene.add(hemiLight);
